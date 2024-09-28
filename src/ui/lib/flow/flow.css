@@ -1,0 +1,7 @@
+.react-flow__edges svg:has(*[data-focused="true"]) {
+  z-index: 10;
+}
+
+.react-flow__pane.selection {
+  cursor: url("cursor/cursor.svg"), default !important;
+}

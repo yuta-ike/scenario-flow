@@ -1,10 +1,21 @@
+import "./globals.css"
+import "jotai-devtools/styles.css"
+
+import { Buffer as BufferPolyfill } from "buffer"
+
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
+import { DevTools } from "jotai-devtools"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
-import { IndexPage } from "./pages/index.tsx"
-import { DevTools } from "./DevTools.tsx"
+import { Provider } from "./ui/adapter/provider"
+import { IndexPage } from "./ui/page/index"
 
-import "./globals.css"
+// NOTE: polyfill https://github.com/vitejs/vite/discussions/2785
+// @ts-expect-error
+globalThis.Buffer = BufferPolyfill
+
+const queryClient = new QueryClient()
 
 const root = document.getElementById("root")
 
@@ -14,7 +25,12 @@ if (root == null) {
 
 createRoot(root).render(
   <StrictMode>
-    <IndexPage />
-    <DevTools />
+    <Provider>
+      <QueryClientProvider client={queryClient}>
+        <IndexPage />
+        {/* <TestPage /> */}
+        <DevTools />
+      </QueryClientProvider>
+    </Provider>
   </StrictMode>,
 )

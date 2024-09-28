@@ -8,6 +8,7 @@ import unusedImportsPlugin from "eslint-plugin-unused-imports"
 import prettierConfig from "eslint-config-prettier"
 import jsxA11yPlugin from "eslint-plugin-jsx-a11y"
 import { FlatCompat } from "@eslint/eslintrc"
+import vitest from "@vitest/eslint-plugin"
 
 const compat = new FlatCompat()
 
@@ -28,7 +29,7 @@ export default tseslint.config(
         ecmaFeatures: {
           jsx: true,
         },
-      },
+      }
     },
     plugins: {
       react: reactPlugin,
@@ -50,7 +51,6 @@ export default tseslint.config(
         "error",
         { extensions: [".jsx", ".tsx"] },
       ],
-      "react/jsx-no-leaked-render": "error",
       "react/jsx-no-target-blank": "warn",
       "react/jsx-no-useless-fragment": "warn",
       "react/self-closing-comp": "warn",
@@ -62,6 +62,48 @@ export default tseslint.config(
           allowNullableObject: false,
         },
       ],
+      "@typescript-eslint/consistent-type-definitions": ["warn", "type"],
+      "@typescript-eslint/consistent-type-imports": "error",
+      "@typescript-eslint/restrict-template-expressions": [
+        "warn",
+        {
+          allowNumber: true,
+          allowBoolean: true,
+          allowAny: true,
+          allowNullish: true,
+        },
+      ],
+      "@typescript-eslint/no-confusing-void-expression": "off",
+      "@typescript-eslint/no-misused-promises": "off",
+      "@typescript-eslint/no-invalid-void-type": "off",
+      "@typescript-eslint/no-empty-function": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        }
+      ],
+      "@typescript-eslint/ban-ts-comment": ["error", {
+        'ts-expect-error': false,
+        'ts-ignore': true,
+        'ts-nocheck': true,
+        'ts-check': false,
+      }],
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-non-null-assertion": "off"
+    }
+  },
+  {
+    files: ["**/*.test.{ts,tsx}"],
+    plugins: {
+      vitest,
+    },
+    rules: {
+      "@typescript-eslint/no-non-null-assertion": "off",
+      ...vitest.configs.recommended.rules,
     },
   },
   {
