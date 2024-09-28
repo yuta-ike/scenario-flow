@@ -10,7 +10,6 @@ import { toActionInstanceId } from "../entity/node/actionInstance.util"
 import { toActionRefId } from "../entity/node/actionRef.util"
 import { toResourceId } from "../entity/resource/resource.util"
 import { toUserDefinedActionId } from "../entity/userDefinedAction/userDefinedAction.util"
-import { actionAtom } from "../datasource/actions"
 import { toActionId } from "../entity/action/action.util"
 
 import { resolveActionInstance } from "./resolveActionInstance"
@@ -36,6 +35,11 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
       name: "Resource 1",
       description: "",
       content: {
+        openapi: "3.0.0",
+        info: {
+          title: "title",
+          version: "1.0.0",
+        },
         paths: {
           "/post-test": {
             post: {
@@ -48,24 +52,15 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
       path: "/path/to/resource",
     })
 
-    actionAtom(toActionId("a1"), {
-      id: toActionId("a1"),
-      type: "rest_call",
-      source: "resoure",
-      resourceId: toResourceId("r1"),
-      identifier: {
-        operationId: "operationId",
-      },
-    })
-
     const actionInstance: ActionInstance = {
       actionInstanceId: toActionInstanceId("ai1"),
       type: "rest_call" as const,
       instanceParameter: {
-        headers: {},
-        cookies: {},
-        queryParams: {},
-        pathParams: {},
+        description: "",
+        headers: [],
+        cookies: [],
+        queryParams: [],
+        pathParams: [],
         config: {
           followRedirect: false,
           useCookie: false,
@@ -129,27 +124,21 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
       name: "post /post-test",
       description: "",
       parameter: {
-        method: "post",
+        method: "POST",
         path: "/uda" as Expression,
         baseUrl: "https://example.com",
       },
-    })
-
-    actionAtom(toActionId("a2"), {
-      id: toActionId("a2"),
-      type: "rest_call",
-      source: "userDefined",
-      userDefinedActionId: toUserDefinedActionId("uda1"),
     })
 
     const actionInstance: ActionInstance = {
       actionInstanceId: toActionInstanceId("ai1"),
       type: "rest_call" as const,
       instanceParameter: {
-        headers: {},
-        cookies: {},
-        queryParams: {},
-        pathParams: {},
+        description: "",
+        headers: [],
+        cookies: [],
+        queryParams: [],
+        pathParams: [],
         config: {
           followRedirect: false,
           useCookie: false,

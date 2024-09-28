@@ -15,6 +15,11 @@ export const genResource = (
     name: `Resource ${id}`,
     description: "",
     content: {
+      openapi: "3.0.0",
+      info: {
+        title: "title",
+        version: "1.0.0",
+      },
       paths: {
         "/post-test": {
           post: {

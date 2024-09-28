@@ -29,13 +29,18 @@ describe("getRouteIdsByNodeId", () => {
       new Set([toNodeId("n1"), toNodeId("n2"), toNodeId("n3"), toNodeId("n4")]),
     )
     for (const id of ["n1", "n2", "n3", "n4"]) {
-      primitiveNodeAtom(toNodeId(id), primitiveNodes.get(id))
+      store.set(primitiveNodeAtom(toNodeId(id)), {
+        create: primitiveNodes.get(id)!,
+      })
     }
 
     store.set(routeIdsAtom, new Set([toRouteId("r1"), toRouteId("r2")]))
-    primitiveRouteAtom(toRouteId("r1"), genPrimitiveRoute("r1", ["n1", "n2"]))
-    primitiveRouteAtom(
-      toRouteId("r2"),
+    store.set(
+      primitiveRouteAtom(toRouteId("r1")),
+      genPrimitiveRoute("r1", ["n1", "n2"]),
+    )
+    store.set(
+      primitiveRouteAtom(toRouteId("r2")),
       genPrimitiveRoute("r2", ["n1", "n3", "n4"]),
     )
   })

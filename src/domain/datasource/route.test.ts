@@ -23,7 +23,11 @@ const store = createStore()
 
 const beforeEachProcess = () => {
   store.clear()
+  // @ts-expect-error
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   primitiveRouteAtom.clearAll()
+  // @ts-expect-error
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   primitiveNodeAtom.clearAll()
 
   store.set(
@@ -31,13 +35,18 @@ const beforeEachProcess = () => {
     new Set([toNodeId("n1"), toNodeId("n2"), toNodeId("n3"), toNodeId("n4")]),
   )
   for (const id of ["n1", "n2", "n3", "n4"]) {
-    primitiveNodeAtom(toNodeId(id), primitiveNodes.get(id))
+    store.set(primitiveNodeAtom(toNodeId(id)), {
+      create: primitiveNodes.get(id)!,
+    })
   }
 
   store.set(routeIdsAtom, new Set([toRouteId("r1"), toRouteId("r2")]))
-  primitiveRouteAtom(toRouteId("r1"), genPrimitiveRoute("r1", ["n1", "n2"]))
-  primitiveRouteAtom(
-    toRouteId("r2"),
+  store.set(
+    primitiveRouteAtom(toRouteId("r1")),
+    genPrimitiveRoute("r1", ["n1", "n2"]),
+  )
+  store.set(
+    primitiveRouteAtom(toRouteId("r2")),
     genPrimitiveRoute("r2", ["n1", "n3", "n4"]),
   )
 }
@@ -88,7 +97,10 @@ describe("route > primitiveRoute", () => {
       routeIdsAtom,
       updateSetOp((ids) => [...ids, toRouteId("r3")]),
     )
-    primitiveRouteAtom(toRouteId("r3"), genPrimitiveRoute("r2", ["n1", "n2"]))
+    store.set(
+      primitiveRouteAtom(toRouteId("r3")),
+      genPrimitiveRoute("r2", ["n1", "n2"]),
+    )
 
     store.set(
       primitiveRouteAtom(toRouteId("r3")),
@@ -140,9 +152,9 @@ describe("route > route", () => {
     store.subscribe(routeAtom(toRouteId("r2")), subscribers.get("r2")!)
 
     // n2を変化させる
-    store.update(primitiveNodeAtom(toNodeId("n2")), () =>
-      genPrimitiveNode("n1", {}),
-    )
+    store.update(primitiveNodeAtom(toNodeId("n2")), () => ({
+      update: genPrimitiveNode("n1", {}),
+    }))
 
     // expect
     expect(subscribers.get("r1")!).toHaveBeenCalledOnce()

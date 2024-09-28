@@ -3,8 +3,9 @@ import { atomFamily } from "jotai/utils"
 
 import { nodeAtom } from "./node"
 
+import type { AtomFamily } from "jotai/vanilla/utils/atomFamily"
 import type { PrimitiveRoute, Route, RouteId } from "../entity/route/route"
-import type { Atom, SetStateAction } from "jotai"
+import type { Atom, SetStateAction, WritableAtom } from "jotai"
 import type { PartialDict } from "@/utils/typeUtil"
 
 import { atomWithId } from "@/lib/jotai/atomWithId"
@@ -17,7 +18,14 @@ export const routeIdsAtom = atomSet<RouteId>([])
 routeIdsAtom.debugLabel = "routeIdsAtom"
 
 const _primitiveRouteAtom = atomWithId<PrimitiveRoute>("primitiveRouteAtom")
-export const primitiveRouteAtom = (id: RouteId) => {
+export const primitiveRouteAtom: AtomFamily<
+  RouteId,
+  WritableAtom<
+    PrimitiveRoute,
+    [update: SetStateAction<PartialDict<PrimitiveRoute, "name" | "color">>],
+    void
+  >
+> = atomFamily((id: RouteId) => {
   const newAtom = atom(
     (get) => get(_primitiveRouteAtom(id)),
     (
@@ -56,7 +64,9 @@ export const primitiveRouteAtom = (id: RouteId) => {
   )
   newAtom.debugLabel = `primitiveRouteAtom(${id})/wrapper`
   return newAtom
-}
+})
+// @ts-expect-error
+primitiveRouteAtom.clearAll = _primitiveRouteAtom.clearAll
 
 // selectors
 export const routeAtom = atomFamily<RouteId, Atom<Route>>((id: RouteId) => {

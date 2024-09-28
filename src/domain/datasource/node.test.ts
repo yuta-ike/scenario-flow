@@ -39,6 +39,8 @@ const store = createStore()
 const beforeEachProcess = () => {
   store.clear()
 
+  // @ts-expect-error
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   primitiveNodeAtom.clearAll()
   resourceAtom.clearAll()
   userDefinedActionAtom.clearAll()
@@ -46,7 +48,9 @@ const beforeEachProcess = () => {
 
   store.set(nodeIdsAtom, new Set([toNodeId("1"), toNodeId("2"), toNodeId("3")]))
   for (const id of ["1", "2", "3"]) {
-    primitiveNodeAtom(toNodeId(id), genPrimitiveNode(toNodeId(id)))
+    store.set(primitiveNodeAtom(toNodeId(id)), {
+      create: genPrimitiveNode(toNodeId(id)),
+    })
   }
 }
 
@@ -72,9 +76,9 @@ describe("node > primitiveNode", () => {
     store.subscribe(primitiveNodeAtom(toNodeId("1")), subscriber)
 
     // action
-    store.update(primitiveNodeAtom(toNodeId("1")), () =>
-      genPrimitiveNode(toNodeId("1"), {}),
-    )
+    store.update(primitiveNodeAtom(toNodeId("1")), () => ({
+      update: genPrimitiveNode(toNodeId("1"), {}),
+    }))
 
     expect(subscriber).toHaveBeenCalled()
   })
@@ -84,9 +88,9 @@ describe("node > primitiveNode", () => {
     store.subscribe(nodeIdsAtom, subscriber)
 
     // action
-    store.update(primitiveNodeAtom(toNodeId("1")), () =>
-      genPrimitiveNode(toNodeId("1"), {}),
-    )
+    store.update(primitiveNodeAtom(toNodeId("1")), () => ({
+      update: genPrimitiveNode(toNodeId("1"), {}),
+    }))
 
     expect(subscriber).not.toHaveBeenCalled()
   })
@@ -100,12 +104,13 @@ describe("node > primitiveNode", () => {
       nodeIdsAtom,
       updateSetOp((ids) => [...ids, toNodeId("4")]),
     )
-    primitiveNodeAtom(toNodeId("4"), genPrimitiveNode(toNodeId("4")))
+    store.set(primitiveNodeAtom(toNodeId("4")), {
+      create: genPrimitiveNode(toNodeId("4")),
+    })
 
-    store.set(
-      primitiveNodeAtom(toNodeId("4")),
-      genPrimitiveNode(toNodeId("4"), {}),
-    )
+    store.set(primitiveNodeAtom(toNodeId("4")), {
+      update: genPrimitiveNode(toNodeId("4"), {}),
+    })
 
     expect(subscriber).not.toHaveBeenCalled()
   })
@@ -132,6 +137,8 @@ describe("node > primitiveNode", () => {
 describe("node > node", () => {
   beforeEach(() => {
     store.clear()
+    // @ts-expect-error
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     primitiveNodeAtom.clearAll()
     resourceAtom.clearAll()
     userDefinedActionAtom.clearAll()
@@ -145,6 +152,11 @@ describe("node > node", () => {
       name: `Resource 1`,
       description: "",
       content: {
+        openapi: "3.0.0",
+        info: {
+          title: "title",
+          version: "1.0.0",
+        },
         paths: {
           "/post-test": {
             post: {
@@ -158,37 +170,39 @@ describe("node > node", () => {
     })
     store.update(resourceIdsAtom, addSetOp(toResourceId("r1")))
 
-    primitiveNodeAtom(toNodeId("1"), {
-      id: toNodeId("1"),
-      name: "node",
-      actionInstances: [
-        {
-          actionInstanceId: toActionInstanceId("ai1"),
-          type: "rest_call" as const,
-          instanceParameter: {
-            description: "",
-            headers: [],
-            cookies: [],
-            queryParams: [],
-            pathParams: [],
-            config: {
-              followRedirect: false,
-              useCookie: false,
+    store.set(primitiveNodeAtom(toNodeId("1")), {
+      create: {
+        id: toNodeId("1"),
+        name: "node",
+        actionInstances: [
+          {
+            actionInstanceId: toActionInstanceId("ai1"),
+            type: "rest_call" as const,
+            instanceParameter: {
+              description: "",
+              headers: [],
+              cookies: [],
+              queryParams: [],
+              pathParams: [],
+              config: {
+                followRedirect: false,
+                useCookie: false,
+              },
+            },
+            actionRef: {
+              id: toActionRefId("ar1"),
+              actionId: resourceActionToActionId(
+                toResourceActionId("operationId"),
+                toResourceId("r1"),
+              ),
             },
           },
-          actionRef: {
-            id: toActionRefId("ar1"),
-            actionId: resourceActionToActionId(
-              toResourceActionId("operationId"),
-              toResourceId("r1"),
-            ),
+        ],
+        config: {
+          condition: "true" as Expression,
+          loop: {
+            times: 1,
           },
-        },
-      ],
-      config: {
-        condition: "true" as Expression,
-        loop: {
-          times: 1,
         },
       },
     })
@@ -265,34 +279,36 @@ describe("node > node", () => {
       },
     })
 
-    primitiveNodeAtom(toNodeId("1"), {
-      id: toNodeId("1"),
-      name: "node",
-      actionInstances: [
-        {
-          actionInstanceId: toActionInstanceId("ai1"),
-          type: "rest_call" as const,
-          instanceParameter: {
-            description: "",
-            headers: [],
-            cookies: [],
-            queryParams: [],
-            pathParams: [],
-            config: {
-              followRedirect: false,
-              useCookie: false,
+    store.set(primitiveNodeAtom(toNodeId("1")), {
+      create: {
+        id: toNodeId("1"),
+        name: "node",
+        actionInstances: [
+          {
+            actionInstanceId: toActionInstanceId("ai1"),
+            type: "rest_call" as const,
+            instanceParameter: {
+              description: "",
+              headers: [],
+              cookies: [],
+              queryParams: [],
+              pathParams: [],
+              config: {
+                followRedirect: false,
+                useCookie: false,
+              },
+            },
+            actionRef: {
+              id: toActionRefId("ar1"),
+              actionId: toActionId(toUserDefinedActionId("uda1")),
             },
           },
-          actionRef: {
-            id: toActionRefId("ar1"),
-            actionId: toActionId(toUserDefinedActionId("uda1")),
+        ],
+        config: {
+          condition: "true" as Expression,
+          loop: {
+            times: 1,
           },
-        },
-      ],
-      config: {
-        condition: "true" as Expression,
-        loop: {
-          times: 1,
         },
       },
     })
@@ -346,24 +362,26 @@ describe("node > node", () => {
   })
 
   test("validator のアクションを定義できる", () => {
-    primitiveNodeAtom(toNodeId("1"), {
-      id: toNodeId("1"),
-      name: "node",
-      actionInstances: [
-        {
-          actionInstanceId: toActionInstanceId("ai1"),
-          type: "validator" as const,
-          instanceParameter: {
-            id: toValidatorId("vl1"),
-            description: "",
-            contents: "true" as Expression,
+    store.set(primitiveNodeAtom(toNodeId("1")), {
+      create: {
+        id: toNodeId("1"),
+        name: "node",
+        actionInstances: [
+          {
+            actionInstanceId: toActionInstanceId("ai1"),
+            type: "validator" as const,
+            instanceParameter: {
+              id: toValidatorId("vl1"),
+              description: "",
+              contents: "true" as Expression,
+            },
           },
-        },
-      ],
-      config: {
-        condition: "true" as Expression,
-        loop: {
-          times: 1,
+        ],
+        config: {
+          condition: "true" as Expression,
+          loop: {
+            times: 1,
+          },
         },
       },
     })
@@ -398,28 +416,30 @@ describe("node > node", () => {
       schema: "any",
     })
 
-    primitiveNodeAtom(toNodeId("1"), {
-      id: toNodeId("1"),
-      name: "node",
-      actionInstances: [
-        {
-          actionInstanceId: toActionInstanceId("ai1"),
-          type: "binder" as const,
-          instanceParameter: {
-            description: "",
-            assignments: [
-              {
-                variableId: toLocalVariableId("vr1"),
-                value: "true" as Expression,
-              },
-            ],
+    store.set(primitiveNodeAtom(toNodeId("1")), {
+      create: {
+        id: toNodeId("1"),
+        name: "node",
+        actionInstances: [
+          {
+            actionInstanceId: toActionInstanceId("ai1"),
+            type: "binder" as const,
+            instanceParameter: {
+              description: "",
+              assignments: [
+                {
+                  variableId: toLocalVariableId("vr1"),
+                  value: "true" as Expression,
+                },
+              ],
+            },
           },
-        },
-      ],
-      config: {
-        condition: "true" as Expression,
-        loop: {
-          times: 1,
+        ],
+        config: {
+          condition: "true" as Expression,
+          loop: {
+            times: 1,
+          },
         },
       },
     })

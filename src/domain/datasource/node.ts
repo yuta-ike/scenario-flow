@@ -168,6 +168,8 @@ export const primitiveNodeAtom = atomFamily((nodeId: NodeId) => {
 
   return newAtom
 })
+// @ts-expect-error
+primitiveNodeAtom.clearAll = _primitiveNodeAtom.clearAll
 
 /**
  * PrimitiveNodeにactionInstanceを加えたNodeを返す
