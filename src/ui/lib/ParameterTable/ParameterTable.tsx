@@ -32,10 +32,12 @@ import { MagicVariableButton } from "../flow/components/DetailPanel/MagicVariabl
 import type { SetStateAction } from "jotai"
 import type { DragEndEvent, UniqueIdentifier } from "@dnd-kit/core"
 import type { ColumnDef, Row } from "@tanstack/react-table"
+import type { ResolvedEnvironment } from "@/domain/entity/environment/environment"
 import type { NodeId } from "@/domain/entity/node/node"
 
 import { getUpdateOps } from "@/ui/utils/arrayUpdate"
 import { genId } from "@/utils/uuid"
+import { ErrorBoundary } from "@/ui/functional-components/ErrorBoundary"
 
 export type TableRow = {
   id: string
@@ -115,14 +117,16 @@ type ParameterTableProps = {
   setRows?: (update: SetStateAction<TableRow[]>) => void
   placeholderKey?: string
   placeholderValue?: string
-  nodeId?: NodeId
+  currentNodeId?: NodeId
+  environment?: ResolvedEnvironment
 }
 export const ParameterTable = ({
   rows,
   setRows,
   placeholderKey,
   placeholderValue,
-  nodeId,
+  currentNodeId,
+  environment,
 }: ParameterTableProps) => {
   const setRowsRef = useRef(setRows)
   useEffect(() => {
@@ -173,41 +177,58 @@ export const ParameterTable = ({
       },
       {
         accessorKey: "value",
-        cell: ({ getValue, cell }) => (
-          <div className="relative">
-            <input
-              type="text"
-              value={getValue<string>()}
-              placeholder={placeholderValue}
-              className="w-full bg-transparent p-2 pr-0 placeholder:text-slate-300 focus:outline-none"
-              onChange={(e) =>
-                updateRowHandler.current(cell.row.id, "value", e.target.value)
-              }
-            />
-            {nodeId != null && (
-              <div className="absolute right-1 top-1/2 -translate-y-1/2">
-                <MagicVariableButton nodeId={nodeId} />
-              </div>
-            )}
-          </div>
-        ),
+        cell: ({ getValue, cell }) => {
+          const value = getValue<string>()
+          return (
+            <div className="relative">
+              <input
+                type="text"
+                value={value}
+                placeholder={placeholderValue}
+                className="w-full bg-transparent p-2 pr-0 placeholder:text-slate-300 focus:outline-none"
+                onChange={(e) =>
+                  updateRowHandler.current(cell.row.id, "value", e.target.value)
+                }
+              />
+              {environment != null && (
+                <ErrorBoundary>
+                  <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                    <MagicVariableButton
+                      environment={environment}
+                      currentNodeId={currentNodeId}
+                      onInsert={(inserted) =>
+                        updateRowHandler.current(
+                          cell.row.id,
+                          "value",
+                          value + `{{${inserted}}}`,
+                        )
+                      }
+                    />
+                  </div>
+                </ErrorBoundary>
+              )}
+            </div>
+          )
+        },
       },
       {
         accessorKey: "isTmp",
         enableHiding: true,
       },
     ]
-  }, [nodeId, placeholderKey, placeholderValue])
+  }, [currentNodeId, environment, placeholderKey, placeholderValue])
+  const data = useMemo(
+    () =>
+      [
+        ...rows.map((row) => ({ ...row, isTmp: false })),
+        genPlaceholderRow(),
+      ].flat(1),
+    [rows],
+  )
+  console.log(data)
 
   const table = useReactTable({
-    data: useMemo(
-      () =>
-        [
-          ...rows.map((row) => ({ ...row, isTmp: false })),
-          genPlaceholderRow(),
-        ].flat(1),
-      [rows],
-    ),
+    data: data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getRowId: (row) => row.id,

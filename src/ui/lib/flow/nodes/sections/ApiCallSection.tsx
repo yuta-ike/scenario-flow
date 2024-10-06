@@ -21,16 +21,21 @@ export const ApiCallSection = ({
       className="flex w-full flex-col gap-3 rounded-lg bg-white px-4 py-3 text-start shadow-object transition hover:bg-slate-50"
     >
       {/* Header */}
-      <div className="w-full">
+      <div className="flex w-full items-center justify-between">
         <MethodChip truncate={3}>
           {actionInstance.action.parameter.method}
         </MethodChip>
+        <div className="text-xs text-slate-400">
+          {actionInstance.action.parameter.operationObject?.operationId}
+        </div>
       </div>
       {/* Body */}
       <div className="text-sm leading-none">
         {actionInstance.action.parameter.path}
       </div>
-      <div className="text-xs leading-none">{actionInstance.action.name}</div>
+      <div className="line-clamp-2 text-xs leading-none">
+        {actionInstance.instanceParameter.description}
+      </div>
     </button>
   )
 }

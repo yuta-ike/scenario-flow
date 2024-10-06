@@ -1,30 +1,39 @@
 import { ImMagicWand } from "react-icons/im"
 import { TbArrowRight, TbSquareRotated } from "react-icons/tb"
+import { useState } from "react"
 
+import { useFocusOn } from "../../useFocusOn"
+
+import type { ResolvedEnvironment } from "@/domain/entity/environment/environment"
 import type { NodeId } from "@/domain/entity/node/node"
 
-import { useNodeEnvironment } from "@/ui/adapter/query"
 import { Popover } from "@/ui/components/common/Popover"
-import { associateBy, associateWithList } from "@/utils/set"
+import { associateWithList } from "@/utils/set"
+import { getVariableDisplay } from "@/domain/entity/environment/environment"
+import { useSetHighlightedNodeId } from "@/ui/state/highlightedNodeId"
 
 type MagicVariableButtonProps = {
-  nodeId: NodeId
   onInsert?: (value: string) => void
+  environment: ResolvedEnvironment
+  currentNodeId?: NodeId
 }
 
 export const MagicVariableButton = ({
-  nodeId,
   onInsert,
+  environment,
+  currentNodeId,
 }: MagicVariableButtonProps) => {
-  const environment = useNodeEnvironment(nodeId)
+  const [isOpen, setIsOpen] = useState(false)
+  // const environment = useParentNodeEnvironment(nodeId)
   const environmentMap = associateWithList(
-    environment.map(({ variable }) => variable),
-    ({ boundIn }) => (boundIn === "global" ? "global" : boundIn.name),
+    environment,
+    ({ variable: { boundIn } }) =>
+      boundIn === "global" ? "global" : boundIn.name,
   )
-  const variableMap = associateBy(
-    environment.map(({ variable }) => variable),
-    "id",
-  )
+  const bindMap = associateWithList(environment, ({ variable: { id } }) => id)
+
+  const highlight = useSetHighlightedNodeId()
+  const focusOn = useFocusOn()
 
   const button = (
     <div className="gap grid h-[28px] w-[28px] place-items-center gap-1 rounded bg-white/80 text-xs text-sky-500 backdrop-blur transition hover:bg-sky-50 active:translate-y-px">
@@ -34,13 +43,15 @@ export const MagicVariableButton = ({
 
   return (
     <Popover
+      open={isOpen}
+      onOpenChange={setIsOpen}
       items={environmentMap
         .entries()
-        .map(([boundInName, variables]) => {
-          const variable = variables[0]
+        .map(([boundInName, binds]) => {
+          const { variable } = binds[0]
           const isThisNode =
             typeof variable.boundIn === "object" &&
-            variable.boundIn.id === nodeId
+            variable.boundIn.id === currentNodeId
           return {
             id: variable.boundIn === "global" ? "global" : variable.boundIn.id,
             title: (
@@ -48,21 +59,55 @@ export const MagicVariableButton = ({
                 <div className="grow">
                   {isThisNode ? "このブロックで定義された変数" : boundInName}
                 </div>
-                {!isThisNode && (
-                  <div>
+                {variable.boundIn !== "global" && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      if (variable.boundIn === "global") {
+                        return
+                      }
+                      highlight(variable.boundIn.id)
+                      void focusOn(
+                        currentNodeId == null
+                          ? [variable.boundIn.id]
+                          : [currentNodeId, variable.boundIn.id],
+                      )
+                      e.stopPropagation()
+                    }}
+                    className="group rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
+                  >
                     <TbSquareRotated
-                      className="text-slate-400"
+                      className="transition group-hover:rotate-180 group-hover:scale-105"
                       strokeWidth={3}
                     />
-                  </div>
+                  </button>
                 )}
               </div>
             ),
-            items: variables.map(({ id, name }) => ({
-              id,
+            items: binds.map((bind) => ({
+              id: bind.variable.id,
               content: (
-                <div className="flex w-full items-center justify-between px-3 py-2">
-                  {name}
+                <div
+                  className="flex w-full items-center justify-between px-3 py-2"
+                  onMouseEnter={() => {
+                    if (variable.boundIn === "global") {
+                      return
+                    }
+                    highlight(variable.boundIn.id)
+                    void focusOn(
+                      currentNodeId == null
+                        ? [variable.boundIn.id]
+                        : [currentNodeId, variable.boundIn.id],
+                    )
+                  }}
+                  onMouseLeave={() => {
+                    if (variable.boundIn === "global") {
+                      return
+                    }
+                    highlight(null)
+                  }}
+                >
+                  {getVariableDisplay(bind)}
                   <TbArrowRight className="text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-400" />
                 </div>
               ),
@@ -71,10 +116,16 @@ export const MagicVariableButton = ({
         })
         .toArray()
         .toReversed()}
+      empty={
+        <div className="grid place-items-center gap-3 p-4 text-sm text-slate-600">
+          <ImMagicWand size={20} className="text-slate-400" />
+          利用できる変数がありません
+        </div>
+      }
       onClick={(VariableId) => {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const variableName = variableMap.get(VariableId)!.name
-        onInsert?.(variableName)
+        const bind = bindMap.get(VariableId)![0]
+        onInsert?.(getVariableDisplay(bind))
+        setIsOpen(false)
       }}
     >
       {button}

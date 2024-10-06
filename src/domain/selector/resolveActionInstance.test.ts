@@ -1,16 +1,22 @@
 import { beforeEach, describe, expect, test } from "vitest"
 import { atom } from "jotai"
 
-import { resourceAtom } from "../datasource/resource"
+import { resourceAtom, resourceIdsAtom } from "../datasource/resource"
 import {
   userDefinedActionAtom,
   userDefinedActionIdsAtom,
 } from "../datasource/userDefinedAction"
 import { toActionInstanceId } from "../entity/node/actionInstance.util"
 import { toActionRefId } from "../entity/node/actionRef.util"
-import { toResourceId } from "../entity/resource/resource.util"
+import {
+  toResourceActionId,
+  toResourceId,
+} from "../entity/resource/resource.util"
 import { toUserDefinedActionId } from "../entity/userDefinedAction/userDefinedAction.util"
-import { toActionId } from "../entity/action/action.util"
+import {
+  resourceActionToActionId,
+  toActionId,
+} from "../entity/action/action.util"
 
 import { resolveActionInstance } from "./resolveActionInstance"
 
@@ -18,6 +24,7 @@ import type { Expression } from "../entity/value/expression"
 import type { ActionInstance } from "../entity/node/actionInstance"
 
 import { createStore } from "@/lib/jotai/store"
+import { addSetOp } from "@/utils/set"
 
 const store = createStore()
 
@@ -43,7 +50,7 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
         paths: {
           "/post-test": {
             post: {
-              operationId: `operationId`,
+              operationId: "operationId",
             },
           },
         },
@@ -51,6 +58,8 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
       locationType: "LocalFile",
       path: "/path/to/resource",
     })
+
+    store.set(resourceIdsAtom, addSetOp(toResourceId("r1")))
 
     const actionInstance: ActionInstance = {
       actionInstanceId: toActionInstanceId("ai1"),
@@ -68,7 +77,10 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
       },
       actionRef: {
         id: toActionRefId("ar1"),
-        actionId: toActionId("a1"),
+        actionId: resourceActionToActionId(
+          toResourceActionId("operationId"),
+          toResourceId("r1"),
+        ),
       },
     }
 
@@ -81,10 +93,11 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
       actionInstanceId: toActionInstanceId("ai1"),
       type: "rest_call",
       instanceParameter: {
-        headers: {},
-        cookies: {},
-        queryParams: {},
-        pathParams: {},
+        description: "",
+        headers: [],
+        cookies: [],
+        queryParams: [],
+        pathParams: [],
         config: {
           followRedirect: false,
           useCookie: false,
@@ -92,12 +105,15 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
       },
       action: {
         id: expect.any(String) as string,
-        name: "post /post-test",
+        name: "operationId",
         description: "",
         parameter: {
-          method: "post",
+          method: "POST",
           path: "/post-test",
           baseUrl: "https://example.com",
+          operationObject: {
+            operationId: "operationId",
+          },
         },
         type: "rest_call",
         identifier: {
@@ -105,10 +121,11 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
         },
         resourceId: "r1",
         source: "resoure",
+        resourceActionId: "operationId",
       },
       actionRef: {
         id: toActionRefId("ar1"),
-        actionId: toActionId("a1"),
+        actionId: toActionId("operationId-r1"),
       },
     })
   })
@@ -146,7 +163,7 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
       },
       actionRef: {
         id: toActionRefId("ar1"),
-        actionId: toActionId("a2"),
+        actionId: toActionId("uda1"),
       },
     }
 
@@ -159,10 +176,11 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
       actionInstanceId: toActionInstanceId("ai1"),
       type: "rest_call",
       instanceParameter: {
-        headers: {},
-        cookies: {},
-        queryParams: {},
-        pathParams: {},
+        description: "",
+        headers: [],
+        cookies: [],
+        queryParams: [],
+        pathParams: [],
         config: {
           followRedirect: false,
           useCookie: false,
@@ -173,7 +191,7 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
         name: "post /post-test",
         description: "",
         parameter: {
-          method: "post",
+          method: "POST",
           path: "/uda",
           baseUrl: "https://example.com",
         },
@@ -183,7 +201,7 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
       },
       actionRef: {
         id: toActionRefId("ar1"),
-        actionId: toActionId("a2"),
+        actionId: toActionId("uda1"),
       },
     })
   })

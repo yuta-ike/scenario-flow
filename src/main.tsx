@@ -1,5 +1,6 @@
 import "./globals.css"
 import "jotai-devtools/styles.css"
+import "./worker"
 
 import { Buffer as BufferPolyfill } from "buffer"
 

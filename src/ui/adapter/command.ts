@@ -13,9 +13,15 @@ import type {
 } from "@/domain/entity/node/actionInstance"
 import type { LocalVariableId } from "@/domain/entity/variable/variable"
 import type { ActionId } from "@/domain/entity/action/action"
+import type {
+  GlobalVariable,
+  GlobalVariableValueId,
+} from "@/domain/entity/globalVariable/globalVariable"
+import type { TypedValue } from "@/domain/entity/value/dataType"
+import type { Resource, ResourceId } from "@/domain/entity/resource/resource"
 
 import { resourceAtom, resourceIdsAtom } from "@/domain/datasource/resource"
-import { addResource } from "@/domain/workflow/resource"
+import { addResource, putResource } from "@/domain/workflow/resource"
 import { addSetOp } from "@/utils/set"
 import { genId } from "@/utils/uuid"
 import { updateRoute as updateRouteEntity } from "@/domain/workflow/route"
@@ -26,6 +32,11 @@ import {
   updateActionInstancesParameter,
   upsertVariables as upsertVariablesWf,
 } from "@/domain/workflow/node"
+import {
+  addGlobalVariable as addGlobalVariableWf,
+  updateGlobalVariable as updateGlobalVariableWf,
+  updateGlobalVariableValue as updateGlobalVariableValueWf,
+} from "@/domain/workflow/globalVariable"
 import {
   toActionInstanceId,
   toValidatorId,
@@ -154,6 +165,31 @@ export const uploadOpenApiFile = async (
   })
 }
 
+export const putOpenApiFile = async (
+  id: ResourceId,
+  name: string,
+  description: string,
+  openApi: Json,
+) => {
+  const content = await resolveRefs(openApi as unknown as OpenAPIObject)
+  const resource = {
+    name,
+    description,
+    content,
+    type: "OpenApi",
+    locationType: "Temporal",
+  } as const
+
+  putResource(id, resource, {
+    putResource: (resourceId, resource) => {
+      store.set(resourceAtom(resourceId), {
+        id: resourceId,
+        ...resource,
+      } as Resource)
+    },
+  })
+}
+
 export const updteRoute = (
   routeId: RouteId,
   param: Partial<Pick<PrimitiveRoute, "name" | "color" | "page">>,
@@ -181,4 +217,19 @@ export const upsertVariables = (
   data: { id: LocalVariableId; name: string }[],
 ) => {
   run(upsertVariablesWf(data))
+}
+
+export const addGlobalVariable = (id: string, name: string) => {
+  return run(addGlobalVariableWf({ id, name }))
+}
+
+export const updateGlobalVariable = (variable: GlobalVariable) => {
+  run(updateGlobalVariableWf(variable))
+}
+
+export const updateGlobalVariableValue = (
+  id: GlobalVariableValueId,
+  value: TypedValue,
+) => {
+  run(updateGlobalVariableValueWf(id, value))
 }

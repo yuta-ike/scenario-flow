@@ -3,70 +3,56 @@ import { atomFamily } from "jotai/utils"
 
 import { nodeAtom } from "./node"
 
-import type { AtomFamily } from "jotai/vanilla/utils/atomFamily"
 import type { PrimitiveRoute, Route, RouteId } from "../entity/route/route"
-import type { Atom, SetStateAction, WritableAtom } from "jotai"
+import type { Atom, SetStateAction } from "jotai"
 import type { PartialDict } from "@/utils/typeUtil"
 
 import { atomWithId } from "@/lib/jotai/atomWithId"
 import { atomSet } from "@/lib/jotai/atomSet"
 import { count } from "@/utils/array"
 import { COLORS } from "@/utils/pcss"
+import { wrapAtomFamily } from "@/lib/jotai/wrapAtomFamily"
 
 // atoms
 export const routeIdsAtom = atomSet<RouteId>([])
 routeIdsAtom.debugLabel = "routeIdsAtom"
 
 const _primitiveRouteAtom = atomWithId<PrimitiveRoute>("primitiveRouteAtom")
-export const primitiveRouteAtom: AtomFamily<
-  RouteId,
-  WritableAtom<
-    PrimitiveRoute,
-    [update: SetStateAction<PartialDict<PrimitiveRoute, "name" | "color">>],
-    void
-  >
-> = atomFamily((id: RouteId) => {
-  const newAtom = atom(
-    (get) => get(_primitiveRouteAtom(id)),
-    (
-      get,
-      set,
-      update: SetStateAction<PartialDict<PrimitiveRoute, "name" | "color">>,
-    ) => {
-      const getDefaultName = () => `シナリオ${get(routeIdsAtom).size + 1}`
-      const getColor = () => get(routeColorCache)
-      const initValue =
-        typeof update === "function"
-          ? undefined
-          : {
-              ...update,
-              color: update.color ?? getColor(),
-              name:
-                update.name == null || update.name.length === 0
-                  ? getDefaultName()
-                  : update.name,
-            }
+export const primitiveRouteAtom = wrapAtomFamily(_primitiveRouteAtom, {
+  write: (
+    id,
+    get,
+    set,
+    update: SetStateAction<PartialDict<PrimitiveRoute, "name" | "color">>,
+  ) => {
+    const getDefaultName = () => `シナリオ${get(routeIdsAtom).size + 1}`
+    const getColor = () => get(routeColorCache)
+    const initValue =
+      typeof update === "function"
+        ? undefined
+        : {
+            ...update,
+            color: update.color ?? getColor(),
+            name:
+              update.name == null || update.name.length === 0
+                ? getDefaultName()
+                : update.name,
+          }
 
-      set(_primitiveRouteAtom(id, initValue), (prevValue) => {
-        const newValue =
-          typeof update === "function" ? update(prevValue) : update
+    set(_primitiveRouteAtom(id, initValue), (prevValue) => {
+      const newValue = typeof update === "function" ? update(prevValue) : update
 
-        return {
-          ...newValue,
-          color: newValue.color ?? getColor(),
-          name:
-            newValue.name == null || newValue.name.length === 0
-              ? getDefaultName()
-              : newValue.name,
-        }
-      })
-    },
-  )
-  newAtom.debugLabel = `primitiveRouteAtom(${id})/wrapper`
-  return newAtom
+      return {
+        ...newValue,
+        color: newValue.color ?? getColor(),
+        name:
+          newValue.name == null || newValue.name.length === 0
+            ? getDefaultName()
+            : newValue.name,
+      }
+    })
+  },
 })
-// @ts-expect-error
-primitiveRouteAtom.clearAll = _primitiveRouteAtom.clearAll
 
 // selectors
 export const routeAtom = atomFamily<RouteId, Atom<Route>>((id: RouteId) => {

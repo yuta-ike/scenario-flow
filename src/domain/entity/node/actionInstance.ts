@@ -26,7 +26,10 @@ export type RestCallActionInstanceParameter = {
   cookies?: KVItem[]
   queryParams?: KVItem[]
   pathParams?: KVItem[]
-  body?: HttpRequestBodyContentTypeObject
+  body?: {
+    selected: keyof HttpRequestBodyContentTypeObject | undefined
+    params: HttpRequestBodyContentTypeObject
+  }
   config?: RestCallActionInstanceConfig
 } & InstanceParameterMeta
 export type RestCallActionInstanceBlock = {
@@ -44,6 +47,7 @@ export type ValidatorActionInstanceParameter = {
 export type ValidatorActionInstanceBlock = {
   type: "validator"
   instanceParameter: ValidatorActionInstanceParameter
+  actionRef?: undefined
 }
 
 // binder
@@ -53,6 +57,7 @@ export type BinderActionInstanceParameter = {
 export type BinderActionInstanceBlock = {
   type: "binder"
   instanceParameter: BinderActionInstanceParameter
+  actionRef?: undefined
 }
 
 // action instance

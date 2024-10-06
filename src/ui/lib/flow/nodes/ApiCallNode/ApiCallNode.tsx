@@ -14,12 +14,14 @@ import { useNode } from "@/ui/adapter/query"
 import { useIsNodeFocused } from "@/ui/state/focusedNodeId"
 import { useFocusedRouteByNodeId } from "@/ui/state/focusedRouteId"
 import { appendNode } from "@/ui/adapter/command"
+import { useIsNodeHighlighted } from "@/ui/state/highlightedNodeId"
 
 type ApiCallNodeProps = NodeProps<GeneralUiNode>
 
 export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
   const node = useNode(nodeId)
   const isFocused = useIsNodeFocused(nodeId)
+  const isHighlighted = useIsNodeHighlighted(nodeId)
   const focusedRoute = useFocusedRouteByNodeId(nodeId)
 
   const handleCreateNewApiCallNode = (actionId: ActionId) => {
@@ -38,10 +40,11 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
       <div
         data-node-focused={isFocused}
         data-route-focused={focusedRoute != null}
+        data-highlighted={isHighlighted}
         style={{
           "--focused-route-color": focusedRoute?.color ?? "#93c5fd",
         }}
-        className="flex w-[240px] flex-col gap-2 rounded-lg bg-[#EFF1F7] p-1 pb-6 outline outline-2 outline-offset-2 outline-transparent data-[node-focused=true]:outline-blue-300"
+        className="flex w-[240px] flex-col gap-2 rounded-lg bg-[#EFF1F7] p-1 pb-6 outline outline-2 outline-offset-2 outline-transparent data-[highlighted=true]:bg-yellow-100 data-[node-focused=true]:bg-blue-100 data-[highlighted=true]:outline-yellow-300 data-[node-focused=true]:outline-blue-300"
       >
         {node.actionInstances.map((actionInstance) => (
           <div

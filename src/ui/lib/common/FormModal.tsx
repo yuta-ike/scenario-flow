@@ -14,6 +14,7 @@ type FormModalProps = {
   title: string
   description: string
   modal: React.ReactNode
+  positiveLabel?: string
 } & (
   | {
       children: React.ReactNode

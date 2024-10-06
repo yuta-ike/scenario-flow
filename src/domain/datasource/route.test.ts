@@ -26,8 +26,6 @@ const beforeEachProcess = () => {
   // @ts-expect-error
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   primitiveRouteAtom.clearAll()
-  // @ts-expect-error
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   primitiveNodeAtom.clearAll()
 
   store.set(

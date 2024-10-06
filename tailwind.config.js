@@ -19,9 +19,16 @@ export default {
         collapsibleSlideOut: "collapsibleSlideOut 0.5s ease-in-out",
         overlayShow: 'overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1)',
         contentShow: 'contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1)',
+        drawerShow: 'drawerShow 300ms ease-in-out',
       },
       colors: {
         "base": "#171717"
+      },
+      keyframes: {
+        drawerShow: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' },
+        }
       }
     },
   },

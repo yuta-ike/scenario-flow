@@ -39,8 +39,6 @@ const store = createStore()
 const beforeEachProcess = () => {
   store.clear()
 
-  // @ts-expect-error
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   primitiveNodeAtom.clearAll()
   resourceAtom.clearAll()
   userDefinedActionAtom.clearAll()
@@ -137,8 +135,6 @@ describe("node > primitiveNode", () => {
 describe("node > node", () => {
   beforeEach(() => {
     store.clear()
-    // @ts-expect-error
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     primitiveNodeAtom.clearAll()
     resourceAtom.clearAll()
     userDefinedActionAtom.clearAll()
@@ -184,9 +180,12 @@ describe("node > node", () => {
               cookies: [],
               queryParams: [],
               pathParams: [],
-              config: {
-                followRedirect: false,
-                useCookie: false,
+              body: {
+                selected: "application/json",
+                params: {
+                  "application/form-data": [],
+                  "application/json": {},
+                },
               },
             },
             actionRef: {
@@ -222,17 +221,23 @@ describe("node > node", () => {
             cookies: [],
             queryParams: [],
             pathParams: [],
-            config: {
-              followRedirect: false,
-              useCookie: false,
+            body: {
+              selected: "application/json",
+              params: {
+                "application/form-data": [],
+                "application/json": {},
+              },
             },
           },
           action: {
             id: expect.any(String) as ActionId,
-            name: "post /post-test",
+            name: "operationId",
             description: "",
             parameter: {
               method: "POST",
+              operationObject: {
+                operationId: "operationId",
+              },
               path: "/post-test" as Expression,
               baseUrl: "https://example.com",
             },
@@ -270,10 +275,13 @@ describe("node > node", () => {
     userDefinedActionAtom(toUserDefinedActionId("uda1"), {
       id: toUserDefinedActionId("uda1"),
       type: "rest_call" as const,
-      name: "post /post-test",
+      name: "operationId",
       description: "",
       parameter: {
         method: "POST",
+        operationObject: {
+          operationId: "operationId",
+        },
         path: "/uda" as Expression,
         baseUrl: "https://example.com",
       },
@@ -293,9 +301,12 @@ describe("node > node", () => {
               cookies: [],
               queryParams: [],
               pathParams: [],
-              config: {
-                followRedirect: false,
-                useCookie: false,
+              body: {
+                selected: "application/json",
+                params: {
+                  "application/form-data": [],
+                  "application/json": {},
+                },
               },
             },
             actionRef: {
@@ -328,18 +339,24 @@ describe("node > node", () => {
             cookies: [],
             queryParams: [],
             pathParams: [],
-            config: {
-              followRedirect: false,
-              useCookie: false,
+            body: {
+              selected: "application/json",
+              params: {
+                "application/form-data": [],
+                "application/json": {},
+              },
             },
           },
           action: {
             id: expect.any(String) as string,
-            name: "post /post-test",
+            name: "operationId",
             description: "",
             parameter: {
               method: "POST",
               path: "/uda",
+              operationObject: {
+                operationId: "operationId",
+              },
               baseUrl: "https://example.com",
             },
             type: "rest_call",
@@ -388,6 +405,7 @@ describe("node > node", () => {
 
     expect(store.get(nodeAtom(toNodeId("1")))).toEqual({
       id: toNodeId("1"),
+      name: "node",
       actionInstances: [
         {
           actionInstanceId: toActionInstanceId("ai1"),
@@ -395,6 +413,7 @@ describe("node > node", () => {
           instanceParameter: {
             id: toValidatorId("vl1"),
             contents: "true",
+            description: "",
           },
         },
       ],
@@ -452,13 +471,19 @@ describe("node > node", () => {
           actionInstanceId: toActionInstanceId("ai1"),
           type: "binder" as const,
           instanceParameter: {
-            variableId: toLocalVariableId("vr1"),
-            value: "true" as Path,
-            variable: {
-              id: toLocalVariableId("vr1"),
-              name: "variable",
-              description: "",
-            },
+            assignments: [
+              {
+                variableId: toLocalVariableId("vr1"),
+                value: "true" as Path,
+                variable: {
+                  id: toLocalVariableId("vr1"),
+                  name: "variable",
+                  description: "",
+                  schema: "any",
+                },
+              },
+            ],
+            description: "",
           },
         },
       ],

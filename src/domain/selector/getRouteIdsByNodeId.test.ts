@@ -47,10 +47,10 @@ describe("getRouteIdsByNodeId", () => {
 
   test("getRouteIdsByNodeIdが正しく取得できる", () => {
     const res1 = store.get(getRouteIdsByNodeId(toNodeId("n1")))
-    expect(res1).toEqual(new Set([toRouteId("r1"), toRouteId("r2")]))
+    expect(res1).toEqual([toRouteId("r1"), toRouteId("r2")])
 
     const res2 = store.get(getRouteIdsByNodeId(toNodeId("n2")))
-    expect(res2).toEqual(new Set([toRouteId("r1")]))
+    expect(res2).toEqual([toRouteId("r1")])
   })
 
   test.skip("getRouteIdsByNodeId値に変更がなければキャッシュされる", () => {

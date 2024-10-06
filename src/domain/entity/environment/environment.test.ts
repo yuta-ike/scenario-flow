@@ -11,18 +11,21 @@ describe("intersectionEnvironment", () => {
     const res = intersectionEnvironment([
       [
         {
+          inherit: true,
           variable: localVariableToVariable(
             genLocalVariable("1"),
             toNodeId("n1"),
           ),
         },
         {
+          inherit: true,
           variable: localVariableToVariable(
             genLocalVariable("2"),
             toNodeId("n1"),
           ),
         },
         {
+          inherit: false,
           variable: localVariableToVariable(
             genLocalVariable("3"),
             toNodeId("n1"),
@@ -31,18 +34,21 @@ describe("intersectionEnvironment", () => {
       ],
       [
         {
+          inherit: true,
           variable: localVariableToVariable(
             genLocalVariable("1"),
             toNodeId("n2"),
           ),
         },
         {
+          inherit: true,
           variable: localVariableToVariable(
             genLocalVariable("2"),
             toNodeId("n2"),
           ),
         },
         {
+          inherit: false,
           variable: localVariableToVariable(
             genLocalVariable("5"),
             toNodeId("n2"),
@@ -52,12 +58,14 @@ describe("intersectionEnvironment", () => {
     ])
     expect(res).toEqual([
       {
+        inherit: true,
         variable: localVariableToVariable(
           genLocalVariable("1"),
           toNodeId("n2"),
         ),
       },
       {
+        inherit: true,
         variable: localVariableToVariable(
           genLocalVariable("2"),
           toNodeId("n2"),
@@ -70,18 +78,21 @@ describe("intersectionEnvironment", () => {
     const res = intersectionEnvironment([
       [
         {
+          inherit: true,
           variable: localVariableToVariable(
             genLocalVariable("1"),
             toNodeId("n1"),
           ),
         },
         {
+          inherit: true,
           variable: localVariableToVariable(
             genLocalVariable("2"),
             toNodeId("n1"),
           ),
         },
         {
+          inherit: false,
           variable: localVariableToVariable(
             genLocalVariable("3"),
             toNodeId("n1"),
@@ -91,18 +102,21 @@ describe("intersectionEnvironment", () => {
     ])
     expect(res).toEqual([
       {
+        inherit: true,
         variable: localVariableToVariable(
           genLocalVariable("1"),
           toNodeId("n1"),
         ),
       },
       {
+        inherit: true,
         variable: localVariableToVariable(
           genLocalVariable("2"),
           toNodeId("n1"),
         ),
       },
       {
+        inherit: false,
         variable: localVariableToVariable(
           genLocalVariable("3"),
           toNodeId("n1"),
@@ -115,18 +129,21 @@ describe("intersectionEnvironment", () => {
     const res = intersectionEnvironment([
       [
         {
+          inherit: true,
           variable: localVariableToVariable(
             genLocalVariable("1"),
             toNodeId("n1"),
           ),
         },
         {
+          inherit: true,
           variable: localVariableToVariable(
             genLocalVariable("2"),
             toNodeId("n1"),
           ),
         },
         {
+          inherit: false,
           variable: localVariableToVariable(
             genLocalVariable("3"),
             toNodeId("n1"),
@@ -135,18 +152,21 @@ describe("intersectionEnvironment", () => {
       ],
       [
         {
+          inherit: true,
           variable: localVariableToVariable(
             genLocalVariable("4"),
             toNodeId("n2"),
           ),
         },
         {
+          inherit: true,
           variable: localVariableToVariable(
             genLocalVariable("5"),
             toNodeId("n2"),
           ),
         },
         {
+          inherit: false,
           variable: localVariableToVariable(
             genLocalVariable("6"),
             toNodeId("n2"),
@@ -162,18 +182,21 @@ describe("dedupeShadowedBind", () => {
   test("同名の変数がある場合は1つにまとめ、後ろで指定されたものが残る", () => {
     const res = dedupeShadowedBind([
       {
+        inherit: true,
         variable: localVariableToVariable(
           genLocalVariable("1"),
           toNodeId("n1"),
         ),
       },
       {
+        inherit: true,
         variable: localVariableToVariable(
           genLocalVariable("2"),
           toNodeId("n1"),
         ),
       },
       {
+        inherit: false,
         variable: localVariableToVariable(
           genLocalVariable("2"),
           toNodeId("n2"),
@@ -182,12 +205,14 @@ describe("dedupeShadowedBind", () => {
     ])
     expect(res).toEqual([
       {
+        inherit: true,
         variable: localVariableToVariable(
           genLocalVariable("1"),
           toNodeId("n1"),
         ),
       },
       {
+        inherit: false,
         variable: localVariableToVariable(
           genLocalVariable("2"),
           toNodeId("n2"),

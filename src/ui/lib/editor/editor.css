@@ -1,3 +1,10 @@
 .cm-editor.cm-focused {
   outline: none !important;
 }
+
+.variable {
+  display: inline-block !important;
+  background: rgb(220, 112, 34) !important;
+  border-radius: 2px !important;
+  color: white !important;
+}

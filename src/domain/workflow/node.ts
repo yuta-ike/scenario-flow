@@ -1,11 +1,14 @@
-import { Context, Effect, pipe } from "effect"
+import { Context, Effect, Option, pipe } from "effect"
 
-import { createNode, updateActionInstanceParameter } from "../entity/node/node"
+import { buildNode, updateActionInstanceParameter } from "../entity/node/node"
 import { toNodeId } from "../entity/node/node.util"
 import { appendNodeToRoute, removeNodeFromRoute } from "../entity/route/route"
 import { toRouteId } from "../entity/route/route.util"
 import { updateNodeConfig as updateNodeConfigEntity } from "../entity/node/node"
 
+import { _genId } from "./common"
+
+import type { GenId } from "./common";
 import type { LocalVariableId } from "../entity/variable/variable"
 import type {
   ActionInstance,
@@ -16,12 +19,16 @@ import type { Route, RouteId, PrimitiveRoute } from "../entity/route/route"
 import type { Id, OmitId } from "@/utils/idType"
 import type { PartialDict } from "@/utils/typeUtil"
 import type { ContextOf } from "@/lib/effect/contextOf"
+import type { ActionId, ResolvedAction } from "../entity/action/action"
 
 import { dedupeArrays, sliceFormer } from "@/lib/array/utils"
+import { associateBy } from "@/utils/set"
 
-export type GenId = () => Id
-export const GenId = Context.GenericTag<GenId>("GenId")
-const _genId = () => GenId.pipe(Effect.map((genId) => genId()))
+
+export type GetUniqName = (name: string) => string
+export const GetUniqName = Context.GenericTag<GetUniqName>("GetUniqName")
+const _getUniqName = (name: string) =>
+  GetUniqName.pipe(Effect.map((getUniqName) => getUniqName(name)))
 
 export type GetChildrenByNodeId = (id: NodeId) => NodeId[]
 export const GetChildrenByNodeId = Context.GenericTag<GetChildrenByNodeId>(
@@ -55,13 +62,10 @@ export const AddRoute = Context.GenericTag<AddRoute>("AddRoute")
 const _addRoute = (route: PartialDict<PrimitiveRoute, "name" | "color">) =>
   AddRoute.pipe(Effect.map((addRoute) => addRoute(route)))
 
-export type AddNode = (
-  nodeId: NodeId,
-  node: OmitId<PrimitiveNode, "name">,
-) => void
+export type AddNode = (node: PrimitiveNode) => void
 export const AddNode = Context.GenericTag<AddNode>("AddNode")
-const _addNode = (nodeId: NodeId, node: OmitId<PrimitiveNode, "name">) =>
-  AddNode.pipe(Effect.map((addNode) => addNode(nodeId, node)))
+const _addNode = (node: PrimitiveNode) =>
+  AddNode.pipe(Effect.map((addNode) => addNode(node)))
 
 export type GetNode = (nodeId: NodeId) => PrimitiveNode
 export const GetNode = Context.GenericTag<GetNode>("GetNode")
@@ -72,6 +76,14 @@ export type SetNode = (nodeId: NodeId, node: PrimitiveNode) => void
 export const SetNode = Context.GenericTag<SetNode>("SetNode")
 const _setNode = (nodeId: NodeId, node: PrimitiveNode) =>
   SetNode.pipe(Effect.map((setNode) => setNode(nodeId, node)))
+
+export type GetDefaultNodeName = () => string
+export const GetDefaultNodeName =
+  Context.GenericTag<GetDefaultNodeName>("GetDefaultNodeName")
+const _getDefaultNodeName = () =>
+  GetDefaultNodeName.pipe(
+    Effect.map((getDefaultNodeName) => getDefaultNodeName()),
+  )
 
 export type GetParentNodesById = (id: NodeId) => NodeId[]
 export const GetParentNodesById =
@@ -97,14 +109,61 @@ export const UpsertVariable =
 const _upsertVariable = (id: LocalVariableId, name: string) =>
   UpsertVariable.pipe(Effect.map((upsertVariable) => upsertVariable(id, name)))
 
+export type GetResolvedAction = (actionId: ActionId) => ResolvedAction
+export const GetResolvedAction =
+  Context.GenericTag<GetResolvedAction>("GetResolvedAction")
+const _getResolvedAction = (actionId: ActionId) =>
+  GetResolvedAction.pipe(
+    Effect.map((getResolvedAction) => getResolvedAction(actionId)),
+  )
+
+const _resolveActionInstances = (
+  actionInstances: ActionInstance[],
+): Effect.Effect<Map<ActionId, ResolvedAction>, never, GetResolvedAction> =>
+  pipe(
+    Effect.succeed(actionInstances),
+    Effect.flatMap((_) =>
+      Effect.all(
+        _.filter((_) => _.actionRef != null).map((_) =>
+          _getResolvedAction(_.actionRef.actionId),
+        ),
+      ),
+    ),
+    Effect.map((_) => associateBy(_, "id")),
+  )
+
+const _buildNode = (id: NodeId, nodeParam: OmitId<PrimitiveNode, "name">) =>
+  Effect.Do.pipe(
+    Effect.bind("actionMap", () =>
+      _resolveActionInstances(nodeParam.actionInstances),
+    ),
+    Effect.bind("nameCandidate", ({ actionMap }) =>
+      Option.fromNullable(
+        actionMap.values().toArray()[0]?.parameter.operationObject?.operationId,
+      ).pipe(
+        Option.map((_) => Effect.succeed(_)),
+        (_) => Option.getOrElse(_, () => _getDefaultNodeName()),
+      ),
+    ),
+    Effect.bind("name", ({ nameCandidate }) => _getUniqName(nameCandidate)),
+    Effect.map(({ name, actionMap }) =>
+      buildNode(id, name, nodeParam, actionMap),
+    ),
+  )
+
 // 新しいノードを追加
 export const _createAndAddNode = (
   nodeParam: OmitId<PrimitiveNode, "name">,
-): Effect.Effect<NodeId, never, GenId | AddNode> =>
+): Effect.Effect<
+  PrimitiveNode,
+  never,
+  GenId | AddNode | GetResolvedAction | GetUniqName
+> =>
   pipe(
     _genId(),
     Effect.map((_) => toNodeId(_)),
-    Effect.tap((_) => _addNode(_, createNode(nodeParam))),
+    Effect.flatMap((_) => _buildNode(_, nodeParam)),
+    Effect.tap((_) => _addNode(_)),
   )
 
 // ノードをルートに追加する
@@ -174,13 +233,14 @@ export const appendNode = (
 ): Effect.Effect<
   void,
   never,
-  GenId | AddNode | ContextOf<typeof _appendNodeToRoutePath>
+  ContextOf<typeof _createAndAddNode | typeof _appendNodeToRoutePath>
 > =>
   pipe(
     // ノードの作成と追加
     _createAndAddNode(nodeParam),
     // 親ノードの最後にノードを追加する
-    Effect.tap((_) => _appendNodeToRoutePath(_, parentNodeId)),
+    Effect.tap((_) => _appendNodeToRoutePath(_.id, parentNodeId)),
+    Effect.asVoid,
   )
 
 // 途中にノードを追加する
@@ -197,6 +257,7 @@ export const insertNode = (
   pipe(
     // ノードの作成と追加
     _createAndAddNode(nodeParam),
+    Effect.map((_) => _.id),
     // ルートにノードを追加する
     Effect.tap((nodeId) =>
       pipe(
@@ -317,7 +378,7 @@ export const connectNodes = (
   const { getRoutesByNodeId, addRoute, genId } = context
 
   const routes = getRoutesByNodeId(fromNodeId)
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
   const representRoute = routes[0]!
 
   const formerSubpaths = routes.map((route) => {
@@ -366,6 +427,7 @@ const _createAndAddRoute = (
 export const createRootNode = (node: OmitId<PrimitiveNode, "name">) =>
   pipe(
     _createAndAddNode(node),
+    Effect.map((_) => _.id),
     Effect.flatMap((_) =>
       _createAndAddRoute({
         path: [_],

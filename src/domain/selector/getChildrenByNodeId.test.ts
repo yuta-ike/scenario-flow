@@ -47,10 +47,10 @@ describe("getParentByNodeId", () => {
 
   test("getChildrenByNodeId が正しく取得できる", () => {
     const res1 = store.get(getChildrenByNodeId(toNodeId("n1")))
-    expect(res1).toEqual(new Set([toNodeId("n2"), toNodeId("n3")]))
+    expect(res1).toEqual([toNodeId("n2"), toNodeId("n3")])
 
     const res2 = store.get(getChildrenByNodeId(toNodeId("n2")))
-    expect(res2).toEqual(new Set([toNodeId("n4")]))
+    expect(res2).toEqual([toNodeId("n4")])
   })
 
   test.skip("getChildrenByNodeId の値に変更がなければキャッシュされる", () => {

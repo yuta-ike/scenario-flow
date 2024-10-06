@@ -13,20 +13,26 @@ type PopoverProps<Id> = {
     title: React.ReactNode
     items: Item<Id>[]
   }[]
+  empty?: React.ReactNode
   onClick: (id: Id) => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export const Popover = <Id extends string = string>({
   children,
   items,
+  empty,
   onClick,
+  open,
+  onOpenChange,
 }: PopoverProps<Id>) => {
   return (
-    <RxPopover.Root>
+    <RxPopover.Root open={open} onOpenChange={onOpenChange}>
       <RxPopover.Trigger>{children}</RxPopover.Trigger>
       <RxPopover.Portal>
         <RxPopover.Content
-          className="min-w-[240px] overflow-hidden rounded-lg border border-slate-100 bg-white shadow-object"
+          className="z-10 min-w-[240px] overflow-hidden rounded-lg border border-slate-100 bg-white shadow-object"
           side="bottom"
           align="start"
           sideOffset={12}
@@ -51,6 +57,7 @@ export const Popover = <Id extends string = string>({
               </li>
             ))}
           </ol>
+          {items.length === 0 && empty}
         </RxPopover.Content>
       </RxPopover.Portal>
     </RxPopover.Root>

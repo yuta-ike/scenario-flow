@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 
 import type { Json } from "@/utils/json"
+import type { ResourceId } from "@/domain/entity/resource/resource"
 
 import { FormItem } from "@/ui/components/FormItem"
 import { RadioPanel } from "@/ui/components/common/RadioPanel"
@@ -12,7 +13,7 @@ import { verifyRemoteOpenApi } from "@/lib/fetch/verifyRemoteUrl"
 import { FormModalContent, useCloseModal } from "@/ui/lib/common/FormModal"
 import { readFile } from "@/ui/utils/readFile"
 import { convertYamlToJson } from "@/ui/lib/yaml/yamlToJson"
-import { uploadOpenApiFile } from "@/ui/adapter/command"
+import { putOpenApiFile, uploadOpenApiFile } from "@/ui/adapter/command"
 import { fetchJson } from "@/utils/fetchJson"
 
 type FormData = {
@@ -22,12 +23,39 @@ type FormData = {
   url?: string
 }
 
-export const AddResourceForm = () => {
+type AddOrUpdateResourceFormProps =
+  | {
+      type: "create"
+      resourceId?: undefined
+
+      name?: undefined
+      description?: undefined
+    }
+  | {
+      type: "update"
+      resourceId: ResourceId
+      name: string
+      description: string
+    }
+
+export const AddOrUpdateResourceForm = ({
+  type,
+  resourceId,
+  name,
+  description,
+}: AddOrUpdateResourceFormProps) => {
   const closeModal = useCloseModal()
 
   const [method, setMethod] = useState<"file" | "remote">("file")
   const { register, watch, setValue, getValues, handleSubmit } =
-    useForm<FormData>()
+    useForm<FormData>({
+      defaultValues: {
+        name: name ?? "",
+        description: description ?? "",
+        file: undefined,
+        url: undefined,
+      },
+    })
 
   const file = watch("file")
 
@@ -51,7 +79,16 @@ export const AddResourceForm = () => {
           ? await readFile(file!).then(convertYamlToJson)
           : await fetchJson<Json>(data.url!)
 
-      await uploadOpenApiFile(data.name, data.description ?? "", json)
+      if (type === "create") {
+        await uploadOpenApiFile(data.name, data.description ?? "", json)
+      } else {
+        await putOpenApiFile(
+          resourceId,
+          data.name,
+          data.description ?? "",
+          json,
+        )
+      }
       closeModal()
     },
     (err) => {
@@ -61,7 +98,10 @@ export const AddResourceForm = () => {
   )
 
   return (
-    <FormModalContent onSubmit={handleAdd}>
+    <FormModalContent
+      onSubmit={handleAdd}
+      okLabel={type === "create" ? "追加する" : "更新する"}
+    >
       <div className="flex flex-col gap-4">
         <FormItem id="method" label="読み込み方法の選択" asFieldset>
           <div className="grid grid-cols-2 gap-2">

@@ -1,10 +1,12 @@
 import { SwitchActionInstanceTypeError } from "./node.error"
 
+import type { ActionId, ResolvedAction } from "../action/action"
 import type { Expression } from "../value/expression"
 import type {
   ActionInstance,
   ActionInstanceId,
   ResolvedActionInstance,
+  RestCallActionInstanceParameter,
 } from "./actionInstance"
 import type { Id, OmitId } from "@/utils/idType"
 import type { Replace } from "@/utils/typeUtil"
@@ -37,10 +39,36 @@ export type Node = Replace<
 export const createNode = (node: OmitId<PrimitiveNode, "name">) => {
   return node
 }
+export const buildNode = (
+  id: NodeId,
+  name: string,
+  nodeParam: OmitId<PrimitiveNode, "name">,
+  actionMap: Map<ActionId, ResolvedAction>,
+): PrimitiveNode => {
+  return {
+    id,
+    name,
+    ...nodeParam,
+    actionInstances: nodeParam.actionInstances.map((ai) => {
+      if (ai.type === "rest_call") {
+        const action = actionMap.get(ai.actionRef.actionId)
 
-/**
- * NodeConfigを更新する
- */
+        return {
+          ...ai,
+          instanceParameter: {
+            ...action?.parameter.example,
+            description:
+              actionMap.get(ai.actionRef.actionId)?.description ?? "",
+          } satisfies RestCallActionInstanceParameter,
+        }
+      } else {
+        return ai
+      }
+    }),
+  }
+}
+
+// NodeConfigを更新する
 export const updateNodeConfig = ((node: PrimitiveNode, config: NodeConfig) => {
   return {
     ...node,

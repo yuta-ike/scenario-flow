@@ -3,6 +3,8 @@ import { toUpperCase } from "effect/String"
 import { toResourceActionId } from "../entity/resource/resource.util"
 import { toMethodAndPath } from "../entity/resource/identifier.utli"
 
+import { generateExampleFromOperationObject } from "./example"
+
 import type { OpenAPIObject } from "openapi3-ts/oas31"
 import type { ResolvedResourceAction } from "../entity/action/action"
 import type { RestCallACtionParameter } from "../entity/action/actionParameter"
@@ -94,6 +96,7 @@ export const retrieveAllActionFromOpenApiResource = (
           path: parsePathToExpression(path),
           baseUrl: "https://example.com",
           operationObject: operationObject,
+          example: generateExampleFromOperationObject(operationObject),
         },
         source: "resoure",
         resourceId: resource.id,

@@ -1,3 +1,4 @@
+import type { RestCallActionInstanceParameter } from "../node/actionInstance"
 import type { Expression } from "../value/expression"
 import type { ReusableActionType } from "./action"
 import type { HttpMethod } from "@/utils/http"
@@ -7,6 +8,7 @@ type RestCallActionparameterBlock = {
   method: HttpMethod
   path: Expression
   operationObject?: OperationObject
+  example?: RestCallActionInstanceParameter
   // @deprecated
   baseUrl: string
 }

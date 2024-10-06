@@ -14,10 +14,10 @@ const store = createStore()
 const beforeEachProcess = () => {
   store.clear()
 
-  store.set(resourceIdsAtom, new Set([toResourceId("r1"), toResourceId("r2")]))
   for (const id of ["r1", "r2"]) {
-    resourceAtom(toResourceId(id), genResource(id))
+    store.set(resourceAtom(toResourceId(id), genResource(id)), genResource(id))
   }
+  store.set(resourceIdsAtom, new Set([toResourceId("r1"), toResourceId("r2")]))
 }
 
 describe("resource > resource", () => {

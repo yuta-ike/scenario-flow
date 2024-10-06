@@ -28,28 +28,61 @@ patternAtom(DEFAULT_PATTERN_ID, {
   description: "",
 })
 
-export const globalVariableIdsAtom = atomSet<GlobalVariableId>([])
+export const patternsAtom = atom((get) =>
+  get(patternIdsAtom)
+    .values()
+    .map((id) => get(patternAtom(id)))
+    .toArray(),
+)
+patternsAtom.debugLabel = "patternsAtom"
+
+export const globalVariableIdsAtom = atomSet<GlobalVariableId>([
+  // toGlobalVariableId("001"),
+])
 globalVariableIdsAtom.debugLabel = "globalVariableIdsAtom"
 export const globalVariableAtom =
   atomWithId<GlobalVariable>("globalVariableAtom")
 
-export const globalVariableValueIdsAtom = atomSet<GlobalVariableValueId>([])
+// globalVariableAtom(toGlobalVariableId("001"), {
+//   id: toGlobalVariableId("001"),
+//   description: "test",
+//   name: "test",
+//   schema: "any",
+// })
+
+export const globalVariableValueIdsAtom = atomSet<GlobalVariableValueId>([
+  // toGlobalVariableValueId(`001-${DEFAULT_PATTERN_ID}`),
+])
 globalVariableValueIdsAtom.debugLabel = "globalVariableValueIdsAtom"
 export const globalVariableValueAtom = atomWithId<GlobalVariableValue>(
   "globalVariableValueAtom",
 )
+// globalVariableValueAtom(toGlobalVariableValueId(`001-${DEFAULT_PATTERN_ID}`), {
+//   id: toGlobalVariableValueId(`001-${DEFAULT_PATTERN_ID}`),
+//   patternId: DEFAULT_PATTERN_ID,
+//   globalVariableId: toGlobalVariableId("001"),
+//   value: {
+//     type: "string",
+//     value: "TEST",
+//   },
+// })
 
 // selector
+export const globalVariablesAtom = atom((get) =>
+  get(globalVariableIdsAtom)
+    .values()
+    .map((id) => get(globalVariableAtom(id)))
+    .toArray(),
+)
+globalVariablesAtom.debugLabel = "globalVariablesAtom"
+
 export const globalVariablesByPatternIdAtom = atomFamily((id: PatternId) => {
   const newAtom = atom<(GlobalVariable & { value: TypedValue })[]>((get) => {
     const globalVariableValues = get(globalVariableValueIdsAtom)
       .values()
       .map((id) => get(globalVariableValueAtom(id)))
-    return Array.from(globalVariableValues)
+    return globalVariableValues
       .filter((item) => item.patternId === id)
-      .toSorted((a, b) =>
-        a.globalVariableId.localeCompare(b.globalVariableId, "en"),
-      )
       .map((item) => {
         const globalVariable = get(globalVariableAtom(item.globalVariableId))
         return {
@@ -57,6 +90,7 @@ export const globalVariablesByPatternIdAtom = atomFamily((id: PatternId) => {
           value: item.value,
         }
       })
+      .toArray()
   })
   newAtom.debugLabel = `globalVariablesByPatternIdAtom(${id})`
   return newAtom
@@ -74,26 +108,24 @@ export const globalVariableMatrixAtom = atom((get) => {
 
     const variables = Object.entries(
       Object.groupBy(values ?? [], (item) => item.globalVariableId),
-    )
-      .toSorted(([key1], [key2]) => key1.localeCompare(key2, "en"))
-      .map(([globalVariableId, value]) => {
-        if (value == null) {
-          throw new Error("value is null")
-        }
-        const globalVariableValue = value[0]
-        if (globalVariableValue == null) {
-          throw new Error("globalVariableValue is null")
-        }
+    ).map(([globalVariableId, value]) => {
+      if (value == null) {
+        throw new Error("value is null")
+      }
+      const globalVariableValue = value[0]
+      if (globalVariableValue == null) {
+        throw new Error("globalVariableValue is null")
+      }
 
-        const globalVariable = get(
-          globalVariableAtom(globalVariableId as GlobalVariableId),
-        )
+      const globalVariable = get(
+        globalVariableAtom(globalVariableId as GlobalVariableId),
+      )
 
-        return {
-          ...globalVariable,
-          value: globalVariableValue.value,
-        }
-      })
+      return {
+        ...globalVariable,
+        value: globalVariableValue.value,
+      }
+    })
 
     return {
       ...pattern,

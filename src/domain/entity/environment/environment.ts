@@ -1,15 +1,24 @@
 import type { ResolvedVariable, Variable } from "./variable"
+import type { Replace } from "@/utils/typeUtil"
 
 export type Bind = {
+  // TODO: namespaceはvariable側で持つべきかも
+  namespace?: "vars" | "steps"
   variable: Variable
+  inherit: boolean
 }
 
 export type Environment = Bind[]
 
-export type ResolvedBind = {
-  variable: ResolvedVariable
-}
+export type ResolvedBind = Replace<Bind, "variable", ResolvedVariable>
 export type ResolvedEnvironment = ResolvedBind[]
+
+// operation
+export const getVariableDisplay = (bind: Bind | ResolvedBind): string => {
+  return [bind.namespace, bind.variable.name]
+    .filter((fragment) => fragment != null)
+    .join(".")
+}
 
 export const intersectionEnvironment = (
   environements: Environment[],
@@ -22,10 +31,12 @@ export const intersectionEnvironment = (
   const variableIdSets = environements.map(
     (environment) =>
       new Set(
-        environment.map((bind) => {
-          bindCache.set(bind.variable.id, bind)
-          return bind.variable.id
-        }),
+        environment
+          .filter((bind) => bind.inherit)
+          .map((bind) => {
+            bindCache.set(bind.variable.id, bind)
+            return bind.variable.id
+          }),
       ),
   )
   const intersectionVariableIds = variableIdSets
@@ -33,12 +44,11 @@ export const intersectionEnvironment = (
     .values()
     .toArray()
 
-  // TODO: 同名変数の扱いなど
-
   return intersectionVariableIds.map((variableId) => {
     return {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      namespace: bindCache.get(variableId)!.namespace,
       variable: bindCache.get(variableId)!.variable,
+      inherit: true,
     }
   })
 }

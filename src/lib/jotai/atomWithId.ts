@@ -94,6 +94,15 @@ export const atomWithId = <State extends { id: string | number }>(
     map.clear()
   }
 
+  createAtom.getParams = () => map.keys()
+
+  createAtom.setShouldRemove = () => {
+    throw new Error("Not implemented")
+  }
+  createAtom.unstable_listen = () => {
+    throw new Error("Not implemented")
+  }
+
   createAtom.subscribe = (
     type: SubscriptionType,
     callback: (params: SubscriptionStates<State>) => void,

@@ -57,6 +57,7 @@
     "jotai": "^2.9.3",
     "jotai-devtools": "^0.10.1",
     "js-yaml": "^4.1.0",
+    "monaco-editor": "^0.52.0",
     "nanoid": "^5.0.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

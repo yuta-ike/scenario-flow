@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from "react"
 import { Section } from "./Section"
 import { MagicVariableButton } from "./MagicVariableButton"
 
+import type { RequestBodyObject, SchemaObject } from "openapi3-ts/oas31"
 import type { SetStateAction } from "react"
 import type { NodeId } from "@/domain/entity/node/node"
 import type { ResolvedRestCallActionInstance } from "@/domain/entity/node/actionInstance"
@@ -10,7 +11,6 @@ import type { EditorRef } from "@/ui/lib/editor/Editor"
 import type { KVItem } from "@/ui/lib/kv"
 
 import { CONTENT_TYPES, type ContentType } from "@/utils/http"
-import { Editor } from "@/ui/lib/editor/Editor"
 import { ParameterTable } from "@/ui/lib/ParameterTable"
 import { MethodChip } from "@/ui/components/common/MethodChip"
 import { Select } from "@/ui/components/common/Select"
@@ -18,6 +18,9 @@ import { updateActionInstance } from "@/ui/adapter/command"
 import { applyUpdate } from "@/ui/utils/applyUpdate"
 import { safelyParseJson, strigifyJson } from "@/utils/json"
 import { TextareaAutosize } from "@/ui/components/common/TextareaAutosize"
+import { Editor2 } from "@/ui/lib/editor/Editor2"
+import { useParentNodeEnvironment } from "@/ui/adapter/query"
+import { ErrorBoundary } from "@/ui/functional-components/ErrorBoundary"
 
 type RestCallTabPanelProps = {
   nodeId: NodeId
@@ -40,8 +43,9 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
   )
 
   // content type and body
-  const [contentTypeTab, setContentTypeTab] =
-    useState<ContentType>("application/json")
+  const [contentTypeTab, setContentTypeTab] = useState<ContentType | null>(
+    "application/json",
+  )
 
   const handleUpdateFormDataParameter = useCallback(
     (update: SetStateAction<KVItem[]>) => {
@@ -50,11 +54,15 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
         instanceParameter: {
           ...ai.instanceParameter,
           body: {
-            ...ai.instanceParameter.body,
-            "application/form-data": applyUpdate(
-              update,
-              ai.instanceParameter.body?.["application/form-data"] ?? [],
-            ),
+            selected: ai.instanceParameter.body?.selected,
+            params: {
+              ...ai.instanceParameter.body?.params,
+              "application/form-data": applyUpdate(
+                update,
+                ai.instanceParameter.body?.params["application/form-data"] ??
+                  [],
+              ),
+            },
           },
         },
       })
@@ -75,8 +83,11 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
         instanceParameter: {
           ...ai.instanceParameter,
           body: {
-            ...ai.instanceParameter.body,
-            "application/json": json,
+            selected: ai.instanceParameter.body?.selected,
+            params: {
+              ...ai.instanceParameter.body?.params,
+              "application/json": json,
+            },
           },
         },
       })
@@ -134,6 +145,9 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
     ref.current?.insertValue(`{{${variableName}}}`)
   }, [])
 
+  // environment
+  const environment = useParentNodeEnvironment(nodeId)
+
   return (
     <div className="flex h-full w-full flex-col bg-white">
       {/* タイトル */}
@@ -172,51 +186,75 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
         <div className="flex flex-col gap-1">
           <div className="flex justify-between">
             <div className="w-max text-slate-600">
-              <Select
-                items={CONTENT_TYPES.map((contentType) => ({
-                  id: contentType,
-                  label: contentType,
-                }))}
+              <Select<ContentType | null>
+                items={[
+                  {
+                    id: null,
+                    label: "リクエストボディなし",
+                  },
+                  ...CONTENT_TYPES.map((contentType) => ({
+                    id: contentType,
+                    label: contentType,
+                  })),
+                ]}
                 value={contentTypeTab}
                 onChange={setContentTypeTab}
               />
             </div>
-            <div>
-              <MagicVariableButton
-                nodeId={nodeId}
-                onInsert={handleInsertToRequestJson}
-              />
-            </div>
+            <ErrorBoundary>
+              <div>
+                <MagicVariableButton
+                  environment={environment}
+                  onInsert={handleInsertToRequestJson}
+                />
+              </div>
+            </ErrorBoundary>
           </div>
           <div>
             {contentTypeTab === "application/json" ? (
               <>
-                <Editor
-                  lang="json"
-                  value={strigifyJson(
-                    ai.instanceParameter.body?.["application/json"] ?? {},
-                  )}
-                  onChange={handleUpdateJsonParameter}
-                  className="rounded-md shadow-md"
-                  ref={ref}
-                />
+                <div className="relative text-sm">
+                  <Editor2
+                    lang="json"
+                    initValue={strigifyJson(
+                      ai.instanceParameter.body?.params["application/json"] ??
+                        {},
+                    )}
+                    schema={
+                      (
+                        ai.action.parameter.operationObject?.requestBody as
+                          | RequestBodyObject
+                          | undefined
+                      )?.content["application/json"]?.schema as
+                        | SchemaObject
+                        | undefined
+                    }
+                    environment={environment}
+                    onChange={handleUpdateJsonParameter}
+                    ref={ref}
+                    fitHeight
+                    className="rounded-md shadow-md"
+                  />
+                </div>
                 {jsonInvalid && (
                   <div className="mt-1 text-xs text-red-500/80">
                     JSON形式が不正です
                   </div>
                 )}
               </>
-            ) : (
+            ) : contentTypeTab === "application/form-data" ? (
               <ParameterTable
                 rows={
-                  ai.instanceParameter.body?.["application/form-data"] ?? []
+                  ai.instanceParameter.body?.params["application/form-data"] ??
+                  []
                 }
                 setRows={handleUpdateFormDataParameter}
                 placeholderKey="name"
                 placeholderValue="John Doe"
-                nodeId={nodeId}
+                environment={environment}
+                currentNodeId={nodeId}
               />
-            )}
+            ) : null}
           </div>
         </div>
       </Section>
@@ -225,9 +263,10 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
           <ParameterTable
             rows={ai.instanceParameter.pathParams ?? []}
             setRows={handleUpdatePathParamsParameter}
-            placeholderKey="userId"
+            placeholderKey="limit"
             placeholderValue="xyz"
-            nodeId={nodeId}
+            environment={environment}
+            currentNodeId={nodeId}
           />
         </div>
       </Section>
@@ -238,7 +277,8 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
             setRows={handleUpdateQueryParamsParameter}
             placeholderKey="limit"
             placeholderValue="100"
-            nodeId={nodeId}
+            environment={environment}
+            currentNodeId={nodeId}
           />
         </div>
       </Section>
@@ -249,7 +289,8 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
             setRows={handleUpdateHeadersParameter}
             placeholderKey="Authorization"
             placeholderValue="Bearer token"
-            nodeId={nodeId}
+            environment={environment}
+            currentNodeId={nodeId}
           />
         </div>
       </Section>
@@ -260,7 +301,8 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
             setRows={handleUpdateCookiesParameter}
             placeholderKey="session_id"
             placeholderValue="1234567890"
-            nodeId={nodeId}
+            environment={environment}
+            currentNodeId={nodeId}
           />
         </div>
       </Section>

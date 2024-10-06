@@ -33,7 +33,6 @@ export const resolveActionInstance = (
           ({ value, variableId }) => ({
             value,
             variableId,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             variable: variabaleMap.get(toLocalVariableId(variableId))!,
           }),
         ),

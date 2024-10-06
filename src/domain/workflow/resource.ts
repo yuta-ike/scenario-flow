@@ -1,6 +1,6 @@
 import { toResourceId } from "../entity/resource/resource.util"
 
-import type { Resource } from "../entity/resource/resource"
+import type { Resource, ResourceId } from "../entity/resource/resource"
 import type { Id, OmitId } from "@/utils/idType"
 
 type AddResourceContext = {
@@ -16,4 +16,17 @@ export const addResource = (
   const id = toResourceId(genId())
   // TODO: validationなど
   addResource({ id, ...resource } as Resource)
+}
+
+type PutResourceContext = {
+  putResource: (resourceId: ResourceId, resource: OmitId<Resource>) => void
+}
+
+export const putResource = (
+  resourceId: ResourceId,
+  resource: OmitId<Resource>,
+  context: PutResourceContext,
+) => {
+  const { putResource } = context
+  putResource(resourceId, resource)
 }

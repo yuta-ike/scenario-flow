@@ -2,7 +2,7 @@ import * as RxSelect from "@radix-ui/react-select"
 import { TbCheck, TbChevronDown, TbChevronUp } from "react-icons/tb"
 
 type SelectProps<Id extends string | null> = {
-  items: { id: NonNullable<Id>; label: string }[]
+  items: { id: Id; label: string }[]
   value: Id
   onChange: (value: Id) => void
 }
@@ -34,7 +34,7 @@ export const Select = <Id extends string | null>({
           {items.map(({ id, label }) => (
             <RxSelect.Item
               key={id}
-              value={id}
+              value={id ?? "NULL"}
               className="relative flex cursor-pointer select-none items-center rounded py-2 pl-[25px] pr-[35px] text-sm leading-none data-[highlighted]:bg-slate-50 data-[highlighted]:outline-none"
             >
               <RxSelect.ItemText>{label}</RxSelect.ItemText>

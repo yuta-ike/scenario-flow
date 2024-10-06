@@ -24,10 +24,19 @@ import {
   resolvedActionAtom,
 } from "@/domain/datasource/actions"
 import { getRouteIdsByNodeId } from "@/domain/selector/getRouteIdsByNodeId"
-import { runnFormatAtom } from "@/domain/selector/runn"
-import { getResolvedNodeEnvironment } from "@/domain/selector/getRouteEnvironment"
+import {
+  getResolvedNodeEnvironment,
+  getResolvedParentNodeEnvironment,
+} from "@/domain/selector/getRouteEnvironment"
 import { metaAtom } from "@/domain/datasource/meta"
-import { globalVariableMatrixAtom } from "@/domain/datasource/globalVariable"
+import {
+  globalVariableMatrixAtom,
+  globalVariablesAtom,
+  patternsAtom,
+} from "@/domain/datasource/globalVariable"
+import { decomposedAtom } from "@/domain/selector/decomposed"
+import { exportPluginIdAtom } from "@/domain/datasource/plugin"
+import { exportPlugins } from "@/plugins"
 
 const nullAtom = atom(null)
 
@@ -127,13 +136,25 @@ export const useEdges = (initialNodeId: NodeId) => {
 export const useNodeEnvironment = (nodeId: NodeId) =>
   useAtomValue(getResolvedNodeEnvironment(nodeId))
 
+export const useParentNodeEnvironment = (nodeId: NodeId) =>
+  useAtomValue(getResolvedParentNodeEnvironment(nodeId))
+
 // global variable
 export const useGlobalVariableMatrix = () => {
   const globalVariableMatrix = useAtomValue(globalVariableMatrixAtom)
   return globalVariableMatrix
 }
+export const usePatterns = () => useAtomValue(patternsAtom)
+export const useGlobalVariables = () => useAtomValue(globalVariablesAtom)
 
-// runn
-export const useRunnFormat = () => useAtomValue(runnFormatAtom)
+// code export
+const decomposedForLibAtom = atom((get) => {
+  const exportPluginId = get(exportPluginIdAtom)
+  const decomposed = get(decomposedAtom)
+  return decomposed.map((scenario) =>
+    exportPlugins[exportPluginId].convertDecomposedToLibFormat(scenario),
+  )
+})
+export const useDecomposedForLib = () => useAtomValue(decomposedForLibAtom)
 
 export const useMeta = () => useAtom(metaAtom)
