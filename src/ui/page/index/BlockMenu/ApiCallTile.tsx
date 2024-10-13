@@ -11,6 +11,9 @@ type ApiCallTileProps = {
 
 export const ApiCallTile = ({ actionId, suffix: Icon }: ApiCallTileProps) => {
   const action = useAction(actionId)
+  if (action.parameter == null) {
+    return null
+  }
   return (
     <div className="group flex w-full items-center gap-1 rounded-md border border-[#EEEEEE] px-3 py-2 text-start transition hover:border-slate-300">
       <div className="flex grow flex-col gap-1">

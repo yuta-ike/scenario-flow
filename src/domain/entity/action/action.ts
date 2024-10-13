@@ -1,14 +1,15 @@
+import type { UnknownActionInner } from "./unknownAction"
 import type { UserDefinedActionInner } from "./userDefinedAction"
 import type { ResourceActionId, ResourceType } from "../resource/resource"
 import type { ResourceActionInner } from "./resourceAction"
 import type { ActionParameter } from "./actionParameter"
 import type { Id } from "@/utils/idType"
 
-export type ActionType = "rest_call" | "validator" | "binder"
-export type ActionSource = "resource" | "user_defined"
+export type ActionType = "rest_call" | "validator" | "binder" | "unknown"
+export type ActionSource = "resource" | "user_defined" | "unknown"
 
 // この概念自体無くしちゃっても良いかも
-export type ReusableActionType = Extract<ActionType, "rest_call">
+export type ReusableActionType = Extract<ActionType, "rest_call" | "unknown">
 
 export type ActionId = Id & { __actionId: never }
 export type Action<
@@ -22,6 +23,7 @@ export type Action<
       source: "resoure"
     } & ResourceActionInner<RType>)
   | ({ source: "userDefined" } & UserDefinedActionInner)
+  | ({ source: "missing" } & UnknownActionInner)
 )
 
 // @duplicated

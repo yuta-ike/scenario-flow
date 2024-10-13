@@ -31,6 +31,7 @@ import {
   createRootNode as createRootNodeWf,
   updateActionInstancesParameter,
   upsertVariables as upsertVariablesWf,
+  replaceAction as replaceActionWf,
 } from "@/domain/workflow/node"
 import {
   addGlobalVariable as addGlobalVariableWf,
@@ -232,4 +233,8 @@ export const updateGlobalVariableValue = (
   value: TypedValue,
 ) => {
   run(updateGlobalVariableValueWf(id, value))
+}
+
+export const replaceAction = (oldActionId: ActionId, newActionId: ActionId) => {
+  run(replaceActionWf(oldActionId, newActionId))
 }

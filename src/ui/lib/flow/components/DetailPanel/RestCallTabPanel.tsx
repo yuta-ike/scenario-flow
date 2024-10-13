@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react"
 
 import { Section } from "./Section"
 import { MagicVariableButton } from "./MagicVariableButton"
+import { ResolveMissingAction } from "./ResolveMissingAction"
 
 import type { RequestBodyObject, SchemaObject } from "openapi3-ts/oas31"
 import type { SetStateAction } from "react"
@@ -21,6 +22,9 @@ import { TextareaAutosize } from "@/ui/components/common/TextareaAutosize"
 import { Editor2 } from "@/ui/lib/editor/Editor2"
 import { useParentNodeEnvironment } from "@/ui/adapter/query"
 import { ErrorBoundary } from "@/ui/functional-components/ErrorBoundary"
+import { ErrorNote } from "@/ui/components/common/ErrorNote"
+import { Button } from "@/ui/components/common/Button"
+import { FormModal } from "@/ui/lib/common/FormModal"
 
 type RestCallTabPanelProps = {
   nodeId: NodeId
@@ -153,21 +157,38 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
       {/* タイトル */}
       <Section>
         <div className="flex flex-col px-2">
-          <div className="flex items-center">
-            <div className="flex grow items-center gap-3">
-              <MethodChip size="lg">{ai.action.parameter.method}</MethodChip>{" "}
-              <div className="text grow leading-none">
-                {ai.action.parameter.path}
+          {ai.action.type === "rest_call" ? (
+            <div className="flex items-center">
+              <div className="flex grow items-center gap-3">
+                <MethodChip size="lg">{ai.action.parameter!.method}</MethodChip>{" "}
+                <div className="text grow leading-none">
+                  {ai.action.parameter!.path}
+                </div>
+              </div>
+              <div className="shrink-0">
+                {ai.action.parameter!.operationObject?.tags?.map((tag) => (
+                  <div key={tag} className="text-sm text-slate-600">
+                    {tag}
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="shrink-0">
-              {ai.action.parameter.operationObject?.tags?.map((tag) => (
-                <div key={tag} className="text-sm text-slate-600">
-                  {tag}
-                </div>
-              ))}
+          ) : (
+            <div>
+              <ErrorNote>
+                呼び出し情報が見つかりません。外部リソースから呼び出し情報が削除された可能性があります。
+              </ErrorNote>
+              <div className="py-4">
+                <FormModal
+                  title="呼び出しの再割り当て"
+                  description=""
+                  modal={<ResolveMissingAction actionId={ai.action.id} />}
+                >
+                  <Button>解決する</Button>
+                </FormModal>
+              </div>
             </div>
-          </div>
+          )}
           <div className="relative">
             <TextareaAutosize
               className="w-[calc(100%+16px)] -translate-x-2 resize-none rounded border border-transparent px-[7px] py-2 text-sm transition hover:border-slate-200 focus:border-slate-200 focus:outline-none"
@@ -222,7 +243,7 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
                     )}
                     schema={
                       (
-                        ai.action.parameter.operationObject?.requestBody as
+                        ai.action.parameter?.operationObject?.requestBody as
                           | RequestBodyObject
                           | undefined
                       )?.content["application/json"]?.schema as

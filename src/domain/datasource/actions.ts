@@ -12,10 +12,7 @@ import {
   toActionId,
 } from "../entity/action/action.util"
 
-import {
-  ActionNotFoundError,
-  ResourceActionNotFoundError,
-} from "./action.error"
+import { ResourceActionNotFoundError } from "./action.error"
 import {
   resourceActionAtom,
   resourceActionIdsAtom,
@@ -41,6 +38,8 @@ export const actionIdsAtom = atom((get) => {
 })
 actionIdsAtom.debugLabel = "actionIdsAtom"
 
+// TODO: actionIdをなくして、UdaID or ResourceId+Indentifierを使うようにする。
+// ActionNotFoundとなった時のエラー量が増える & resourceIdActionIdCacheが不要になる
 const actionAtom = atomFamily<ActionId, Atom<Action>>((actionId: ActionId) =>
   atom((get) => {
     const resourceAction = tryFn(() => get(resourceActionAtom(actionId)))
@@ -66,7 +65,11 @@ const actionAtom = atomFamily<ActionId, Atom<Action>>((actionId: ActionId) =>
       } satisfies Action
     }
 
-    throw new ActionNotFoundError(`actionId = ${actionId}`)
+    return {
+      id: actionId,
+      source: "missing",
+      type: "unknown",
+    } satisfies Action
   }),
 )
 
@@ -83,7 +86,7 @@ export const resolvedActionAtom = atomFamily<ActionId, Atom<ResolvedAction>>(
           ...userDefinedAction,
           ...action,
         } satisfies ResolvedAction
-      } else {
+      } else if (action.source === "resoure") {
         const { resourceId, identifier } = action
         const resource = get(resourceAtom(resourceId))
         const res = resolveOpenApiResource(resource, identifier)
@@ -96,6 +99,13 @@ export const resolvedActionAtom = atomFamily<ActionId, Atom<ResolvedAction>>(
           parameter: res.parameter,
           ...action,
         } satisfies ResolvedAction
+      } else {
+        return {
+          name: "Unknown",
+          description: "Unknown",
+          parameter: null,
+          ...action,
+        }
       }
     })
     createdAtom.debugLabel = `resolvedActionAtom(${actionId})`

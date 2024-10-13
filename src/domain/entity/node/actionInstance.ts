@@ -60,6 +60,13 @@ export type BinderActionInstanceBlock = {
   actionRef?: undefined
 }
 
+// unknown
+export type UnknownActionInstanceBlock = {
+  type: "unknown"
+  instanceParameter?: undefined
+  actionRef?: undefined
+}
+
 // action instance
 export type ActionInstanceId = Id & { __actionInstanceId: never }
 type _ActionInstance<Type extends ActionType> = {
@@ -68,17 +75,20 @@ type _ActionInstance<Type extends ActionType> = {
   rest_call: RestCallActionInstanceBlock
   validator: ValidatorActionInstanceBlock
   binder: BinderActionInstanceBlock
+  unknown: UnknownActionInstanceBlock
 }[Type]
 
 // specific type
 export type RestCallActionInstance = _ActionInstance<"rest_call">
 export type ValidatorActionInstance = _ActionInstance<"validator">
 export type BinderActionInstance = _ActionInstance<"binder">
+export type UnknownActionInstance = _ActionInstance<"unknown">
 
 export type ActionInstance =
   | RestCallActionInstance
   | ValidatorActionInstance
   | BinderActionInstance
+  | UnknownActionInstance
 
 // resolved action instance
 export type ResolvedRestCallActionInstance = RestCallActionInstance & {
@@ -103,3 +113,4 @@ export type ResolvedActionInstance =
   | ResolvedRestCallActionInstance
   | ValidatorActionInstance
   | ResolvedBinderActionInstance
+  | UnknownActionInstance

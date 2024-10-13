@@ -15,6 +15,7 @@ type RestCallActionparameterBlock = {
 
 export type ActionParameter<Type extends ReusableActionType> = {
   rest_call: RestCallActionparameterBlock
+  unknown: null
 }[Type]
 
 export type RestCallACtionParameter = ActionParameter<"rest_call">

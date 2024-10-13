@@ -56,7 +56,7 @@ export const buildNode = (
         return {
           ...ai,
           instanceParameter: {
-            ...action?.parameter.example,
+            ...action?.parameter?.example,
             description:
               actionMap.get(ai.actionRef.actionId)?.description ?? "",
           } satisfies RestCallActionInstanceParameter,
@@ -91,6 +91,30 @@ export const updateActionInstanceParameter = ((
           throw new SwitchActionInstanceTypeError()
         }
         return actionInstance
+      } else {
+        return ai
+      }
+    }),
+  }
+}) satisfies Receiver<PrimitiveNode>
+
+// actionを入れ替える
+export const replaceAction = ((
+  node: PrimitiveNode,
+  oldActionId: ActionId,
+  newActionId: ActionId,
+) => {
+  return {
+    ...node,
+    actionInstances: node.actionInstances.map((ai) => {
+      if (ai.actionRef != null && ai.actionRef.actionId == oldActionId) {
+        return {
+          ...ai,
+          actionRef: {
+            ...ai.actionRef,
+            actionId: newActionId,
+          },
+        }
       } else {
         return ai
       }

@@ -58,6 +58,8 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
               />
             ) : actionInstance.type === "validator" ? (
               <ValidatorSection actionInstance={actionInstance} />
+            ) : actionInstance.type === "unknown" ? (
+              <div className="">ノードが見つかりません</div>
             ) : null}
           </div>
         ))}

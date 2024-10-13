@@ -225,7 +225,6 @@ export const ParameterTable = ({
       ].flat(1),
     [rows],
   )
-  console.log(data)
 
   const table = useReactTable({
     data: data,

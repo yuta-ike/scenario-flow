@@ -26,7 +26,7 @@ export const OpenCreateDropdown = ({
   const [page, setPage] = useState<1 | 2>(1)
   const [filters, { toggle: toggleFilter }] = useSetState([] as HttpMethod[])
 
-  const actions = useActions()
+  const actions = useActions().filter((action) => action.parameter != null)
 
   const [searchText, setSeachText] = useState("")
 
@@ -35,7 +35,7 @@ export const OpenCreateDropdown = ({
       if (filters.length === 0 || filters.length === HTTP_METHODS.length) {
         return true
       } else {
-        return filters.includes(action.parameter.method)
+        return filters.includes(action.parameter!.method)
       }
     })
 
@@ -45,8 +45,8 @@ export const OpenCreateDropdown = ({
 
     return searchFuzzy(searchText, methodFilteredActions, {
       keys: [
-        (action) => action.parameter.method,
-        (action) => action.parameter.path,
+        (action) => action.parameter!.method,
+        (action) => action.parameter!.path,
         "name",
         "description",
       ],

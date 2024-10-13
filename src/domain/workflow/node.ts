@@ -1,14 +1,18 @@
 import { Context, Effect, Option, pipe } from "effect"
 
-import { buildNode, updateActionInstanceParameter } from "../entity/node/node"
+import {
+  buildNode,
+  updateActionInstanceParameter,
+  replaceAction as replaceActionEntity,
+  updateNodeConfig as updateNodeConfigEntity,
+} from "../entity/node/node"
 import { toNodeId } from "../entity/node/node.util"
 import { appendNodeToRoute, removeNodeFromRoute } from "../entity/route/route"
 import { toRouteId } from "../entity/route/route.util"
-import { updateNodeConfig as updateNodeConfigEntity } from "../entity/node/node"
 
 import { _genId } from "./common"
 
-import type { GenId } from "./common";
+import type { GenId } from "./common"
 import type { LocalVariableId } from "../entity/variable/variable"
 import type {
   ActionInstance,
@@ -23,7 +27,6 @@ import type { ActionId, ResolvedAction } from "../entity/action/action"
 
 import { dedupeArrays, sliceFormer } from "@/lib/array/utils"
 import { associateBy } from "@/utils/set"
-
 
 export type GetUniqName = (name: string) => string
 export const GetUniqName = Context.GenericTag<GetUniqName>("GetUniqName")
@@ -76,6 +79,10 @@ export type SetNode = (nodeId: NodeId, node: PrimitiveNode) => void
 export const SetNode = Context.GenericTag<SetNode>("SetNode")
 const _setNode = (nodeId: NodeId, node: PrimitiveNode) =>
   SetNode.pipe(Effect.map((setNode) => setNode(nodeId, node)))
+
+export type GetNodes = () => PrimitiveNode[]
+export const GetNodes = Context.GenericTag<GetNodes>("GetNodes")
+const _getNodes = () => GetNodes.pipe(Effect.map((getNodes) => getNodes()))
 
 export type GetDefaultNodeName = () => string
 export const GetDefaultNodeName =
@@ -139,7 +146,8 @@ const _buildNode = (id: NodeId, nodeParam: OmitId<PrimitiveNode, "name">) =>
     ),
     Effect.bind("nameCandidate", ({ actionMap }) =>
       Option.fromNullable(
-        actionMap.values().toArray()[0]?.parameter.operationObject?.operationId,
+        actionMap.values().toArray()[0]?.parameter?.operationObject
+          ?.operationId,
       ).pipe(
         Option.map((_) => Effect.succeed(_)),
         (_) => Option.getOrElse(_, () => _getDefaultNodeName()),
@@ -460,4 +468,15 @@ export const upsertVariables = (
       Effect.forEach(_, (_) => _upsertVariable(_.id, _.name)),
     ),
     Effect.asVoid,
+  )
+
+// Actionを差し替える
+export const replaceAction = (oldActionId: ActionId, newActionId: ActionId) =>
+  pipe(
+    _getNodes(),
+    Effect.map((nodes) =>
+      nodes.map((node) => replaceActionEntity(node, oldActionId, newActionId)),
+    ),
+    Effect.tap((_) => console.log(_)),
+    Effect.flatMap((_) => Effect.forEach(_, (node) => _setNode(node.id, node))),
   )

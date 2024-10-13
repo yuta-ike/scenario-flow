@@ -68,12 +68,21 @@ export const RouteTile = ({ routeId }: Props) => {
                   instance.type === "rest_call",
               )
               .map((instance) => {
-                const parameter = instance.action.parameter
+                const action = instance.action
+
+                if (action.type === "unknown") {
+                  return
+                }
+
                 return (
                   <div key={instance.actionInstanceId}>
                     <div className="flex items-center gap-2 text-sm">
-                      <MethodChip truncate={3}>{parameter.method}</MethodChip>
-                      <div className="grow truncate">{parameter.path}</div>
+                      <MethodChip truncate={3}>
+                        {action.parameter!.method}
+                      </MethodChip>
+                      <div className="grow truncate">
+                        {action.parameter!.path}
+                      </div>
                     </div>
                   </div>
                 )

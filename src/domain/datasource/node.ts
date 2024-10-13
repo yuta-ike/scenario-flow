@@ -40,12 +40,16 @@ export const primitiveNodeAtom = wrapAtomFamily(_primitiveNodeAtom, {
     set,
     param: CreateOrUpdate<PrimitiveNode, OmitId<PrimitiveNode>>,
   ) => {
+    console.log("PRIMITIVENODE!!!!!!!!!")
     if (param.update != null) {
       // 更新
-      set(_primitiveNodeAtom(nodeId), (prev) => ({
-        ...prev,
-        ...param.update,
-      }))
+      set(_primitiveNodeAtom(nodeId), (prev) => {
+        console.log(prev, param.update)
+        return {
+          ...prev,
+          ...param.update,
+        }
+      })
     } else {
       // 作成
       _primitiveNodeAtom(nodeId, param.create)

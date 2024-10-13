@@ -9,6 +9,7 @@ import {
   GetChildrenByNodeId,
   GetDefaultNodeName,
   GetNode,
+  GetNodes,
   GetParentNodesById,
   GetResolvedAction,
   GetRoutesByNodeId,
@@ -24,6 +25,7 @@ import { primitiveRouteAtom, routeIdsAtom } from "@/domain/datasource/route"
 import {
   nodeDefaultNameCal,
   nodeNameUniqCache,
+  nodesAtom,
   primitiveNodeAtom,
 } from "@/domain/datasource/node"
 import { getParentByNodeId } from "@/domain/selector/getParentByNodeId"
@@ -58,9 +60,11 @@ export const buildContext = (store: Store) =>
       })
     }),
     Context.add(GetNode, (nodeId) => store.get(primitiveNodeAtom(nodeId))),
-    Context.add(SetNode, (nodeId, nodeParam) =>
-      store.set(primitiveNodeAtom(nodeId), { update: nodeParam }),
-    ),
+    Context.add(SetNode, (nodeId, nodeParam) => {
+      console.log("SETNODE!")
+      return store.set(primitiveNodeAtom(nodeId), { update: nodeParam })
+    }),
+    Context.add(GetNodes, () => store.get(nodesAtom).values().toArray()),
     Context.add(GetDefaultNodeName, () => store.get(nodeDefaultNameCal)),
     Context.add(GetUniqName, (rawName) => {
       const usedNames = store.get(nodeNameUniqCache)

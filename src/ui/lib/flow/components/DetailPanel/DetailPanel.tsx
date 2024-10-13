@@ -58,8 +58,10 @@ const DetailPanelInner = ({ nodeId }: DetailPanelInnerProps) => {
           <RestCallTabPanel nodeId={nodeId} ai={targetActionInstance} />
         ) : targetActionInstance.type === "validator" ? (
           <ValidatorTabPanel nodeId={nodeId} ai={targetActionInstance} />
-        ) : (
+        ) : targetActionInstance.type === "binder" ? (
           <BinderTabPanel nodeId={nodeId} ai={targetActionInstance} />
+        ) : (
+          <div>No</div>
         ))}
     </div>
   )
