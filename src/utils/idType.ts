@@ -1,7 +1,8 @@
-export type Id = string & { __uuid: never }
+declare const _uuid: unique symbol
+export type Id = string & { [_uuid]: never }
 
 export type OmitId<
-  Obj extends { id: Id },
+  Obj extends { id: string },
   Key extends keyof Obj = never,
 > = Omit<Obj, Key | "id">
 

@@ -1,32 +1,53 @@
 import { Context, Effect, Option, pipe } from "effect"
 
 import {
-  buildNode,
   updateActionInstanceParameter,
   replaceAction as replaceActionEntity,
   updateNodeConfig as updateNodeConfigEntity,
+  resolvePrimitveNode,
+  buildPrimitiveNode,
+  applyInitialValue,
 } from "../entity/node/node"
 import { toNodeId } from "../entity/node/node.util"
 import { appendNodeToRoute, removeNodeFromRoute } from "../entity/route/route"
 import { toRouteId } from "../entity/route/route.util"
+import {
+  display,
+  type ActionSourceIdentifier,
+} from "../entity/action/identifier"
+import {
+  getIdentifier,
+  type ActionId,
+  type ResolvedAction,
+} from "../entity/action/action"
 
 import { _genId } from "./common"
 
+import type { StripeSymbol } from "../entity/type"
 import type { GenId } from "./common"
 import type { LocalVariableId } from "../entity/variable/variable"
 import type {
   ActionInstance,
   ActionInstanceId,
 } from "../entity/node/actionInstance"
-import type { NodeId, PrimitiveNode, NodeConfig } from "../entity/node/node"
-import type { Route, RouteId, PrimitiveRoute } from "../entity/route/route"
+import type {
+  NodeId,
+  PrimitiveNode,
+  NodeConfig,
+  RawPrimitiveNode,
+} from "../entity/node/node"
+import type {
+  Route,
+  RouteId,
+  PrimitiveRoute,
+  RawPrimitiveRoute,
+} from "../entity/route/route"
 import type { Id, OmitId } from "@/utils/idType"
 import type { PartialDict } from "@/utils/typeUtil"
 import type { ContextOf } from "@/lib/effect/contextOf"
-import type { ActionId, ResolvedAction } from "../entity/action/action"
 
 import { dedupeArrays, sliceFormer } from "@/lib/array/utils"
-import { associateBy } from "@/utils/set"
+import { associateWithList } from "@/utils/set"
 
 export type GetUniqName = (name: string) => string
 export const GetUniqName = Context.GenericTag<GetUniqName>("GetUniqName")
@@ -59,10 +80,10 @@ const _updateRoute = (id: RouteId, route: OmitId<PrimitiveRoute>) =>
   UpdateRoute.pipe(Effect.map((updateRoute) => updateRoute(id, route)))
 
 export type AddRoute = (
-  routeParam: PartialDict<PrimitiveRoute, "name" | "color">,
+  routeParam: PartialDict<RawPrimitiveRoute, "name" | "color">,
 ) => void
 export const AddRoute = Context.GenericTag<AddRoute>("AddRoute")
-const _addRoute = (route: PartialDict<PrimitiveRoute, "name" | "color">) =>
+const _addRoute = (route: PartialDict<RawPrimitiveRoute, "name" | "color">) =>
   AddRoute.pipe(Effect.map((addRoute) => addRoute(route)))
 
 export type AddNode = (node: PrimitiveNode) => void
@@ -110,44 +131,60 @@ export const DeleteNode = Context.GenericTag<DeleteNode>("DeleteNode")
 const _deleteNode = (nodeId: NodeId) =>
   DeleteNode.pipe(Effect.map((deleteNode) => deleteNode(nodeId)))
 
-export type UpsertVariable = (id: LocalVariableId, name: string) => void
+export type UpsertVariable = (
+  id: LocalVariableId,
+  name: string,
+  boundIn: NodeId,
+) => void
 export const UpsertVariable =
   Context.GenericTag<UpsertVariable>("UpsertVariable")
-const _upsertVariable = (id: LocalVariableId, name: string) =>
-  UpsertVariable.pipe(Effect.map((upsertVariable) => upsertVariable(id, name)))
+const _upsertVariable = (id: LocalVariableId, name: string, boundIn: NodeId) =>
+  UpsertVariable.pipe(
+    Effect.map((upsertVariable) => upsertVariable(id, name, boundIn)),
+  )
 
-export type GetResolvedAction = (actionId: ActionId) => ResolvedAction
+export type GetResolvedAction = (
+  actionIdentifier: ActionSourceIdentifier,
+) => ResolvedAction
 export const GetResolvedAction =
   Context.GenericTag<GetResolvedAction>("GetResolvedAction")
-const _getResolvedAction = (actionId: ActionId) =>
+const _getResolvedAction = (actionIdentifier: ActionSourceIdentifier) =>
   GetResolvedAction.pipe(
-    Effect.map((getResolvedAction) => getResolvedAction(actionId)),
+    Effect.map((getResolvedAction) => getResolvedAction(actionIdentifier)),
   )
 
 const _resolveActionInstances = (
-  actionInstances: ActionInstance[],
-): Effect.Effect<Map<ActionId, ResolvedAction>, never, GetResolvedAction> =>
+  actionInstances: StripeSymbol<ActionInstance[]>,
+): Effect.Effect<Map<string, ResolvedAction>, never, GetResolvedAction> =>
   pipe(
     Effect.succeed(actionInstances),
     Effect.flatMap((_) =>
       Effect.all(
-        _.filter((_) => _.actionRef != null).map((_) =>
-          _getResolvedAction(_.actionRef.actionId),
-        ),
+        _.map((_) => _.actionIdentifier as ActionSourceIdentifier | undefined)
+          .filter((_) => _ != null)
+          .map((_) => _getResolvedAction(_)),
       ),
     ),
-    Effect.map((_) => associateBy(_, "id")),
+    Effect.map((_) =>
+      associateWithList(_, (action) => getIdentifier(action))
+        .entries()
+        .map(([key, values]) => [display(key), values[0]] as const),
+    ),
+    Effect.map((_) => new Map(_)),
+    Effect.tap((_) => console.log(_)),
   )
 
-const _buildNode = (id: NodeId, nodeParam: OmitId<PrimitiveNode, "name">) =>
+const _buildNode = (
+  id: NodeId,
+  nodeParam: StripeSymbol<OmitId<PrimitiveNode, "name">>,
+) =>
   Effect.Do.pipe(
     Effect.bind("actionMap", () =>
       _resolveActionInstances(nodeParam.actionInstances),
     ),
     Effect.bind("nameCandidate", ({ actionMap }) =>
       Option.fromNullable(
-        actionMap.values().toArray()[0]?.parameter?.operationObject
-          ?.operationId,
+        actionMap.values().toArray()[0]?.schema.jsonSchema?.operationId,
       ).pipe(
         Option.map((_) => Effect.succeed(_)),
         (_) => Option.getOrElse(_, () => _getDefaultNodeName()),
@@ -155,13 +192,18 @@ const _buildNode = (id: NodeId, nodeParam: OmitId<PrimitiveNode, "name">) =>
     ),
     Effect.bind("name", ({ nameCandidate }) => _getUniqName(nameCandidate)),
     Effect.map(({ name, actionMap }) =>
-      buildNode(id, name, nodeParam, actionMap),
+      resolvePrimitveNode(
+        buildPrimitiveNode(id, { name, ...nodeParam }),
+        actionMap,
+        new Map(),
+      ),
     ),
+    Effect.map((_) => applyInitialValue(_)),
   )
 
 // 新しいノードを追加
 export const _createAndAddNode = (
-  nodeParam: OmitId<PrimitiveNode, "name">,
+  nodeParam: OmitId<RawPrimitiveNode, "name">,
 ): Effect.Effect<
   PrimitiveNode,
   never,
@@ -236,7 +278,7 @@ const _appendNodeToRoutePath = (
 
 // ノードを追加する
 export const appendNode = (
-  nodeParam: OmitId<PrimitiveNode, "name">,
+  nodeParam: OmitId<RawPrimitiveNode, "name">,
   parentNodeId: NodeId,
 ): Effect.Effect<
   void,
@@ -373,7 +415,7 @@ export const moveNode = (
 
 type ConnectNodesContext = {
   getRoutesByNodeId: (id: NodeId) => Route[]
-  addRoute: (route: PartialDict<PrimitiveRoute, "name" | "color">) => void
+  addRoute: (route: PartialDict<RawPrimitiveRoute, "name" | "color">) => void
   genId: () => Id
 }
 
@@ -423,7 +465,7 @@ export const connectNodes = (
 
 // 新しいルートを作成する
 const _createAndAddRoute = (
-  routeParam: PartialDict<OmitId<PrimitiveRoute>, "name" | "color">,
+  routeParam: PartialDict<OmitId<RawPrimitiveRoute>, "name" | "color">,
 ): Effect.Effect<RouteId, never, ContextOf<typeof _genId | typeof _addRoute>> =>
   pipe(
     _genId(),
@@ -432,7 +474,7 @@ const _createAndAddRoute = (
   )
 
 // ルートノードを作成する
-export const createRootNode = (node: OmitId<PrimitiveNode, "name">) =>
+export const createRootNode = (node: OmitId<RawPrimitiveNode, "name">) =>
   pipe(
     _createAndAddNode(node),
     Effect.map((_) => _.id),
@@ -448,24 +490,25 @@ export const createRootNode = (node: OmitId<PrimitiveNode, "name">) =>
 export const updateActionInstancesParameter = (
   nodeId: NodeId,
   actionInstanceId: ActionInstanceId,
-  actionInstance: ActionInstance,
+  params: ActionInstance,
 ): Effect.Effect<void, never, ContextOf<typeof _getNode | typeof _setNode>> =>
   pipe(
     _getNode(nodeId),
     Effect.map((_) =>
-      updateActionInstanceParameter(_, actionInstanceId, actionInstance),
+      updateActionInstanceParameter(_, actionInstanceId, params),
     ),
+    Effect.tap((_) => console.log(_)),
     Effect.tap((node) => _setNode(nodeId, node)),
   )
 
 // Variableのアップデート
 export const upsertVariables = (
-  data: { id: LocalVariableId; name: string }[],
+  data: { id: LocalVariableId; name: string; boundIn: NodeId }[],
 ) =>
   pipe(
     Effect.succeed(data),
     Effect.flatMap((_) =>
-      Effect.forEach(_, (_) => _upsertVariable(_.id, _.name)),
+      Effect.forEach(_, (_) => _upsertVariable(_.id, _.name, _.boundIn)),
     ),
     Effect.asVoid,
   )

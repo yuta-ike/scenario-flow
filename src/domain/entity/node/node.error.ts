@@ -1,6 +1,7 @@
-export class SwitchActionInstanceTypeError extends Error {
+export class CannotChangeActionTypeError extends Error {
   constructor() {
-    super("Switch action instance type error")
+    super("Cannot change action type")
   }
-  readonly _tag = "SwitchActionInstanceTypeError"
+  readonly _tag = "CannotChangeActionTypeError"
+  readonly _category = "entity"
 }

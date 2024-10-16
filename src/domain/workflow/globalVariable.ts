@@ -5,14 +5,16 @@ import {
   toGlobalVariableValueId,
 } from "../entity/globalVariable/globalVariable.util"
 import { DEFAULT_PATTERN_ID } from "../datasource/globalVariable"
+import {
+  type GlobalVariable,
+  type GlobalVariableId,
+  type GlobalVariableBind,
+  type GlobalVariableBindId,
+  buildGlobalVariable,
+  buildGlobalVariableBind,
+} from "../entity/globalVariable/globalVariable"
 
 import type { TypedValue } from "../entity/value/dataType"
-import type {
-  GlobalVariable,
-  GlobalVariableId,
-  GlobalVariableValue,
-  GlobalVariableValueId,
-} from "../entity/globalVariable/globalVariable"
 import type { ContextOf } from "@/lib/effect/contextOf"
 
 export type AddGlobalVariable = (params: GlobalVariable) => void
@@ -23,11 +25,12 @@ const _addGlobalVariable = (params: GlobalVariable) =>
     Effect.map((addGlobalVariable) => addGlobalVariable(params)),
   )
 
-export type AddGlobalVariableValue = (params: GlobalVariableValue) => void
-export const AddGlobalVariableValue =
-  Context.GenericTag<AddGlobalVariableValue>("AddGlobalVariableValue")
-const _addGlobalVariableValue = (params: GlobalVariableValue) =>
-  AddGlobalVariableValue.pipe(
+export type AddGlobalVariableBind = (params: GlobalVariableBind) => void
+export const AddGlobalVariableBind = Context.GenericTag<AddGlobalVariableBind>(
+  "AddGlobalVariableBind",
+)
+const _addGlobalVariableBind = (params: GlobalVariableBind) =>
+  AddGlobalVariableBind.pipe(
     Effect.map((addGlobalVariableValue) => addGlobalVariableValue(params)),
   )
 
@@ -41,13 +44,13 @@ const _updateGlobalVariable = (params: GlobalVariable) =>
   )
 
 export type UpdateGlobalVariableValue = (
-  id: GlobalVariableValueId,
+  id: GlobalVariableBindId,
   value: TypedValue,
 ) => void
 export const UpdateGlobalVariableValue =
   Context.GenericTag<UpdateGlobalVariableValue>("UpdateGlobalVariableValue")
 const _updateGlobalVariableValue = (
-  id: GlobalVariableValueId,
+  id: GlobalVariableBindId,
   value: TypedValue,
 ) =>
   UpdateGlobalVariableValue.pipe(
@@ -62,25 +65,32 @@ export const addGlobalVariable = (params: {
 }): Effect.Effect<
   GlobalVariableId,
   void,
-  ContextOf<typeof _addGlobalVariable | typeof _addGlobalVariableValue>
+  ContextOf<typeof _addGlobalVariable | typeof _addGlobalVariableBind>
 > =>
   Effect.Do.pipe(
     Effect.let("globalVariableId", () => toGlobalVariableId(params.id)),
     Effect.tap(({ globalVariableId }) =>
-      _addGlobalVariable({
-        id: globalVariableId,
-        name: params.name,
-        description: "",
-        schema: "any",
-      }),
+      _addGlobalVariable(
+        buildGlobalVariable(globalVariableId, {
+          name: params.name,
+          namespace: "vars",
+          description: "",
+          schema: "any",
+          boundIn: "global",
+        }),
+      ),
     ),
     Effect.tap(({ globalVariableId }) =>
-      _addGlobalVariableValue({
-        id: toGlobalVariableValueId(`${params.id}-${DEFAULT_PATTERN_ID}`),
-        patternId: DEFAULT_PATTERN_ID,
-        globalVariableId,
-        value: { type: "string", value: "" },
-      }),
+      _addGlobalVariableBind(
+        buildGlobalVariableBind(
+          toGlobalVariableValueId(`${params.id}-${DEFAULT_PATTERN_ID}`),
+          {
+            patternId: DEFAULT_PATTERN_ID,
+            globalVariableId,
+            value: { type: "string", value: "" },
+          },
+        ),
+      ),
     ),
     Effect.map(({ globalVariableId }) => globalVariableId),
   )
@@ -91,7 +101,7 @@ export const updateGlobalVariable = (
   _updateGlobalVariable(params)
 
 export const updateGlobalVariableValue = (
-  id: GlobalVariableValueId,
+  id: GlobalVariableBindId,
   value: TypedValue,
 ): Effect.Effect<void, never, ContextOf<typeof _updateGlobalVariableValue>> =>
   _updateGlobalVariableValue(id, value)

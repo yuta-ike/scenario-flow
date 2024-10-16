@@ -18,10 +18,7 @@ export const associateBy = <
     return acc
   }, new Map<Item[Key], Item>())
 
-export const associateWithList = <
-  Item extends Record<string, unknown>,
-  Key extends string,
->(
+export const associateWithList = <Item extends Record<string, unknown>, Key>(
   arr: Item[],
   keyAccessor: (item: Item) => Key,
 ) =>

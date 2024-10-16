@@ -9,11 +9,11 @@ import type { ResourceId } from "@/domain/entity/resource/resource"
 import { FormItem } from "@/ui/components/FormItem"
 import { RadioPanel } from "@/ui/components/common/RadioPanel"
 import { LoadableButton } from "@/ui/components/common/LoadableButton"
-import { verifyRemoteOpenApi } from "@/lib/fetch/verifyRemoteUrl"
+import { verifyRemoteopen_api } from "@/lib/fetch/verifyRemoteUrl"
 import { FormModalContent, useCloseModal } from "@/ui/lib/common/FormModal"
 import { readFile } from "@/ui/utils/readFile"
 import { convertYamlToJson } from "@/ui/lib/yaml/yamlToJson"
-import { putOpenApiFile, uploadOpenApiFile } from "@/ui/adapter/command"
+import { putopen_apiFile, uploadopen_apiFile } from "@/ui/adapter/command"
 import { fetchJson } from "@/utils/fetchJson"
 
 type FormData = {
@@ -64,7 +64,7 @@ export const AddOrUpdateResourceForm = ({
     isPending,
     data: isValidUrlOrError,
   } = useMutation({
-    mutationFn: verifyRemoteOpenApi,
+    mutationFn: verifyRemoteopen_api,
   })
 
   const handleAdd = handleSubmit(
@@ -80,9 +80,9 @@ export const AddOrUpdateResourceForm = ({
           : await fetchJson<Json>(data.url!)
 
       if (type === "create") {
-        await uploadOpenApiFile(data.name, data.description ?? "", json)
+        await uploadopen_apiFile(data.name, data.description ?? "", json)
       } else {
-        await putOpenApiFile(
+        await putopen_apiFile(
           resourceId,
           data.name,
           data.description ?? "",

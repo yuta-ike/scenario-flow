@@ -36,7 +36,7 @@ describe("resource > resource", () => {
     // action
     store.update(resourceAtom(toResourceId("r1")), () =>
       genResource("r1", {
-        locationType: "LocalFile",
+        locationType: "local_file",
         path: "/path/to/new/resource",
       }),
     )
@@ -51,7 +51,7 @@ describe("resource > resource", () => {
     // action
     store.update(resourceAtom(toResourceId("r1")), () =>
       genResource("r1", {
-        locationType: "LocalFile",
+        locationType: "local_file",
         path: "/path/to/new/resource",
       }),
     )

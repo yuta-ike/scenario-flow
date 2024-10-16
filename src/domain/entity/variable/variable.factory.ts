@@ -1,14 +1,16 @@
-import { toLocalVariableId } from "./variable.util"
+import { toNodeId } from "../node/node.util"
 
-import type { LocalVariable } from "./variable"
+import { buildLocalVariable, type LocalVariable } from "./variable"
 
 export const genLocalVariable = (
   id: string,
   params?: Partial<LocalVariable>,
-): LocalVariable => ({
-  id: toLocalVariableId(id),
-  name: id,
-  description: `variable description ${id}`,
-  schema: "any",
-  ...params,
-})
+): LocalVariable =>
+  buildLocalVariable(id, {
+    name: id,
+    namespace: "vars",
+    description: `variable description ${id}`,
+    schema: "any",
+    boundIn: toNodeId("id"),
+    ...params,
+  })

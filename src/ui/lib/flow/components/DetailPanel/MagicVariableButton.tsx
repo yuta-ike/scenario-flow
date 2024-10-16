@@ -9,8 +9,8 @@ import type { NodeId } from "@/domain/entity/node/node"
 
 import { Popover } from "@/ui/components/common/Popover"
 import { associateWithList } from "@/utils/set"
-import { getVariableDisplay } from "@/domain/entity/environment/environment"
 import { useSetHighlightedNodeId } from "@/ui/state/highlightedNodeId"
+import { getVariableName } from "@/domain/entity/environment/variable"
 
 type MagicVariableButtonProps = {
   onInsert?: (value: string) => void
@@ -107,7 +107,7 @@ export const MagicVariableButton = ({
                     highlight(null)
                   }}
                 >
-                  {getVariableDisplay(bind)}
+                  {getVariableName(bind.variable)}
                   <TbArrowRight className="text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-400" />
                 </div>
               ),
@@ -124,7 +124,7 @@ export const MagicVariableButton = ({
       }
       onClick={(VariableId) => {
         const bind = bindMap.get(VariableId)![0]
-        onInsert?.(getVariableDisplay(bind))
+        onInsert?.(getVariableName(bind.variable))
         setIsOpen(false)
       }}
     >

@@ -1,32 +1,47 @@
+import type { Builder, BuilderReturn, Transition } from "../type"
 import type { NodeId, Node } from "../node/node"
-import type { Receiver } from "@/lib/receiver"
 import type { Id } from "@/utils/idType"
 import type { Replace } from "@/utils/typeUtil"
 
-export type RouteId = Id & { __routeId: never }
+declare const _route: unique symbol
+export type RouteId = Id & { [_route]: never }
 
 export type Color = string
 export type Page = number
 
 export type Route = {
+  [_route]: never
   id: RouteId
   name: string
   path: Node[]
   color: Color
   page: Page
 }
+export const buildRoute: Builder<Route> = (id, params) => {
+  return { id, ...params } satisfies BuilderReturn<Route> as Route
+}
 
 export type PrimitiveRoute = Replace<Route, "path", NodeId[]>
+export type RawPrimitiveRoute = Omit<PrimitiveRoute, typeof _route>
+export const buildPrimitiveRoute: Builder<PrimitiveRoute> = (id, params) => {
+  return {
+    id,
+    ...params,
+  } satisfies BuilderReturn<PrimitiveRoute> as PrimitiveRoute
+}
 
-export const appendNodeToRoute = ((route: PrimitiveRoute, nodeId: NodeId) => {
+export const appendNodeToRoute: Transition<PrimitiveRoute> = (
+  route: PrimitiveRoute,
+  nodeId: NodeId,
+) => {
   return {
     ...route,
     path: [...route.path, nodeId],
   }
-}) satisfies Receiver<PrimitiveRoute>
+}
 
-export const insertNodeToRoute = ((
-  route: PrimitiveRoute,
+export const insertNodeToRoute: Transition<PrimitiveRoute> = (
+  route,
   nodeId: NodeId,
   parentNodeId: NodeId,
 ) => {
@@ -44,33 +59,24 @@ export const insertNodeToRoute = ((
       ...route.path.slice(index + 1),
     ],
   }
-}) satisfies Receiver<PrimitiveRoute>
+}
 
-export const updateRoute = ((
-  route: PrimitiveRoute,
+export const updateRoute: Transition<PrimitiveRoute> = (
+  route,
   newRoute: Partial<Pick<PrimitiveRoute, "name" | "color" | "page">>,
 ) => {
   return {
     ...route,
     ...newRoute,
   }
-}) satisfies Receiver<PrimitiveRoute>
+}
 
-export const removeNodeFromRoute = ((route: PrimitiveRoute, nodeId: NodeId) => {
+export const removeNodeFromRoute: Transition<PrimitiveRoute> = (
+  route,
+  nodeId: NodeId,
+) => {
   return {
     ...route,
     paths: route.path.filter((id) => id !== nodeId),
   }
-}) satisfies Receiver<PrimitiveRoute>
-
-// レシーバーの要件を満たすか微妙
-export const cloneRoute = ((route: PrimitiveRoute, newId: RouteId) => {
-  const { path, color, page } = route
-  return {
-    id: newId,
-    name: `${route.name} (copy)`,
-    path,
-    color,
-    page,
-  }
-}) satisfies Receiver<PrimitiveRoute>
+}

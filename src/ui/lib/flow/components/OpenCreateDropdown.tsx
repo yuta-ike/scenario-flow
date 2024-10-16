@@ -5,17 +5,17 @@ import { RxCaretLeft, RxCaretRight, RxPlus } from "react-icons/rx"
 
 import { Transition } from "../../common/Transition"
 
-import type { ActionId } from "@/domain/entity/action/action"
-
+import { type ActionSourceIdentifier } from "@/domain/entity/action/identifier"
 import { HTTP_METHODS, type HttpMethod } from "@/utils/http"
 import { useSetState } from "@/ui/utils/useSetState"
 import { useActions } from "@/ui/adapter/query"
 import { ApiCallTile } from "@/ui/page/index/BlockMenu/ApiCallTile"
 import { searchFuzzy } from "@/utils/searchFuzzy"
+import { getIdentifier } from "@/domain/entity/action/action"
 
 type OpenCreateDropdownProps = {
   children: React.ReactNode
-  onCreateApiCall: (actionId: ActionId) => void
+  onCreateApiCall: (actionId: ActionSourceIdentifier) => void
 }
 
 export const OpenCreateDropdown = ({
@@ -26,7 +26,7 @@ export const OpenCreateDropdown = ({
   const [page, setPage] = useState<1 | 2>(1)
   const [filters, { toggle: toggleFilter }] = useSetState([] as HttpMethod[])
 
-  const actions = useActions().filter((action) => action.parameter != null)
+  const actions = useActions().filter((action) => action.type === "rest_call")
 
   const [searchText, setSeachText] = useState("")
 
@@ -35,7 +35,7 @@ export const OpenCreateDropdown = ({
       if (filters.length === 0 || filters.length === HTTP_METHODS.length) {
         return true
       } else {
-        return filters.includes(action.parameter!.method)
+        return filters.includes(action.schema.base.method!)
       }
     })
 
@@ -45,15 +45,15 @@ export const OpenCreateDropdown = ({
 
     return searchFuzzy(searchText, methodFilteredActions, {
       keys: [
-        (action) => action.parameter!.method,
-        (action) => action.parameter!.path,
+        (action) => action.schema.base.method!,
+        (action) => action.schema.base.path!,
         "name",
         "description",
       ],
     })
   }, [actions, filters, searchText])
 
-  const handleSelectApiCall = (actionId: ActionId) => {
+  const handleSelectApiCall = (actionId: ActionSourceIdentifier) => {
     onCreateApiCall(actionId)
     setIsOpen(false)
   }
@@ -133,12 +133,12 @@ export const OpenCreateDropdown = ({
                     <button
                       key={action.id}
                       type="button"
-                      onClick={() => handleSelectApiCall(action.id)}
+                      onClick={() => handleSelectApiCall(action)}
                       className="w-full"
                     >
                       <ApiCallTile
                         key={action.id}
-                        actionId={action.id}
+                        actionIdentifier={getIdentifier(action)}
                         suffix={RxPlus}
                       />
                     </button>

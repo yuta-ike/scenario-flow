@@ -6,9 +6,10 @@ import { ResourceTile } from "./ResourceTile"
 
 import { useActionIds, useResourceIds } from "@/ui/adapter/query"
 import { FormModal, FormModalContent } from "@/ui/lib/common/FormModal"
-import { uploadOpenApiFile } from "@/ui/adapter/command"
+import { uploadopen_apiFile } from "@/ui/adapter/command"
 import { readFile } from "@/ui/utils/readFile"
 import { convertYamlToJson } from "@/ui/lib/yaml/yamlToJson"
+import { display } from "@/domain/entity/action/identifier"
 
 type FormItemProps = {
   id: string
@@ -56,7 +57,7 @@ export const BlockMenu = () => {
 
     const yaml = await readFile(file)
     const json = convertYamlToJson(yaml)
-    await uploadOpenApiFile(name, description, json)
+    await uploadopen_apiFile(name, description, json)
 
     setName("")
     setDescription("")
@@ -64,7 +65,7 @@ export const BlockMenu = () => {
     setOpenModal(false)
   }
 
-  const actionIds = useActionIds()
+  const identifiers = useActionIds()
 
   return (
     <>
@@ -80,10 +81,13 @@ export const BlockMenu = () => {
               <ResourceTile key={resourceId} resourceId={resourceId} />
             ))}
           </div>
-          {0 < actionIds.length ? (
+          {0 < identifiers.length ? (
             <div className="flex flex-col gap-2 overflow-y-scroll">
-              {actionIds.map((actionId) => (
-                <ApiCallTile key={actionId} actionId={actionId} />
+              {identifiers.map((identifier) => (
+                <ApiCallTile
+                  key={display(identifier)}
+                  actionIdentifier={identifier}
+                />
               ))}
             </div>
           ) : (

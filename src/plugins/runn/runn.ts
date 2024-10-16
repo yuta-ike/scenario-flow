@@ -93,16 +93,21 @@ const convertDecomposedAction = (
   }
 }
 
-const convertDecomposedStep = (step: DecomposedStep): RunnStep => {
+const convertDecomposedStep = (
+  step: DecomposedStep,
+): [id: string, step: RunnStep] => {
   const actionObjs = step.actions.map((action) =>
     convertDecomposedAction(action),
   )
-  return actionObjs.reduce((acc, action) => {
-    return {
-      ...acc,
-      ...action,
-    }
-  })
+  return [
+    `${step.id}`,
+    actionObjs.reduce((acc, action) => {
+      return {
+        ...acc,
+        ...action,
+      }
+    }),
+  ]
 }
 
 export const convertDecomposedToRunn = (decomposed: Decomposed) => {
@@ -127,7 +132,7 @@ export const convertDecomposedToRunn = (decomposed: Decomposed) => {
                 typedValueToValue(value),
               ]),
             ),
-      steps: decomposed.steps.map(convertDecomposedStep),
+      steps: Object.fromEntries(decomposed.steps.map(convertDecomposedStep)),
       "x-id": decomposed.id,
       "x-color": decomposed.color,
     } as unknown as Json,

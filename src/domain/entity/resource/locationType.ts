@@ -1,18 +1,18 @@
 export const LOCATION_TYPE_LIST = [
   {
-    type: "Temporal",
+    type: "temporal",
     label: "アップロード",
   },
   {
-    type: "LocalFile",
+    type: "local_file",
     label: "ローカルファイルから読み込み",
   },
   {
-    type: "Remote",
+    type: "remote",
     label: "URLからの読み込み",
   },
   {
-    type: "Git",
+    type: "git",
     label: "Git連携",
   },
 ] as const

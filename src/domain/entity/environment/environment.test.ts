@@ -3,174 +3,113 @@ import { describe, expect, test } from "vitest"
 import { genLocalVariable } from "../variable/variable.factory"
 import { toNodeId } from "../node/node.util"
 
-import { dedupeShadowedBind, intersectionEnvironment } from "./environment"
-import { localVariableToVariable } from "./variable.factory"
+import { dedupeEnvironmentBinds, intersect } from "./environment"
 
 describe("intersectionEnvironment", () => {
   test("複数のenvironmentの直積を取得できる", () => {
-    const res = intersectionEnvironment([
+    const res = intersect([
       [
         {
           inherit: true,
-          variable: localVariableToVariable(
-            genLocalVariable("1"),
-            toNodeId("n1"),
-          ),
+          variable: genLocalVariable("1", { boundIn: toNodeId("n1") }),
         },
         {
           inherit: true,
-          variable: localVariableToVariable(
-            genLocalVariable("2"),
-            toNodeId("n1"),
-          ),
+          variable: genLocalVariable("2", { boundIn: toNodeId("n1") }),
         },
         {
           inherit: false,
-          variable: localVariableToVariable(
-            genLocalVariable("3"),
-            toNodeId("n1"),
-          ),
+          variable: genLocalVariable("3", { boundIn: toNodeId("n1") }),
         },
       ],
       [
         {
           inherit: true,
-          variable: localVariableToVariable(
-            genLocalVariable("1"),
-            toNodeId("n2"),
-          ),
+          variable: genLocalVariable("1", { boundIn: toNodeId("n2") }),
         },
         {
           inherit: true,
-          variable: localVariableToVariable(
-            genLocalVariable("2"),
-            toNodeId("n2"),
-          ),
+          variable: genLocalVariable("2", { boundIn: toNodeId("n2") }),
         },
         {
           inherit: false,
-          variable: localVariableToVariable(
-            genLocalVariable("5"),
-            toNodeId("n2"),
-          ),
+          variable: genLocalVariable("5", { boundIn: toNodeId("n2") }),
         },
       ],
     ])
     expect(res).toEqual([
       {
         inherit: true,
-        variable: localVariableToVariable(
-          genLocalVariable("1"),
-          toNodeId("n2"),
-        ),
+        variable: genLocalVariable("1", { boundIn: toNodeId("n2") }),
       },
       {
         inherit: true,
-        variable: localVariableToVariable(
-          genLocalVariable("2"),
-          toNodeId("n2"),
-        ),
+        variable: genLocalVariable("2", { boundIn: toNodeId("n2") }),
       },
     ])
   })
 
   test("environmentが1つの場合はそのまま返す", () => {
-    const res = intersectionEnvironment([
+    const res = intersect([
       [
         {
           inherit: true,
-          variable: localVariableToVariable(
-            genLocalVariable("1"),
-            toNodeId("n1"),
-          ),
+          variable: genLocalVariable("1", { boundIn: toNodeId("n1") }),
         },
         {
           inherit: true,
-          variable: localVariableToVariable(
-            genLocalVariable("2"),
-            toNodeId("n1"),
-          ),
+          variable: genLocalVariable("2", { boundIn: toNodeId("n1") }),
         },
         {
           inherit: false,
-          variable: localVariableToVariable(
-            genLocalVariable("3"),
-            toNodeId("n1"),
-          ),
+          variable: genLocalVariable("3", { boundIn: toNodeId("n1") }),
         },
       ],
     ])
     expect(res).toEqual([
       {
         inherit: true,
-        variable: localVariableToVariable(
-          genLocalVariable("1"),
-          toNodeId("n1"),
-        ),
+        variable: genLocalVariable("1", { boundIn: toNodeId("n1") }),
       },
       {
         inherit: true,
-        variable: localVariableToVariable(
-          genLocalVariable("2"),
-          toNodeId("n1"),
-        ),
+        variable: genLocalVariable("2", { boundIn: toNodeId("n1") }),
       },
       {
         inherit: false,
-        variable: localVariableToVariable(
-          genLocalVariable("3"),
-          toNodeId("n1"),
-        ),
+        variable: genLocalVariable("3", { boundIn: toNodeId("n1") }),
       },
     ])
   })
 
   test("共通の変数がない場合は空の配列を返す", () => {
-    const res = intersectionEnvironment([
+    const res = intersect([
       [
         {
           inherit: true,
-          variable: localVariableToVariable(
-            genLocalVariable("1"),
-            toNodeId("n1"),
-          ),
+          variable: genLocalVariable("1", { boundIn: toNodeId("n1") }),
         },
         {
           inherit: true,
-          variable: localVariableToVariable(
-            genLocalVariable("2"),
-            toNodeId("n1"),
-          ),
+          variable: genLocalVariable("2", { boundIn: toNodeId("n1") }),
         },
         {
           inherit: false,
-          variable: localVariableToVariable(
-            genLocalVariable("3"),
-            toNodeId("n1"),
-          ),
+          variable: genLocalVariable("3", { boundIn: toNodeId("n1") }),
         },
       ],
       [
         {
           inherit: true,
-          variable: localVariableToVariable(
-            genLocalVariable("4"),
-            toNodeId("n2"),
-          ),
+          variable: genLocalVariable("4", { boundIn: toNodeId("n2") }),
         },
         {
           inherit: true,
-          variable: localVariableToVariable(
-            genLocalVariable("5"),
-            toNodeId("n2"),
-          ),
+          variable: genLocalVariable("5", { boundIn: toNodeId("n2") }),
         },
         {
           inherit: false,
-          variable: localVariableToVariable(
-            genLocalVariable("6"),
-            toNodeId("n2"),
-          ),
+          variable: genLocalVariable("6", { boundIn: toNodeId("n2") }),
         },
       ],
     ])
@@ -180,43 +119,28 @@ describe("intersectionEnvironment", () => {
 
 describe("dedupeShadowedBind", () => {
   test("同名の変数がある場合は1つにまとめ、後ろで指定されたものが残る", () => {
-    const res = dedupeShadowedBind([
+    const res = dedupeEnvironmentBinds([
       {
         inherit: true,
-        variable: localVariableToVariable(
-          genLocalVariable("1"),
-          toNodeId("n1"),
-        ),
+        variable: genLocalVariable("1", { boundIn: toNodeId("n1") }),
       },
       {
         inherit: true,
-        variable: localVariableToVariable(
-          genLocalVariable("2"),
-          toNodeId("n1"),
-        ),
+        variable: genLocalVariable("2", { boundIn: toNodeId("n1") }),
       },
       {
         inherit: false,
-        variable: localVariableToVariable(
-          genLocalVariable("2"),
-          toNodeId("n2"),
-        ),
+        variable: genLocalVariable("2", { boundIn: toNodeId("n2") }),
       },
     ])
     expect(res).toEqual([
       {
         inherit: true,
-        variable: localVariableToVariable(
-          genLocalVariable("1"),
-          toNodeId("n1"),
-        ),
+        variable: genLocalVariable("1", { boundIn: toNodeId("n1") }),
       },
       {
         inherit: false,
-        variable: localVariableToVariable(
-          genLocalVariable("2"),
-          toNodeId("n2"),
-        ),
+        variable: genLocalVariable("2", { boundIn: toNodeId("n2") }),
       },
     ])
   })

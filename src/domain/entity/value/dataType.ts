@@ -1,10 +1,12 @@
 export type DataType =
   | "string"
   | "number"
+  | "integer"
   | "boolean"
   | "object"
   | "array"
   | "null"
+  | "any"
 
 export type TypedValue =
   | {
@@ -12,7 +14,7 @@ export type TypedValue =
       value: string
     }
   | {
-      type: "number"
+      type: "number" | "integer"
       value: number
     }
   | {
@@ -29,6 +31,11 @@ export type TypedValue =
     }
   | {
       type: "null"
+      value: null
+    }
+  | {
+      type: "any"
+      value: unknown
     }
 
 export const typedValueToValue = (typedValue: TypedValue): unknown => {

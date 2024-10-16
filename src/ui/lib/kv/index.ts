@@ -34,3 +34,14 @@ export const kvFromRecordBy = <Value>(
     value: option.valueSelector(value),
   }))
 }
+
+export const dedupe = (kvs: KVItem[] | undefined): KVItem[] => {
+  if (kvs == null) {
+    return []
+  }
+  const map = new Map<string, KVItem>()
+  kvs.forEach((item) => {
+    map.set(item.key, item)
+  })
+  return Array.from(map.values())
+}

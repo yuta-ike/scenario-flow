@@ -46,14 +46,17 @@ export const Flow = () => {
   const nodeIds = useNodeIds()
   const edges = useEdges(initialNodeId)
 
-  const layout = useMemo(
-    () =>
-      getLayout(
+  const layout = useMemo(() => {
+    try {
+      return getLayout(
         initialNodeId,
         edges.map(({ source, target }) => [source, target]),
-      ),
-    [edges],
-  )
+      )
+    } catch (e) {
+      console.error(e)
+      return undefined
+    }
+  }, [edges])
 
   useReleaseHighlight()
 
@@ -72,7 +75,7 @@ export const Flow = () => {
             },
             ...nodeIds
               .map((nodeId) => {
-                const position = layout.get(nodeId)
+                const position = layout?.get(nodeId)
                 if (position == null) {
                   return null
                 }

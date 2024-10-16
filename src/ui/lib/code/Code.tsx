@@ -52,6 +52,7 @@ export const Code = () => {
         <Editor2
           key={selectedId}
           lang="yaml"
+          className="h-full"
           initValue={targetYaml?.yaml ?? ""}
           onChange={console.log}
         />

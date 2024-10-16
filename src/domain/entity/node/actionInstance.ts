@@ -1,116 +1,200 @@
-import type { Expression } from "../value/expression"
-import type { ActionType, ResolvedAction } from "../action/action"
-import type { ActionRef } from "./actionRef"
-import type { Replace } from "@/utils/typeUtil"
-import type { Id } from "@/utils/idType"
+import {
+  mergeActionParameter,
+  type BinderActionParameter,
+  type RestCallActionParameter,
+  type UnknownActionParameter,
+  type ValidatorActionParameter,
+} from "../action/actionParameter"
+
+import type { ActionSourceIdentifier } from "../action/identifier"
+import type { Builder, BuilderReturn } from "../type"
 import type { LocalVariable, LocalVariableId } from "../variable/variable"
-import type { Json } from "@/utils/json"
-import type { KVItem } from "@/ui/lib/kv"
+import type { RawResolvedAction, ResolvedAction } from "../action/action"
+import type { Id } from "@/utils/idType"
+import type { Expression } from "../value/expression"
+import type { Replace } from "@/utils/typeUtil"
 
-export type HttpRequestBodyContentTypeObject = {
-  "application/json"?: Json
-  "application/form-data"?: KVItem[]
-}
-
-type InstanceParameterMeta = {
-  description: string
-}
+declare const _actionInstance: unique symbol
+export type ActionInstanceId = Id & { [_actionInstance]: never }
 
 // rest_call
 export type RestCallActionInstanceConfig = {
   followRedirect: boolean
   useCookie: boolean
 }
-export type RestCallActionInstanceParameter = {
-  headers?: KVItem[]
-  cookies?: KVItem[]
-  queryParams?: KVItem[]
-  pathParams?: KVItem[]
-  body?: {
-    selected: keyof HttpRequestBodyContentTypeObject | undefined
-    params: HttpRequestBodyContentTypeObject
-  }
-  config?: RestCallActionInstanceConfig
-} & InstanceParameterMeta
-export type RestCallActionInstanceBlock = {
+export type RestCallActionInstance = {
+  [_actionInstance]: never
+  id: ActionInstanceId
+  description: string
+  actionIdentifier: ActionSourceIdentifier
   type: "rest_call"
-  instanceParameter: RestCallActionInstanceParameter
-  actionRef: ActionRef
+  instanceParameter: Partial<RestCallActionParameter>
+  config: RestCallActionInstanceConfig
 }
 
 // validator
-export type ValidatorId = Id & { __validatorId: never }
-export type ValidatorActionInstanceParameter = {
-  id: ValidatorId
-  contents: Expression
-} & InstanceParameterMeta
-export type ValidatorActionInstanceBlock = {
+export type ValidatorActionInstance = {
+  [_actionInstance]: never
+  id: ActionInstanceId
+  actionIdentifier?: undefined
   type: "validator"
-  instanceParameter: ValidatorActionInstanceParameter
-  actionRef?: undefined
+  instanceParameter: ValidatorActionParameter
 }
 
 // binder
-export type BinderActionInstanceParameter = {
-  assignments: { variableId: LocalVariableId; value: Expression }[]
-} & InstanceParameterMeta
-export type BinderActionInstanceBlock = {
+export type BinderActionInstance = {
+  [_actionInstance]: never
+  id: ActionInstanceId
+  actionIdentifier?: undefined
   type: "binder"
-  instanceParameter: BinderActionInstanceParameter
-  actionRef?: undefined
+  instanceParameter: BinderActionParameter
 }
 
 // unknown
-export type UnknownActionInstanceBlock = {
+export type UnknownActionInstance = {
+  [_actionInstance]: never
+  id: ActionInstanceId
+  actionIdentifier?: undefined
+  instanceParameter: Partial<UnknownActionParameter>
   type: "unknown"
-  instanceParameter?: undefined
-  actionRef?: undefined
 }
 
-// action instance
-export type ActionInstanceId = Id & { __actionInstanceId: never }
-type _ActionInstance<Type extends ActionType> = {
-  actionInstanceId: ActionInstanceId
-} & {
-  rest_call: RestCallActionInstanceBlock
-  validator: ValidatorActionInstanceBlock
-  binder: BinderActionInstanceBlock
-  unknown: UnknownActionInstanceBlock
-}[Type]
-
-// specific type
-export type RestCallActionInstance = _ActionInstance<"rest_call">
-export type ValidatorActionInstance = _ActionInstance<"validator">
-export type BinderActionInstance = _ActionInstance<"binder">
-export type UnknownActionInstance = _ActionInstance<"unknown">
-
+// Action Instance
 export type ActionInstance =
   | RestCallActionInstance
   | ValidatorActionInstance
   | BinderActionInstance
   | UnknownActionInstance
 
-// resolved action instance
+export type RawActionInstance =
+  | Omit<RestCallActionInstance, typeof _actionInstance>
+  | Omit<ValidatorActionInstance, typeof _actionInstance>
+  | Omit<BinderActionInstance, typeof _actionInstance>
+  | Omit<UnknownActionInstance, typeof _actionInstance>
+
 export type ResolvedRestCallActionInstance = RestCallActionInstance & {
-  action: ResolvedAction
+  action: ResolvedAction<"rest_call" | "unknown">
 }
 
 export type ResolvedBinderActionInstance = Replace<
   BinderActionInstance,
   "instanceParameter",
-  Replace<
-    BinderActionInstanceParameter,
-    "assignments",
-    {
+  {
+    assignments: {
       variableId: LocalVariableId
       variable: LocalVariable
       value: Expression
     }[]
-  >
+  }
 >
+
+export type ResolvedValidatorActionInstance = ValidatorActionInstance
 
 export type ResolvedActionInstance =
   | ResolvedRestCallActionInstance
-  | ValidatorActionInstance
   | ResolvedBinderActionInstance
+  | ResolvedValidatorActionInstance
   | UnknownActionInstance
+
+export type RawResolvedActionInstance =
+  | (Omit<ResolvedRestCallActionInstance, "_actionInstance" | "action"> & {
+      action: RawResolvedAction
+    })
+  | Omit<ResolvedBinderActionInstance, "_actionInstance">
+  | Omit<ResolvedValidatorActionInstance, "_actionInstance" | "action">
+  | Omit<UnknownActionInstance, "_actionInstance" | "action">
+
+export const buildRestCallActionInstance: Builder<RestCallActionInstance> = (
+  id,
+  params,
+) => {
+  return {
+    id,
+    ...params,
+  } satisfies BuilderReturn<RestCallActionInstance> as RestCallActionInstance
+}
+
+export const buildValidatorActionInstance: Builder<ValidatorActionInstance> = (
+  id,
+  params,
+) => {
+  return {
+    id,
+    ...params,
+  } satisfies BuilderReturn<ValidatorActionInstance> as ValidatorActionInstance
+}
+
+export const buildBinderActionInstance: Builder<BinderActionInstance> = (
+  id,
+  params,
+) => {
+  return {
+    id,
+    ...params,
+  } satisfies BuilderReturn<BinderActionInstance> as BinderActionInstance
+}
+
+export const buildUnknownActionInstance: Builder<UnknownActionInstance> = (
+  id,
+  params,
+) => {
+  return {
+    id,
+    ...params,
+  } satisfies BuilderReturn<UnknownActionInstance> as UnknownActionInstance
+}
+
+export const buildResolvedActionInstance: Builder<ResolvedActionInstance> = (
+  id,
+  params,
+) => {
+  return {
+    id,
+    ...params,
+  } satisfies BuilderReturn<ResolvedActionInstance> as ResolvedActionInstance
+}
+
+export const resolveRestCallActionInstance = (
+  actionInstance: RestCallActionInstance,
+  action: ResolvedAction<"rest_call">,
+): ResolvedRestCallActionInstance => {
+  return {
+    ...actionInstance,
+    instanceParameter: mergeActionParameter(
+      "rest_call",
+      actionInstance.instanceParameter,
+      action.schema.base,
+    ),
+    action,
+  }
+}
+
+export const resolveBinderActionInstance = (
+  actionInstance: BinderActionInstance,
+  variablesMap: Map<LocalVariableId, LocalVariable>,
+): ResolvedBinderActionInstance => {
+  const assignments = actionInstance.instanceParameter.assignments.map(
+    (assign) => {
+      const variable = variablesMap.get(assign.variableId)
+      if (variable == null) {
+        throw new Error(`variable not found: ${assign.variableId}`)
+      }
+      return {
+        ...assign,
+        variable,
+      }
+    },
+  )
+  return {
+    ...actionInstance,
+    instanceParameter: {
+      assignments,
+    },
+  }
+}
+
+export const resolveValidatorActionInstance = (
+  actionInstance: ValidatorActionInstance,
+): ResolvedValidatorActionInstance => {
+  return actionInstance
+}

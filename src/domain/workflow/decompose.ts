@@ -1,5 +1,6 @@
 import { resolveExpression } from "../entity/value/expression.util"
 
+import type { Expression } from "../entity/value/expression"
 import type { TypedValue } from "../entity/value/dataType"
 import type { Meta } from "../entity/meta/meta"
 import type { Decomposed, DecomposedStep } from "../entity/decompose/decomposed"
@@ -7,18 +8,13 @@ import type { GlobalVariable } from "../entity/globalVariable/globalVariable"
 import type { Route } from "../entity/route/route"
 import type { Node } from "../entity/node/node"
 
-import { genId } from "@/utils/uuid"
 import { kvToRecordNullable } from "@/ui/lib/kv"
 
 const decomposeStepItem = (node: Node): DecomposedStep => {
-  const title =
-    node.actionInstances.find((ai) => ai.type === "rest_call")?.action.name ??
-    genId()
-
   return {
-    id: title,
-    title,
-    actions: node.actionInstances.map((ai) => {
+    id: node.name,
+    title: node.name,
+    actions: node.actionInstances.flatMap((ai) => {
       if (ai.type === "rest_call") {
         const pathParams =
           kvToRecordNullable(ai.instanceParameter.pathParams) ?? {}
@@ -26,9 +22,12 @@ const decomposeStepItem = (node: Node): DecomposedStep => {
 
         return {
           type: "rest_call",
-          description: ai.instanceParameter.description,
-          path: resolveExpression(ai.action.parameter.path, pathParams),
-          method: ai.action.parameter.method,
+          description: ai.description,
+          path: resolveExpression(
+            ai.instanceParameter.path as Expression,
+            pathParams,
+          ),
+          method: ai.instanceParameter.method!,
           headers: ai.instanceParameter.headers,
           cookies: ai.instanceParameter.cookies,
           queryParams: ai.instanceParameter.queryParams,
@@ -38,10 +37,9 @@ const decomposeStepItem = (node: Node): DecomposedStep => {
       } else if (ai.type === "validator") {
         return {
           type: "validator",
-          description: ai.instanceParameter.description,
           contents: ai.instanceParameter.contents,
         }
-      } else {
+      } else if (ai.type === "binder") {
         return {
           type: "binder",
           assignments: ai.instanceParameter.assignments.map((assignment) => ({
@@ -49,6 +47,8 @@ const decomposeStepItem = (node: Node): DecomposedStep => {
             value: assignment.value,
           })),
         }
+      } else {
+        return []
       }
     }),
   }

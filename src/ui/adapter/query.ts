@@ -1,10 +1,11 @@
 import { atom, useAtom, useAtomValue } from "jotai"
 import { useMemo } from "react"
 
-import type { ActionId, ResolvedAction } from "@/domain/entity/action/action"
+import type { ResolvedAction } from "@/domain/entity/action/action"
 import type { NodeId } from "@/domain/entity/node/node"
 import type { ResourceId } from "@/domain/entity/resource/resource"
 import type { RouteId } from "@/domain/entity/route/route"
+import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
 
 import { nodeAtom, nodeIdsAtom } from "@/domain/datasource/node"
 import {
@@ -44,11 +45,11 @@ export const useNodeIds = () => useAtomValue(nodeIdsAtom).values().toArray()
 
 export const useNode = (id: NodeId) => useAtomValue(nodeAtom(id))
 
-export const useActionIds = (): ActionId[] =>
+export const useActionIds = (): ActionSourceIdentifier[] =>
   useAtomValue(actionIdsAtom).values().toArray()
 
-export const useAction = (actionId: ActionId): ResolvedAction =>
-  useAtomValue(resolvedActionAtom(actionId))
+export const useAction = (identifier: ActionSourceIdentifier): ResolvedAction =>
+  useAtomValue(resolvedActionAtom(identifier))
 
 export const useActions = () => useAtomValue(actionsAtom)
 

@@ -2,29 +2,24 @@ import { beforeEach, describe, expect, test } from "vitest"
 import { atom } from "jotai"
 
 import { resourceAtom, resourceIdsAtom } from "../datasource/resource"
-import {
-  userDefinedActionAtom,
-  userDefinedActionIdsAtom,
-} from "../datasource/userDefinedAction"
+import { userDefinedActionAtom } from "../datasource/userDefinedAction"
 import { toActionInstanceId } from "../entity/node/actionInstance.util"
-import { toActionRefId } from "../entity/node/actionRef.util"
-import {
-  toResourceActionId,
-  toResourceId,
-} from "../entity/resource/resource.util"
+import { toResourceId } from "../entity/resource/resource.util"
 import { toUserDefinedActionId } from "../entity/userDefinedAction/userDefinedAction.util"
-import {
-  resourceActionToActionId,
-  toActionId,
-} from "../entity/action/action.util"
+import { buildResource } from "../entity/resource/resource"
+import { buildRestCallActionInstance } from "../entity/node/actionInstance"
 
 import { resolveActionInstance } from "./resolveActionInstance"
 
+import type { ResolvedActionInstance } from "../entity/node/actionInstance"
+import type { StripeSymbol } from "../entity/type"
+import type { OperationId } from "../entity/resource/identifier"
+import type { Resource } from "../entity/resource/resource"
 import type { Expression } from "../entity/value/expression"
-import type { ActionInstance } from "../entity/node/actionInstance"
+import type { OmitId } from "@/utils/idType"
 
-import { createStore } from "@/lib/jotai/store"
 import { addSetOp } from "@/utils/set"
+import { createStore } from "@/lib/jotai/store"
 
 const store = createStore()
 
@@ -36,53 +31,56 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
   })
 
   test("resource で定義されたOpenAPIを参照できる", () => {
-    resourceAtom(toResourceId("r1"), {
-      id: toResourceId("r1"),
-      type: "OpenApi",
-      name: "Resource 1",
-      description: "",
-      content: {
-        openapi: "3.0.0",
-        info: {
-          title: "title",
-          version: "1.0.0",
-        },
-        paths: {
-          "/post-test": {
-            post: {
-              operationId: "operationId",
+    resourceAtom(
+      toResourceId("r1"),
+      buildResource("r1", {
+        type: "open_api",
+        name: "Resource 1",
+        description: "",
+        content: {
+          openapi: "3.0.0",
+          info: {
+            title: "title",
+            version: "1.0.0",
+          },
+          paths: {
+            "/post-test": {
+              post: {
+                operationId: "operationId",
+              },
             },
           },
         },
-      },
-      locationType: "LocalFile",
-      path: "/path/to/resource",
-    })
+        locationType: "local_file",
+        path: "/path/to/resource",
+      } as StripeSymbol<OmitId<Resource>>),
+    )
 
     store.set(resourceIdsAtom, addSetOp(toResourceId("r1")))
 
-    const actionInstance: ActionInstance = {
-      actionInstanceId: toActionInstanceId("ai1"),
+    const actionInstance = buildRestCallActionInstance("ai1", {
       type: "rest_call" as const,
+      description: "",
       instanceParameter: {
-        description: "",
         headers: [],
         cookies: [],
         queryParams: [],
         pathParams: [],
-        config: {
-          followRedirect: false,
-          useCookie: false,
+      },
+      actionIdentifier: {
+        resourceType: "resource",
+        resourceIdentifier: {
+          resourceId: toResourceId("r1"),
+          identifier: {
+            operationId: "operationId" as OperationId,
+          },
         },
       },
-      actionRef: {
-        id: toActionRefId("ar1"),
-        actionId: resourceActionToActionId(
-          toResourceActionId("operationId"),
-          toResourceId("r1"),
-        ),
+      config: {
+        followRedirect: false,
+        useCookie: false,
       },
-    }
+    })
 
     const resolvedAtom = atom((get) =>
       resolveActionInstance(get, actionInstance),
@@ -90,82 +88,121 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
     const resolved = store.get(resolvedAtom)
 
     expect(resolved).toEqual({
-      actionInstanceId: toActionInstanceId("ai1"),
+      id: toActionInstanceId("ai1"),
       type: "rest_call",
+      description: "",
       instanceParameter: {
-        description: "",
+        baseUrl: "https://example.com",
+        method: "POST",
+        path: "/post-test",
         headers: [],
         cookies: [],
         queryParams: [],
         pathParams: [],
-        config: {
-          followRedirect: false,
-          useCookie: false,
+        body: {
+          params: {
+            "application/form-data": [],
+            "application/json": undefined,
+          },
+          selected: undefined,
         },
+      },
+      config: {
+        followRedirect: false,
+        useCookie: false,
       },
       action: {
         id: expect.any(String) as string,
         name: "operationId",
         description: "",
-        parameter: {
-          method: "POST",
-          path: "/post-test",
-          baseUrl: "https://example.com",
-          operationObject: {
+        resourceIdentifier: {
+          identifier: {
+            operationId: "operationId",
+          },
+          resourceId: "r1",
+        },
+        schema: {
+          base: {
+            method: "POST",
+            path: "/post-test",
+            baseUrl: "https://example.com",
+          },
+          examples: [
+            {
+              baseUrl: "https://example.com",
+              body: {
+                params: {
+                  "application/form-data": [],
+                  "application/json": {},
+                },
+                selected: "application/json",
+              },
+              cookies: [],
+              headers: [],
+              method: "POST",
+              path: "/post-test",
+              pathParams: [],
+              queryParams: [],
+            },
+          ],
+          jsonSchema: {
             operationId: "operationId",
           },
         },
         type: "rest_call",
-        identifier: {
-          operationId: "operationId",
+        resourceType: "resource",
+      },
+      actionIdentifier: {
+        resourceType: "resource",
+        resourceIdentifier: {
+          resourceId: toResourceId("r1"),
+          identifier: {
+            operationId: "operationId" as OperationId,
+          },
         },
-        resourceId: "r1",
-        source: "resoure",
-        resourceActionId: "operationId",
       },
-      actionRef: {
-        id: toActionRefId("ar1"),
-        actionId: toActionId("operationId-r1"),
-      },
-    })
+    } satisfies StripeSymbol<ResolvedActionInstance>)
   })
 
   test("user_defined で定義されたOpenAPIを参照できる", () => {
-    store.set(
-      userDefinedActionIdsAtom,
-      new Set([toUserDefinedActionId("uda1")]),
-    )
-    userDefinedActionAtom(toUserDefinedActionId("uda1"), {
-      id: toUserDefinedActionId("uda1"),
-      type: "rest_call" as const,
-      name: "post /post-test",
-      description: "",
-      parameter: {
-        method: "POST",
-        path: "/uda" as Expression,
-        baseUrl: "https://example.com",
+    store.set(userDefinedActionAtom(toUserDefinedActionId("uda1")), {
+      create: {
+        id: toUserDefinedActionId("uda1"),
+        type: "rest_call" as const,
+        name: "post /post-test",
+        description: "",
+        schema: {
+          base: {
+            method: "POST",
+            path: "/uda" as Expression,
+            baseUrl: "https://example.com",
+          },
+          examples: [],
+          jsonSchema: undefined,
+        },
       },
     })
 
-    const actionInstance: ActionInstance = {
-      actionInstanceId: toActionInstanceId("ai1"),
+    const actionInstance = buildRestCallActionInstance("ai1", {
       type: "rest_call" as const,
+      description: "",
       instanceParameter: {
-        description: "",
         headers: [],
         cookies: [],
         queryParams: [],
         pathParams: [],
-        config: {
-          followRedirect: false,
-          useCookie: false,
+      },
+      config: {
+        followRedirect: false,
+        useCookie: false,
+      },
+      actionIdentifier: {
+        resourceType: "user_defined",
+        resourceIdentifier: {
+          userDefinedActionId: toUserDefinedActionId("uda1"),
         },
       },
-      actionRef: {
-        id: toActionRefId("ar1"),
-        actionId: toActionId("uda1"),
-      },
-    }
+    })
 
     const resolvedAtom = atom((get) =>
       resolveActionInstance(get, actionInstance),
@@ -173,36 +210,54 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
     const resolved = store.get(resolvedAtom)
 
     expect(resolved).toEqual({
-      actionInstanceId: toActionInstanceId("ai1"),
+      id: toActionInstanceId("ai1"),
       type: "rest_call",
+      description: "",
       instanceParameter: {
-        description: "",
+        baseUrl: "https://example.com",
+        method: "POST",
+        path: "/uda",
         headers: [],
         cookies: [],
         queryParams: [],
         pathParams: [],
-        config: {
-          followRedirect: false,
-          useCookie: false,
+        body: {
+          params: {
+            "application/form-data": [],
+            "application/json": undefined,
+          },
+          selected: undefined,
         },
+      },
+      config: {
+        followRedirect: false,
+        useCookie: false,
       },
       action: {
         id: expect.any(String) as string,
         name: "post /post-test",
         description: "",
-        parameter: {
-          method: "POST",
-          path: "/uda",
-          baseUrl: "https://example.com",
+        schema: {
+          base: {
+            method: "POST",
+            path: "/uda",
+            baseUrl: "https://example.com",
+          },
+          examples: [],
+          jsonSchema: undefined,
         },
-        source: "userDefined",
+        resourceType: "user_defined",
         type: "rest_call",
-        userDefinedActionId: "uda1",
+        resourceIdentifier: {
+          userDefinedActionId: toUserDefinedActionId("uda1"),
+        },
       },
-      actionRef: {
-        id: toActionRefId("ar1"),
-        actionId: toActionId("uda1"),
+      actionIdentifier: {
+        resourceType: "user_defined",
+        resourceIdentifier: {
+          userDefinedActionId: toUserDefinedActionId("uda1"),
+        },
       },
-    })
+    } satisfies StripeSymbol<ResolvedActionInstance>)
   })
 })

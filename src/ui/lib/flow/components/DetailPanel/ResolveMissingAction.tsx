@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react"
 import { TbFileCode2, TbReplace } from "react-icons/tb"
 
-import type { ActionId } from "@/domain/entity/action/action"
-
+import { getIdentifier, type ActionId } from "@/domain/entity/action/action"
 import { RadioPanel } from "@/ui/components/common/RadioPanel"
 import { FormModalContent } from "@/ui/lib/common/FormModal"
 import { useActions } from "@/ui/adapter/query"
@@ -21,7 +20,7 @@ export const ResolveMissingAction = ({ actionId }: Props) => {
     null,
   )
 
-  const actions = useActions().filter((action) => action.parameter != null)
+  const actions = useActions().filter((action) => action.type === "rest_call")
 
   const [searchText, setSeachText] = useState("")
 
@@ -32,8 +31,8 @@ export const ResolveMissingAction = ({ actionId }: Props) => {
 
     return searchFuzzy(searchText, actions, {
       keys: [
-        (action) => action.parameter!.method,
-        (action) => action.parameter!.path,
+        (action) => action.schema.base.method ?? "",
+        (action) => action.schema.base.path ?? "",
         "name",
         "description",
       ],
@@ -94,7 +93,10 @@ export const ResolveMissingAction = ({ actionId }: Props) => {
                       onClick={() => setSelectedActionId(action.id)}
                       className="w-full rounded-md border border-transparent data-[selected=true]:border-blue-400 data-[selected=true]:bg-blue-50"
                     >
-                      <ApiCallTile key={action.id} actionId={action.id} />
+                      <ApiCallTile
+                        key={action.id}
+                        actionIdentifier={getIdentifier(action)}
+                      />
                     </button>
                   ))}
                 </div>

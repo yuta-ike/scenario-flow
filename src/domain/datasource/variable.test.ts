@@ -15,19 +15,10 @@ describe("variable > primitiveVariable", () => {
   beforeEach(() => {
     store.clear()
 
-    store.set(
-      variableIdsAtom,
-      new Set([
-        toLocalVariableId("v1"),
-        toLocalVariableId("v2"),
-        toLocalVariableId("v3"),
-      ]),
-    )
     for (const id of ["v1", "v2", "v3"]) {
-      variableAtom(
-        toLocalVariableId(id),
-        genLocalVariable(toLocalVariableId(id)),
-      )
+      store.set(variableAtom(toLocalVariableId(id)), {
+        create: genLocalVariable(toLocalVariableId(id)),
+      })
     }
   })
 
@@ -50,11 +41,11 @@ describe("variable > primitiveVariable", () => {
     store.subscribe(variableAtom(toLocalVariableId("v1")), subscriber)
 
     // action
-    store.update(variableAtom(toLocalVariableId("v1")), () =>
-      genLocalVariable(toLocalVariableId("v1"), {
+    store.set(variableAtom(toLocalVariableId("v1")), {
+      update: genLocalVariable(toLocalVariableId("v1"), {
         description: "new",
       }),
-    )
+    })
 
     expect(subscriber).toHaveBeenCalled()
   })
@@ -64,11 +55,11 @@ describe("variable > primitiveVariable", () => {
     store.subscribe(variableIdsAtom, subscriber)
 
     // action
-    store.update(variableAtom(toLocalVariableId("v1")), () =>
-      genLocalVariable(toLocalVariableId("v1"), {
+    store.set(variableAtom(toLocalVariableId("v1")), {
+      update: genLocalVariable(toLocalVariableId("v1"), {
         description: "new",
       }),
-    )
+    })
 
     expect(subscriber).not.toHaveBeenCalled()
   })
@@ -78,21 +69,15 @@ describe("variable > primitiveVariable", () => {
     store.subscribe(variableAtom(toLocalVariableId("v1")), subscriber)
 
     // action
-    store.update(
-      variableIdsAtom,
-      updateSetOp((ids) => [...ids, toLocalVariableId("4")]),
-    )
-    variableAtom(
-      toLocalVariableId("4"),
-      genLocalVariable(toLocalVariableId("4")),
-    )
+    store.set(variableAtom(toLocalVariableId("4")), {
+      create: genLocalVariable(toLocalVariableId("4")),
+    })
 
-    store.set(
-      variableAtom(toLocalVariableId("4")),
-      genLocalVariable(toLocalVariableId("4"), {
+    store.set(variableAtom(toLocalVariableId("4")), {
+      update: genLocalVariable(toLocalVariableId("4"), {
         description: "new",
       }),
-    )
+    })
 
     expect(subscriber).not.toHaveBeenCalled()
   })

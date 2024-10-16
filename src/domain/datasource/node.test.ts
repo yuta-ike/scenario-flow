@@ -1,22 +1,12 @@
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
-import { toActionRefId } from "../entity/node/actionRef.util"
 import { genPrimitiveNode } from "../entity/node/node.factory"
-import {
-  toResourceActionId,
-  toResourceId,
-} from "../entity/resource/resource.util"
+import { toResourceId } from "../entity/resource/resource.util"
 import { toNodeId } from "../entity/node/node.util"
-import {
-  toActionInstanceId,
-  toValidatorId,
-} from "../entity/node/actionInstance.util"
+import { toActionInstanceId } from "../entity/node/actionInstance.util"
 import { toLocalVariableId } from "../entity/variable/variable.util"
 import { toUserDefinedActionId } from "../entity/userDefinedAction/userDefinedAction.util"
-import {
-  resourceActionToActionId,
-  toActionId,
-} from "../entity/action/action.util"
+import { buildResource } from "../entity/resource/resource"
 
 import {
   userDefinedActionAtom,
@@ -24,7 +14,7 @@ import {
 } from "./userDefinedAction"
 import { resourceAtom, resourceIdsAtom } from "./resource"
 import { nodeAtom, nodeIdsAtom, nodesAtom, primitiveNodeAtom } from "./node"
-import { variableAtom, variableIdsAtom } from "./variable"
+import { variableAtom } from "./variable"
 
 import type { ActionId } from "../entity/action/action"
 import type { Expression } from "../entity/value/expression"
@@ -44,7 +34,6 @@ const beforeEachProcess = () => {
   userDefinedActionAtom.clearAll()
   variableAtom.clearAll()
 
-  store.set(nodeIdsAtom, new Set([toNodeId("1"), toNodeId("2"), toNodeId("3")]))
   for (const id of ["1", "2", "3"]) {
     store.set(primitiveNodeAtom(toNodeId(id)), {
       create: genPrimitiveNode(toNodeId(id)),
@@ -142,28 +131,29 @@ describe("node > node", () => {
   })
 
   test("resource で定義されたOpenAPIを参照できる", () => {
-    resourceAtom(toResourceId("r1"), {
-      id: toResourceId("r1"),
-      type: "OpenApi" as const,
-      name: `Resource 1`,
-      description: "",
-      content: {
-        openapi: "3.0.0",
-        info: {
-          title: "title",
-          version: "1.0.0",
-        },
-        paths: {
-          "/post-test": {
-            post: {
-              operationId: `operationId`,
+    resourceAtom(
+      toResourceId("r1"),
+      buildResource("r1", {
+        type: "open_api" as const,
+        name: `Resource 1`,
+        description: "",
+        content: {
+          openapi: "3.0.0",
+          info: {
+            title: "title",
+            version: "1.0.0",
+          },
+          paths: {
+            "/post-test": {
+              post: {
+                operationId: `operationId`,
+              },
             },
           },
         },
-      },
-      locationType: "LocalFile" as const,
-      path: "/path/to/resource",
-    })
+        locationType: "local_file" as const,
+      }),
+    )
     store.update(resourceIdsAtom, addSetOp(toResourceId("r1")))
 
     store.set(primitiveNodeAtom(toNodeId("1")), {
@@ -172,28 +162,32 @@ describe("node > node", () => {
         name: "node",
         actionInstances: [
           {
-            actionInstanceId: toActionInstanceId("ai1"),
+            id: toActionInstanceId("ai1"),
+            description: "",
+            config: {
+              followRedirect: true,
+              useCookie: true,
+            },
             type: "rest_call" as const,
             instanceParameter: {
-              description: "",
               headers: [],
               cookies: [],
               queryParams: [],
               pathParams: [],
               body: {
-                selected: "application/json",
+                selected: "application/json" as const,
                 params: {
                   "application/form-data": [],
                   "application/json": {},
                 },
               },
             },
-            actionRef: {
-              id: toActionRefId("ar1"),
-              actionId: resourceActionToActionId(
-                toResourceActionId("operationId"),
-                toResourceId("r1"),
-              ),
+            actionIdentifier: {
+              resourceType: "resource",
+              resourceIdentifier: {
+                resourceId: "r1",
+                identifier: { operationId: "operationId" },
+              },
             },
           },
         ],
@@ -213,10 +207,12 @@ describe("node > node", () => {
       name: "node",
       actionInstances: [
         {
-          actionInstanceId: toActionInstanceId("ai1"),
+          id: toActionInstanceId("ai1"),
           type: "rest_call",
+          description: "",
           instanceParameter: {
-            description: "",
+            method: "POST",
+            path: "/post-test",
             headers: [],
             cookies: [],
             queryParams: [],
@@ -228,33 +224,57 @@ describe("node > node", () => {
                 "application/json": {},
               },
             },
+            baseUrl: "https://example.com",
           },
           action: {
             id: expect.any(String) as ActionId,
             name: "operationId",
             description: "",
-            parameter: {
-              method: "POST",
-              operationObject: {
+            type: "rest_call",
+            resourceIdentifier: {
+              resourceId: "r1",
+              identifier: { operationId: "operationId" },
+            },
+            resourceType: "resource",
+            schema: {
+              base: {
+                baseUrl: "https://example.com",
+                method: "POST",
+                path: "/post-test",
+              },
+              examples: [
+                {
+                  baseUrl: "https://example.com",
+                  body: {
+                    selected: "application/json",
+                    params: {
+                      "application/json": {},
+                      "application/form-data": [],
+                    },
+                  },
+                  method: "POST",
+                  path: "/post-test",
+                  headers: [],
+                  cookies: [],
+                  queryParams: [],
+                  pathParams: [],
+                },
+              ],
+              jsonSchema: {
                 operationId: "operationId",
               },
-              path: "/post-test" as Expression,
-              baseUrl: "https://example.com",
-            },
-            type: "rest_call",
-            source: "resoure",
-            resourceId: toResourceId("r1"),
-            resourceActionId: "operationId",
-            identifier: {
-              operationId: "operationId",
             },
           },
-          actionRef: {
-            id: toActionRefId("ar1"),
-            actionId: resourceActionToActionId(
-              toResourceActionId("operationId"),
-              toResourceId("r1"),
-            ),
+          actionIdentifier: {
+            resourceType: "resource",
+            resourceIdentifier: {
+              resourceId: "r1",
+              identifier: { operationId: "operationId" },
+            },
+          },
+          config: {
+            followRedirect: true,
+            useCookie: true,
           },
         },
       ],
@@ -272,18 +292,25 @@ describe("node > node", () => {
       userDefinedActionIdsAtom,
       new Set([toUserDefinedActionId("uda1")]),
     )
-    userDefinedActionAtom(toUserDefinedActionId("uda1"), {
-      id: toUserDefinedActionId("uda1"),
-      type: "rest_call" as const,
-      name: "operationId",
-      description: "",
-      parameter: {
-        method: "POST",
-        operationObject: {
-          operationId: "operationId",
+    store.set(userDefinedActionAtom(toUserDefinedActionId("uda1")), {
+      create: {
+        id: toUserDefinedActionId("uda1"),
+        type: "rest_call" as const,
+        name: "operationId",
+        description: "",
+        schema: {
+          base: {
+            method: "POST" as const,
+            path: "/uda" as Expression,
+            headers: [],
+            cookies: [],
+            queryParams: [],
+            pathParams: [],
+            baseUrl: "https://example.com",
+          },
+          examples: [],
+          jsonSchema: undefined,
         },
-        path: "/uda" as Expression,
-        baseUrl: "https://example.com",
       },
     })
 
@@ -293,25 +320,31 @@ describe("node > node", () => {
         name: "node",
         actionInstances: [
           {
-            actionInstanceId: toActionInstanceId("ai1"),
+            id: toActionInstanceId("ai1"),
             type: "rest_call" as const,
+            description: "",
             instanceParameter: {
-              description: "",
               headers: [],
               cookies: [],
               queryParams: [],
               pathParams: [],
               body: {
-                selected: "application/json",
+                selected: "application/json" as const,
                 params: {
                   "application/form-data": [],
                   "application/json": {},
                 },
               },
             },
-            actionRef: {
-              id: toActionRefId("ar1"),
-              actionId: toActionId(toUserDefinedActionId("uda1")),
+            actionIdentifier: {
+              resourceType: "user_defined",
+              resourceIdentifier: {
+                userDefinedActionId: toUserDefinedActionId("uda1"),
+              },
+            },
+            config: {
+              followRedirect: true,
+              useCookie: true,
             },
           },
         ],
@@ -331,10 +364,13 @@ describe("node > node", () => {
       name: "node",
       actionInstances: [
         {
-          actionInstanceId: toActionInstanceId("ai1"),
+          id: toActionInstanceId("ai1"),
           type: "rest_call",
+          description: "",
           instanceParameter: {
-            description: "",
+            baseUrl: "https://example.com",
+            method: "POST",
+            path: "/uda",
             headers: [],
             cookies: [],
             queryParams: [],
@@ -351,21 +387,34 @@ describe("node > node", () => {
             id: expect.any(String) as string,
             name: "operationId",
             description: "",
-            parameter: {
-              method: "POST",
-              path: "/uda",
-              operationObject: {
-                operationId: "operationId",
-              },
-              baseUrl: "https://example.com",
+            resourceIdentifier: {
+              userDefinedActionId: "uda1",
             },
             type: "rest_call",
-            source: "userDefined",
-            userDefinedActionId: "uda1",
+            resourceType: "user_defined",
+            schema: {
+              base: {
+                baseUrl: "https://example.com",
+                method: "POST",
+                path: "/uda",
+                headers: [],
+                cookies: [],
+                queryParams: [],
+                pathParams: [],
+              },
+              examples: [],
+              jsonSchema: undefined,
+            },
           },
-          actionRef: {
-            id: toActionRefId("ar1"),
-            actionId: toActionId(toUserDefinedActionId("uda1")),
+          actionIdentifier: {
+            resourceType: "user_defined",
+            resourceIdentifier: {
+              userDefinedActionId: toUserDefinedActionId("uda1"),
+            },
+          },
+          config: {
+            followRedirect: true,
+            useCookie: true,
           },
         },
       ],
@@ -385,11 +434,9 @@ describe("node > node", () => {
         name: "node",
         actionInstances: [
           {
-            actionInstanceId: toActionInstanceId("ai1"),
+            id: toActionInstanceId("ai1"),
             type: "validator" as const,
             instanceParameter: {
-              id: toValidatorId("vl1"),
-              description: "",
               contents: "true" as Expression,
             },
           },
@@ -408,12 +455,10 @@ describe("node > node", () => {
       name: "node",
       actionInstances: [
         {
-          actionInstanceId: toActionInstanceId("ai1"),
+          id: toActionInstanceId("ai1"),
           type: "validator",
           instanceParameter: {
-            id: toValidatorId("vl1"),
             contents: "true",
-            description: "",
           },
         },
       ],
@@ -427,12 +472,14 @@ describe("node > node", () => {
   })
 
   test("binder のアクションを定義できる", () => {
-    store.set(variableIdsAtom, new Set([toLocalVariableId("vr1")]))
-    variableAtom(toLocalVariableId("vr1"), {
-      id: toLocalVariableId("vr1"),
-      name: "variable",
-      description: "",
-      schema: "any",
+    store.set(variableAtom(toLocalVariableId("vr1")), {
+      create: {
+        id: toLocalVariableId("vr1"),
+        name: "variable",
+        description: "",
+        schema: "any",
+        boundIn: "1",
+      },
     })
 
     store.set(primitiveNodeAtom(toNodeId("1")), {
@@ -441,7 +488,7 @@ describe("node > node", () => {
         name: "node",
         actionInstances: [
           {
-            actionInstanceId: toActionInstanceId("ai1"),
+            id: toActionInstanceId("ai1"),
             type: "binder" as const,
             instanceParameter: {
               description: "",
@@ -468,7 +515,7 @@ describe("node > node", () => {
       name: "node",
       actionInstances: [
         {
-          actionInstanceId: toActionInstanceId("ai1"),
+          id: toActionInstanceId("ai1"),
           type: "binder" as const,
           instanceParameter: {
             assignments: [
@@ -480,10 +527,10 @@ describe("node > node", () => {
                   name: "variable",
                   description: "",
                   schema: "any",
+                  boundIn: "1",
                 },
               },
             ],
-            description: "",
           },
         },
       ],

@@ -3,7 +3,12 @@ import { atomFamily } from "jotai/utils"
 
 import { nodeAtom } from "./node"
 
-import type { PrimitiveRoute, Route, RouteId } from "../entity/route/route"
+import type {
+  PrimitiveRoute,
+  RawPrimitiveRoute,
+  Route,
+  RouteId,
+} from "../entity/route/route"
 import type { Atom, SetStateAction } from "jotai"
 import type { PartialDict } from "@/utils/typeUtil"
 
@@ -23,7 +28,7 @@ export const primitiveRouteAtom = wrapAtomFamily(_primitiveRouteAtom, {
     id,
     get,
     set,
-    update: SetStateAction<PartialDict<PrimitiveRoute, "name" | "color">>,
+    update: SetStateAction<PartialDict<RawPrimitiveRoute, "name" | "color">>,
   ) => {
     const getDefaultName = () => `シナリオ${get(routeIdsAtom).size + 1}`
     const getColor = () => get(routeColorCache)
@@ -39,7 +44,7 @@ export const primitiveRouteAtom = wrapAtomFamily(_primitiveRouteAtom, {
                 : update.name,
           }
 
-    set(_primitiveRouteAtom(id, initValue), (prevValue) => {
+    set(_primitiveRouteAtom(id, initValue as PrimitiveRoute), (prevValue) => {
       const newValue = typeof update === "function" ? update(prevValue) : update
 
       return {
@@ -49,7 +54,7 @@ export const primitiveRouteAtom = wrapAtomFamily(_primitiveRouteAtom, {
           newValue.name == null || newValue.name.length === 0
             ? getDefaultName()
             : newValue.name,
-      }
+      } as PrimitiveRoute
     })
   },
 })

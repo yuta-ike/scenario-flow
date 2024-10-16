@@ -1,4 +1,4 @@
-export const verifyRemoteOpenApi = async (
+export const verifyRemoteopen_api = async (
   url: string,
 ): Promise<true | string> => {
   try {

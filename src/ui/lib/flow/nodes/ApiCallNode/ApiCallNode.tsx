@@ -8,7 +8,7 @@ import { ValidatorSection } from "../sections/ValidatorSection"
 
 import type { NodeProps } from "@xyflow/react"
 import type { GeneralUiNode } from "../../type"
-import type { ActionId } from "@/domain/entity/action/action"
+import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
 
 import { useNode } from "@/ui/adapter/query"
 import { useIsNodeFocused } from "@/ui/state/focusedNodeId"
@@ -24,9 +24,11 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
   const isHighlighted = useIsNodeHighlighted(nodeId)
   const focusedRoute = useFocusedRouteByNodeId(nodeId)
 
-  const handleCreateNewApiCallNode = (actionId: ActionId) => {
+  const handleCreateNewApiCallNode = (actionId: ActionSourceIdentifier) => {
     appendNode(nodeId, actionId)
   }
+
+  console.log(node)
 
   return (
     <>
@@ -47,10 +49,7 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
         className="flex w-[240px] flex-col gap-2 rounded-lg bg-[#EFF1F7] p-1 pb-6 outline outline-2 outline-offset-2 outline-transparent data-[highlighted=true]:bg-yellow-100 data-[node-focused=true]:bg-blue-100 data-[highlighted=true]:outline-yellow-300 data-[node-focused=true]:outline-blue-300"
       >
         {node.actionInstances.map((actionInstance) => (
-          <div
-            key={actionInstance.actionInstanceId}
-            className="w-full empty:hidden"
-          >
+          <div key={actionInstance.id} className="w-full empty:hidden">
             {actionInstance.type === "rest_call" ? (
               <ApiCallSection
                 nodeId={node.id}

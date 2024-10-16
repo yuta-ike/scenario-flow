@@ -1,17 +1,18 @@
-import { toResourceId } from "./resource.util"
-
-import type { Resource, ResourceLocationBlock } from "./resource"
+import {
+  buildResource,
+  type Resource,
+  type ResourceLocationBlock,
+} from "./resource"
 
 export const genResource = (
   id: string,
   overrides: Partial<Resource> & ResourceLocationBlock = {
-    locationType: "LocalFile",
+    locationType: "local_file",
     path: "/path/to/resource",
   },
-): Resource => {
-  return {
-    id: toResourceId(id),
-    type: "OpenApi",
+): Resource =>
+  buildResource(id, {
+    type: "open_api",
     name: `Resource ${id}`,
     description: "",
     content: {
@@ -34,5 +35,4 @@ export const genResource = (
       },
     },
     ...overrides,
-  }
-}
+  })

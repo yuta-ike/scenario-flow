@@ -16,10 +16,8 @@ import clsx from "clsx"
 
 import type { SchemaObject } from "openapi3-ts/oas31"
 
-import {
-  getVariableDisplay,
-  type ResolvedEnvironment,
-} from "@/domain/entity/environment/environment"
+import { type ResolvedEnvironment } from "@/domain/entity/environment/environment"
+import { getVariableSuggests } from "@/domain/entity/environment/variable"
 
 const highlightVariables = (
   model: monacoEditor.ITextModel,
@@ -137,7 +135,7 @@ export const Editor2 = forwardRef<EditorRef, Props>(
       return () => {
         editor?.dispose()
       }
-    }, [fitHeight, initValue, lang])
+    }, [fitHeight, initValue, lang, readOnly])
 
     // スキーマ
     useEffect(() => {
@@ -164,25 +162,28 @@ export const Editor2 = forwardRef<EditorRef, Props>(
           const word = model.getWordUntilPosition(position)
           return {
             incomplete: false,
-            suggestions: environment.map((bind) => ({
-              label: `{{${getVariableDisplay(bind)}}}`,
-              detail: `[${bind.variable.boundIn === "global" ? "グローバル変数" : "変数"}] ${bind.variable.description}`,
-              documentation: bind.variable.description,
-              kind: languages.CompletionItemKind.Keyword,
-              insertText: `{{${getVariableDisplay(bind)}.$0}}`,
-              insertTextRules:
-                languages.CompletionItemInsertTextRule.InsertAsSnippet,
-              range: {
-                startLineNumber: position.lineNumber,
-                endLineNumber: position.lineNumber,
-                startColumn:
-                  context.triggerKind ===
-                  languages.CompletionTriggerKind.TriggerCharacter
-                    ? word.startColumn - 1
-                    : word.startColumn,
-                endColumn: word.endColumn,
-              },
-            })),
+            suggestions: environment.flatMap((bind) => {
+              const suggests = getVariableSuggests(bind.variable)
+              return suggests.map(({ name, type, depth }) => ({
+                label: `{{${name}}}`,
+                detail: `[${type}] ${bind.variable.description} ([${bind.variable.boundIn === "global" ? "グローバル変数" : "変数"}])`,
+                documentation: bind.variable.description,
+                kind: languages.CompletionItemKind.Keyword,
+                insertText: `{{${name}.$${depth}}}`,
+                insertTextRules:
+                  languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                range: {
+                  startLineNumber: position.lineNumber,
+                  endLineNumber: position.lineNumber,
+                  startColumn:
+                    context.triggerKind ===
+                    languages.CompletionTriggerKind.TriggerCharacter
+                      ? word.startColumn - 1
+                      : word.startColumn,
+                  endColumn: word.endColumn,
+                },
+              }))
+            }),
           }
         },
       })
@@ -219,7 +220,7 @@ export const Editor2 = forwardRef<EditorRef, Props>(
       <div
         className={clsx("relative min-h-[4lh]", className)}
         style={{
-          height: editor?.getContentHeight(),
+          height: fitHeight ? editor?.getContentHeight() : undefined,
         }}
         ref={monacoEl}
       />

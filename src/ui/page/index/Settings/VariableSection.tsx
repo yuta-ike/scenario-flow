@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from "react"
 
-import type { GlobalVariableId } from "@/domain/entity/globalVariable/globalVariable"
-
+import { buildGlobalVariable } from "@/domain/entity/globalVariable/globalVariable"
 import { typedValueToValue } from "@/domain/entity/value/dataType"
 import {
   addGlobalVariable,
@@ -29,12 +28,15 @@ export const VariableSection = () => {
       // 新規作成
       addGlobalVariable(id, value)
     }
-    return updateGlobalVariable({
-      id: id as GlobalVariableId,
-      name: value,
-      description: "",
-      schema: "any",
-    })
+    return updateGlobalVariable(
+      buildGlobalVariable(id, {
+        name: value,
+        namespace: "vars",
+        description: "",
+        schema: "any",
+        boundIn: "global",
+      }),
+    )
   }, [])
 
   const updateValue = useCallback(

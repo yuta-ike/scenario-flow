@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest"
 import {
   genPattern,
   genGlobalVariable,
-  getGlobalVariableValue,
+  getGlobalVariableBind,
 } from "../entity/globalVariable/globalVariable.factory"
 import {
   toPatternId,
@@ -63,7 +63,7 @@ describe("globalVariable", () => {
         )
         globalVariableValueAtom(
           toGlobalVariableValueId(gvvId),
-          getGlobalVariableValue(gvvId, pId, gvId),
+          getGlobalVariableBind(gvvId, pId, gvId),
         )
       }
     }
@@ -76,24 +76,30 @@ describe("globalVariable", () => {
     expect(globalVariables).toEqual([
       {
         id: toGlobalVariableId("gv1"),
+        namespace: "vars",
         name: "variable",
         schema: "any",
         description: "description",
         value: { type: "string", value: "TEST" },
+        boundIn: "global",
       },
       {
         id: toGlobalVariableId("gv2"),
+        namespace: "vars",
         name: "variable",
         schema: "any",
         description: "description",
         value: { type: "string", value: "TEST" },
+        boundIn: "global",
       },
       {
         id: toGlobalVariableId("gv3"),
+        namespace: "vars",
         name: "variable",
         schema: "any",
         description: "description",
         value: { type: "string", value: "TEST" },
+        boundIn: "global",
       },
     ])
   })
@@ -108,24 +114,30 @@ describe("globalVariable", () => {
         variables: [
           {
             id: "gv1",
+            namespace: "vars",
             name: "variable",
             schema: "any",
             description: "description",
             value: { type: "string", value: "TEST" },
+            boundIn: "global",
           },
           {
             id: "gv2",
+            namespace: "vars",
             name: "variable",
             schema: "any",
             description: "description",
             value: { type: "string", value: "TEST" },
+            boundIn: "global",
           },
           {
             id: "gv3",
+            namespace: "vars",
             name: "variable",
             schema: "any",
             description: "description",
             value: { type: "string", value: "TEST" },
+            boundIn: "global",
           },
         ],
       },
@@ -136,24 +148,30 @@ describe("globalVariable", () => {
         variables: [
           {
             id: "gv1",
+            namespace: "vars",
             name: "variable",
             schema: "any",
             description: "description",
             value: { type: "string", value: "TEST" },
+            boundIn: "global",
           },
           {
             id: "gv2",
+            namespace: "vars",
             name: "variable",
             schema: "any",
             description: "description",
             value: { type: "string", value: "TEST" },
+            boundIn: "global",
           },
           {
             id: "gv3",
+            namespace: "vars",
             name: "variable",
             schema: "any",
             description: "description",
             value: { type: "string", value: "TEST" },
+            boundIn: "global",
           },
         ],
       },
@@ -164,24 +182,30 @@ describe("globalVariable", () => {
         variables: [
           {
             id: "gv1",
+            namespace: "vars",
             name: "variable",
             schema: "any",
             description: "description",
             value: { type: "string", value: "TEST" },
+            boundIn: "global",
           },
           {
             id: "gv2",
+            namespace: "vars",
             name: "variable",
             schema: "any",
             description: "description",
             value: { type: "string", value: "TEST" },
+            boundIn: "global",
           },
           {
             id: "gv3",
+            namespace: "vars",
             name: "variable",
             schema: "any",
             description: "description",
             value: { type: "string", value: "TEST" },
+            boundIn: "global",
           },
         ],
       },

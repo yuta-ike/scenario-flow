@@ -35,10 +35,11 @@ export const BinderTabPanel = ({ nodeId, ai }: BinderTabPanelProps) => {
         updatedAssignments.map(({ id, key }) => ({
           id: toLocalVariableId(id),
           name: key,
+          boundIn: nodeId,
         })),
       )
 
-      updateActionInstance(nodeId, ai.actionInstanceId, {
+      updateActionInstance(nodeId, ai.id, {
         ...ai,
         instanceParameter: {
           ...ai.instanceParameter,

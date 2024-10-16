@@ -2,8 +2,14 @@ import { atom } from "jotai"
 import { atomFamily } from "jotai/utils"
 
 import { resolveActionInstance } from "../selector/resolveActionInstance"
+import {
+  type PrimitiveNode,
+  type Node,
+  type NodeId,
+  buildPrimitiveNode,
+} from "../entity/node/node"
 
-import type { PrimitiveNode, Node, NodeId } from "../entity/node/node"
+import type { StripeSymbol } from "../entity/type"
 import type { Atom } from "jotai"
 import type { OmitId } from "@/utils/idType"
 import type { CreateOrUpdate } from "@/lib/jotai/util"
@@ -38,21 +44,22 @@ export const primitiveNodeAtom = wrapAtomFamily(_primitiveNodeAtom, {
     nodeId,
     _,
     set,
-    param: CreateOrUpdate<PrimitiveNode, OmitId<PrimitiveNode>>,
+    param: CreateOrUpdate<
+      StripeSymbol<PrimitiveNode>,
+      StripeSymbol<OmitId<PrimitiveNode>>
+    >,
   ) => {
-    console.log("PRIMITIVENODE!!!!!!!!!")
     if (param.update != null) {
       // 更新
       set(_primitiveNodeAtom(nodeId), (prev) => {
-        console.log(prev, param.update)
         return {
           ...prev,
           ...param.update,
-        }
+        } as PrimitiveNode
       })
     } else {
       // 作成
-      _primitiveNodeAtom(nodeId, param.create)
+      _primitiveNodeAtom(nodeId, buildPrimitiveNode(nodeId, param.create))
       set(
         nodeIdsAtom,
         updateSetOp((prev) => [...prev, nodeId]),

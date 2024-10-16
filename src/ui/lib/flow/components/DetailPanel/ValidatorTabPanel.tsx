@@ -19,7 +19,7 @@ type ValidatorTabPanelProps = {
 export const ValidatorTabPanel = ({ nodeId, ai }: ValidatorTabPanelProps) => {
   const handleUpdateValidator = useCallback(
     (update: string) => {
-      updateActionInstance(nodeId, ai.actionInstanceId, {
+      updateActionInstance(nodeId, ai.id, {
         ...ai,
         instanceParameter: {
           ...ai.instanceParameter,

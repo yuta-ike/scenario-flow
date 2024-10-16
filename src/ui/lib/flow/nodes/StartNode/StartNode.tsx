@@ -3,13 +3,15 @@ import { Handle, Position } from "@xyflow/react"
 
 import { OpenCreateDropdown } from "../../components/OpenCreateDropdown"
 
-import type { ActionId } from "@/domain/entity/action/action"
+import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
 
 import { createRootNode } from "@/ui/adapter/command"
 
 export const StartNode = () => {
-  const handleCreateNewApiCallNode = (actionId: ActionId) => {
-    createRootNode(actionId)
+  const handleCreateNewApiCallNode = (
+    actionIdentifier: ActionSourceIdentifier,
+  ) => {
+    createRootNode(actionIdentifier)
   }
 
   return (

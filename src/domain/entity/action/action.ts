@@ -1,59 +1,114 @@
-import type { UnknownActionInner } from "./unknownAction"
-import type { UserDefinedActionInner } from "./userDefinedAction"
-import type { ResourceActionId, ResourceType } from "../resource/resource"
-import type { ResourceActionInner } from "./resourceAction"
-import type { ActionParameter } from "./actionParameter"
+import {
+  buildActionSourceIdentifier,
+  type ActionSourceIdentifier,
+} from "./identifier"
+
+import type { UserDefinedAction } from "../userDefinedAction/userDefinedAction"
+import type { OperationObject } from "openapi3-ts/oas31"
+import type { BuilderParams, Builder, BuilderReturn } from "../type"
+import type {
+  BinderActionParameter,
+  RestCallActionParameter,
+  UnknownActionParameter,
+  ValidatorActionParameter,
+} from "./actionParameter"
 import type { Id } from "@/utils/idType"
 
+declare const _action: unique symbol
+export type ActionId = Id & { [_action]: never }
+
 export type ActionType = "rest_call" | "validator" | "binder" | "unknown"
-export type ActionSource = "resource" | "user_defined" | "unknown"
+export type ActionSource = "resource" | "user_defined"
 
-// この概念自体無くしちゃっても良いかも
-export type ReusableActionType = Extract<ActionType, "rest_call" | "unknown">
-
-export type ActionId = Id & { __actionId: never }
-export type Action<
-  Type extends ReusableActionType = ReusableActionType,
-  RType extends ResourceType = ResourceType,
-> = {
+// Action
+export type Action = {
+  [_action]: never
   id: ActionId
-  type: Type
-} & (
-  | ({
-      source: "resoure"
-    } & ResourceActionInner<RType>)
-  | ({ source: "userDefined" } & UserDefinedActionInner)
-  | ({ source: "missing" } & UnknownActionInner)
-)
-
-// @duplicated
-export type ResolvedAction<
-  Type extends ReusableActionType = ReusableActionType,
-  RType extends ResourceType = ResourceType,
-> = Action<Type, RType> & {
+  type: ActionType
   name: string
   description: string
-  parameter: ActionParameter<Type>
+} & ActionSourceIdentifier // TODO:
+export const buildAction: Builder<Action> = (id, params) => {
+  return { id, ...params } satisfies BuilderReturn<Action> as Action
 }
 
-// Resource Action
-export type ResourceAction<
-  Type extends ReusableActionType = ReusableActionType,
-  RType extends ResourceType = ResourceType,
-> = {
-  id: ResourceActionId
-  type: Type
-  source: "resource"
-} & ResourceActionInner<RType>
+export type RawAction = Omit<Action, "_action">
 
-export type ResolvedResourceAction<
-  Type extends ReusableActionType = ReusableActionType,
-  RType extends ResourceType = ResourceType,
-> = {
-  id: ResourceActionId
-  type: Type
-  name: string
-  description: string
-  parameter: ActionParameter<Type>
-  source: "resoure"
-} & ResourceActionInner<RType>
+// ResolvedAction
+export type RestCallActionParameterSchema = {
+  base: Partial<RestCallActionParameter>
+  examples: Partial<RestCallActionParameter>[]
+  jsonSchema?: OperationObject
+}
+
+export type ValidatorActionParameterSchema = {
+  base: Partial<ValidatorActionParameter>
+  examples: Partial<ValidatorActionParameter>[]
+  jsonSchema?: undefined
+}
+
+export type BinderActionParameterSchema = {
+  base: Partial<BinderActionParameter>
+  examples: Partial<BinderActionParameter>[]
+  jsonSchema?: undefined
+}
+
+export type UnknownActionParameterSchema = {
+  base: Partial<UnknownActionParameter>
+  examples: Partial<UnknownActionParameter>[]
+  jsonSchema?: undefined
+}
+
+export type ResolvedAction<AType extends ActionType = ActionType> = Action & {
+  type: AType
+} & (
+    | {
+        type: "rest_call"
+        schema: RestCallActionParameterSchema
+      }
+    | {
+        type: "validator"
+        schema: ValidatorActionParameterSchema
+      }
+    | {
+        type: "binder"
+        schema: BinderActionParameterSchema
+      }
+    | {
+        type: "unknown"
+        schema: UnknownActionParameterSchema
+      }
+  )
+export type RawResolvedAction = Omit<ResolvedAction, "_action">
+
+export const buildResolvedAction = <AType extends ActionType = ActionType>(
+  id: string,
+  params: BuilderParams<ResolvedAction<AType>>,
+) => {
+  // @ts-expect-error
+  return { id, ...params } as ResolvedAction<AType>
+}
+
+export const buildResolvedActionFromUserDefinedAction = (
+  action: UserDefinedAction,
+): ResolvedAction => {
+  return buildResolvedAction(action.id, {
+    ...action,
+    resourceType: "user_defined",
+    resourceIdentifier: { userDefinedActionId: action.id },
+  })
+}
+
+export const getIdentifier = (action: Action) => {
+  if (action.resourceType === "resource") {
+    return buildActionSourceIdentifier({
+      resourceType: "resource",
+      resourceIdentifier: action.resourceIdentifier,
+    })
+  } else {
+    return buildActionSourceIdentifier({
+      resourceType: "user_defined",
+      resourceIdentifier: action.resourceIdentifier,
+    })
+  }
+}

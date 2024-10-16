@@ -7,19 +7,23 @@ import type { Json } from "@/utils/json"
 import type { PrimitiveRoute, RouteId } from "@/domain/entity/route/route"
 import type { OmitId } from "@/utils/idType"
 import type { NodeId } from "@/domain/entity/node/node"
-import type {
-  ActionInstance,
-  ActionInstanceId,
-} from "@/domain/entity/node/actionInstance"
 import type { LocalVariableId } from "@/domain/entity/variable/variable"
 import type { ActionId } from "@/domain/entity/action/action"
 import type {
   GlobalVariable,
-  GlobalVariableValueId,
+  GlobalVariableBindId,
 } from "@/domain/entity/globalVariable/globalVariable"
 import type { TypedValue } from "@/domain/entity/value/dataType"
-import type { Resource, ResourceId } from "@/domain/entity/resource/resource"
+import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
 
+import {
+  buildResource,
+  type ResourceId,
+} from "@/domain/entity/resource/resource"
+import {
+  type ActionInstance,
+  type ActionInstanceId,
+} from "@/domain/entity/node/actionInstance"
 import { resourceAtom, resourceIdsAtom } from "@/domain/datasource/resource"
 import { addResource, putResource } from "@/domain/workflow/resource"
 import { addSetOp } from "@/utils/set"
@@ -38,47 +42,36 @@ import {
   updateGlobalVariable as updateGlobalVariableWf,
   updateGlobalVariableValue as updateGlobalVariableValueWf,
 } from "@/domain/workflow/globalVariable"
-import {
-  toActionInstanceId,
-  toValidatorId,
-} from "@/domain/entity/node/actionInstance.util"
-import { toActionRefId } from "@/domain/entity/node/actionRef.util"
+import { toActionInstanceId } from "@/domain/entity/node/actionInstance.util"
 import { toExpression } from "@/domain/entity/value/expression.util"
 import { resolveRefs } from "@/lib/json-schema/resolveRefs"
 
-export const createRootNode = (actionId: ActionId) => {
+export const createRootNode = (actionIdentifier: ActionSourceIdentifier) => {
   run(
     createRootNodeWf({
       actionInstances: [
         {
-          actionInstanceId: toActionInstanceId(genId()),
+          id: toActionInstanceId(genId()),
           type: "rest_call",
-          instanceParameter: {
-            description: "",
-            config: {
-              followRedirect: false,
-              useCookie: false,
-            },
+          description: "",
+          instanceParameter: {},
+          config: {
+            followRedirect: false,
+            useCookie: false,
           },
-          actionRef: {
-            id: toActionRefId(genId()),
-            actionId,
-          },
+          actionIdentifier: actionIdentifier,
         },
         {
-          actionInstanceId: toActionInstanceId(genId()),
+          id: toActionInstanceId(genId()),
           type: "validator",
           instanceParameter: {
-            id: toValidatorId(genId()),
-            description: "",
             contents: toExpression(""),
           },
         },
         {
-          actionInstanceId: toActionInstanceId(genId()),
+          id: toActionInstanceId(genId()),
           type: "binder",
           instanceParameter: {
-            description: "",
             assignments: [],
           },
         },
@@ -93,40 +86,36 @@ export const createRootNode = (actionId: ActionId) => {
   )
 }
 
-export const appendNode = (nodeId: NodeId, actionId: ActionId) => {
+export const appendNode = (
+  nodeId: NodeId,
+  actionIdentifier: ActionSourceIdentifier,
+) => {
   run(
     appendNodeWf(
       {
         actionInstances: [
           {
-            actionInstanceId: toActionInstanceId(genId()),
+            id: toActionInstanceId(genId()),
             type: "rest_call",
-            instanceParameter: {
-              description: "",
-              config: {
-                followRedirect: false,
-                useCookie: false,
-              },
+            description: "",
+            instanceParameter: {},
+            config: {
+              followRedirect: false,
+              useCookie: false,
             },
-            actionRef: {
-              id: toActionRefId(genId()),
-              actionId,
-            },
+            actionIdentifier,
           },
           {
-            actionInstanceId: toActionInstanceId(genId()),
+            id: toActionInstanceId(genId()),
             type: "validator",
             instanceParameter: {
-              id: toValidatorId(genId()),
-              description: "",
               contents: toExpression(""),
             },
           },
           {
-            actionInstanceId: toActionInstanceId(genId()),
+            id: toActionInstanceId(genId()),
             type: "binder",
             instanceParameter: {
-              description: "",
               assignments: [],
             },
           },
@@ -143,30 +132,31 @@ export const appendNode = (nodeId: NodeId, actionId: ActionId) => {
   )
 }
 
-export const uploadOpenApiFile = async (
+export const uploadopen_apiFile = async (
   name: string,
   description: string,
   openApi: Json,
 ) => {
   const content = await resolveRefs(openApi as unknown as OpenAPIObject)
-  const resource = {
-    name,
-    description,
-    content,
-    type: "OpenApi",
-    locationType: "Temporal",
-  } as const
-
-  addResource(resource, {
-    genId: genId,
-    addResource: (resource) => {
-      resourceAtom(resource.id, resource)
-      store.update(resourceIdsAtom, addSetOp(resource.id))
+  addResource(
+    {
+      name,
+      description,
+      content,
+      type: "open_api",
+      locationType: "temporal",
     },
-  })
+    {
+      genId: genId,
+      addResource: (resource) => {
+        resourceAtom(resource.id, resource)
+        store.update(resourceIdsAtom, addSetOp(resource.id))
+      },
+    },
+  )
 }
 
-export const putOpenApiFile = async (
+export const putopen_apiFile = async (
   id: ResourceId,
   name: string,
   description: string,
@@ -177,16 +167,13 @@ export const putOpenApiFile = async (
     name,
     description,
     content,
-    type: "OpenApi",
-    locationType: "Temporal",
+    type: "open_api",
+    locationType: "temporal",
   } as const
 
   putResource(id, resource, {
-    putResource: (resourceId, resource) => {
-      store.set(resourceAtom(resourceId), {
-        id: resourceId,
-        ...resource,
-      } as Resource)
+    putResource: (id, params) => {
+      store.set(resourceAtom(id), buildResource(id, params))
     },
   })
 }
@@ -215,7 +202,7 @@ export const updateActionInstance = (
 }
 
 export const upsertVariables = (
-  data: { id: LocalVariableId; name: string }[],
+  data: { id: LocalVariableId; name: string; boundIn: NodeId }[],
 ) => {
   run(upsertVariablesWf(data))
 }
@@ -229,7 +216,7 @@ export const updateGlobalVariable = (variable: GlobalVariable) => {
 }
 
 export const updateGlobalVariableValue = (
-  id: GlobalVariableValueId,
+  id: GlobalVariableBindId,
   value: TypedValue,
 ) => {
   run(updateGlobalVariableValueWf(id, value))

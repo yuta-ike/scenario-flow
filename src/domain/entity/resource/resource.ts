@@ -1,47 +1,69 @@
-import type { Id } from "@/utils/idType"
+import type { StripeSymbol, Transition } from "../type"
+import type { Id, OmitId } from "@/utils/idType"
 import type { OpenAPIObject } from "openapi3-ts/oas31"
 
-// location
-
-export type LocationType = "Temporal" | "LocalFile" | "Remote" | "Git"
 export type ResourceLocationBlock =
   | {
-      locationType: "Temporal"
+      locationType: "temporal"
     }
   | {
-      locationType: "LocalFile"
+      locationType: "local_file"
       path: string
     }
   | {
-      locationType: "Remote"
+      locationType: "remote"
       url: string
     }
   | {
-      locationType: "Git"
+      locationType: "git"
       repository: string
       branch: string
     }
 
 // resource type
-export type ResourceType = "OpenApi"
+export type ResourceType = "open_api"
 
-// OpenApiResourceType
-export type OpenApiResourceBlock = {
-  type: "OpenApi"
+// open_apiResourceType
+export type open_apiResourceBlock = {
+  type: "open_api"
 }
 
 // Resource
-export type ResourceId = Id & { __resourceId: never }
-export type Resource = {
+declare const _resource: unique symbol
+export type ResourceId = Id & { [_resource]: never }
+export type OpenApiResource = {
+  [_resource]: never
   id: ResourceId
   name: string
   description: string
   content: OpenAPIObject
-} & OpenApiResourceBlock &
-  ResourceLocationBlock
+  type: "open_api"
+} & ResourceLocationBlock
 
-// Specific Resource
-export type OpenApiResource = Resource & { type: "OpenApi" }
+export type Resource = OpenApiResource
+export type RawResource = Omit<Resource, typeof _resource>
+
+export const buildResource = (
+  id: string,
+  params: StripeSymbol<OmitId<Resource>>,
+) => {
+  return { id, ...params } as Resource
+}
+
+export const updateopen_apiContent: Transition<Resource> = (
+  resource,
+  content: OpenAPIObject,
+) => {
+  return { ...resource, content }
+}
+
+export const updateResourceMeta: Transition<Resource> = (
+  resource,
+  params: Partial<Pick<Resource, "id" | "name">>,
+) => {
+  return { ...resource, ...params }
+}
 
 // ResourceAction
+// どこに置く問題
 export type ResourceActionId = Id & { __resourceActionId: never }

@@ -5,3 +5,11 @@ export const count = <T>(arr: T[]): Map<T, number> => {
   }
   return map
 }
+
+export const dedupeArrayByKey = <T>(arr: T[], key: keyof T): T[] => {
+  const map = new Map<T[keyof T], T>()
+  for (const item of arr) {
+    map.set(item[key], item)
+  }
+  return Array.from(map.values())
+}

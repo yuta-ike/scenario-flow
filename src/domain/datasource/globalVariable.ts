@@ -2,16 +2,17 @@ import { atom } from "jotai"
 import { atomFamily } from "jotai/utils"
 
 import { toPatternId } from "../entity/globalVariable/globalVariable.util"
+import {
+  type PatternId,
+  type Pattern,
+  type GlobalVariableId,
+  type GlobalVariable,
+  type GlobalVariableBindId,
+  type GlobalVariableBind,
+  buildPattern,
+} from "../entity/globalVariable/globalVariable"
 
 import type { TypedValue } from "../entity/value/dataType"
-import type {
-  PatternId,
-  Pattern,
-  GlobalVariableId,
-  GlobalVariable,
-  GlobalVariableValueId,
-  GlobalVariableValue,
-} from "../entity/globalVariable/globalVariable"
 
 import { atomWithId } from "@/lib/jotai/atomWithId"
 import { atomSet } from "@/lib/jotai/atomSet"
@@ -22,11 +23,13 @@ export const DEFAULT_PATTERN_ID = toPatternId("DEFAULT")
 export const patternIdsAtom = atomSet<PatternId>([DEFAULT_PATTERN_ID])
 patternIdsAtom.debugLabel = "patternIdsAtom"
 export const patternAtom = atomWithId<Pattern>("patternAtom")
-patternAtom(DEFAULT_PATTERN_ID, {
-  id: DEFAULT_PATTERN_ID,
-  name: "デフォルト",
-  description: "",
-})
+patternAtom(
+  DEFAULT_PATTERN_ID,
+  buildPattern(DEFAULT_PATTERN_ID, {
+    name: "デフォルト",
+    description: "",
+  }),
+)
 
 export const patternsAtom = atom((get) =>
   get(patternIdsAtom)
@@ -50,11 +53,11 @@ export const globalVariableAtom =
 //   schema: "any",
 // })
 
-export const globalVariableValueIdsAtom = atomSet<GlobalVariableValueId>([
+export const globalVariableValueIdsAtom = atomSet<GlobalVariableBindId>([
   // toGlobalVariableValueId(`001-${DEFAULT_PATTERN_ID}`),
 ])
 globalVariableValueIdsAtom.debugLabel = "globalVariableValueIdsAtom"
-export const globalVariableValueAtom = atomWithId<GlobalVariableValue>(
+export const globalVariableValueAtom = atomWithId<GlobalVariableBind>(
   "globalVariableValueAtom",
 )
 // globalVariableValueAtom(toGlobalVariableValueId(`001-${DEFAULT_PATTERN_ID}`), {

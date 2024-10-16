@@ -1,7 +1,7 @@
 import { Context } from "effect"
 
 import type { Store } from "@/lib/jotai/store"
-import type { ActionId } from "@/domain/entity/action/action"
+import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
 
 import {
   AddNode,
@@ -35,7 +35,7 @@ import { resolvedActionAtom } from "@/domain/datasource/actions"
 import { GenId } from "@/domain/workflow/common"
 import {
   AddGlobalVariable,
-  AddGlobalVariableValue,
+  AddGlobalVariableBind as AddGlobalVariableBind,
   UpdateGlobalVariable,
   UpdateGlobalVariableValue,
 } from "@/domain/workflow/globalVariable"
@@ -47,6 +47,7 @@ import {
   patternIdsAtom,
 } from "@/domain/datasource/globalVariable"
 import { toGlobalVariableValueId } from "@/domain/entity/globalVariable/globalVariable.util"
+import { buildGlobalVariableBind } from "@/domain/entity/globalVariable/globalVariable"
 
 export type Context =
   ReturnType<typeof buildContext> extends Context.Context<infer T> ? T : never
@@ -95,21 +96,23 @@ export const buildContext = (store: Store) =>
         ...routeParam,
       })),
     ),
-    Context.add(UpsertVariable, (variableId, variableName) =>
-      store.set(
-        variableAtom(variableId, {
+    Context.add(UpsertVariable, (variableId, variableName, boundIn) =>
+      store.set(variableAtom(variableId), {
+        create: {
           id: variableId,
           name: variableName,
           description: "",
           schema: "any",
-        }),
-        {
-          id: variableId,
-          name: variableName,
-          description: "",
-          schema: "any",
+          boundIn,
         },
-      ),
+        update: {
+          name: variableName,
+          description: "",
+          schema: "any",
+          boundIn,
+        },
+        upsert: true,
+      }),
     ),
     // global variables
     Context.add(AddGlobalVariable, (params) => {
@@ -122,19 +125,21 @@ export const buildContext = (store: Store) =>
         const globalVariableValueId = toGlobalVariableValueId(
           `${params.id}-${patternId}`,
         )
-        globalVariableValueAtom(globalVariableValueId, {
-          id: globalVariableValueId,
-          globalVariableId: params.id,
-          patternId,
-          value: { type: "string", value: "" },
-        })
+        globalVariableValueAtom(
+          globalVariableValueId,
+          buildGlobalVariableBind(globalVariableValueId, {
+            globalVariableId: params.id,
+            patternId,
+            value: { type: "string", value: "" },
+          }),
+        )
         store.update(
           globalVariableValueIdsAtom,
           addSetOp(globalVariableValueId),
         )
       })
     }),
-    Context.add(AddGlobalVariableValue, (params) => {
+    Context.add(AddGlobalVariableBind, (params) => {
       store.set(globalVariableValueAtom(params.id, params), params)
       store.update(globalVariableValueIdsAtom, addSetOp(params.id))
     }),
@@ -161,7 +166,7 @@ export const buildContext = (store: Store) =>
       return store.get(getParentByNodeId(nodeId))
     }),
     // Action
-    Context.add(GetResolvedAction, (actionId: ActionId) =>
+    Context.add(GetResolvedAction, (actionId: ActionSourceIdentifier) =>
       store.get(resolvedActionAtom(actionId)),
     ),
   )

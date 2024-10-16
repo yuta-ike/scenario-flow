@@ -1,45 +1,45 @@
+import { toGlobalVariableId, toPatternId } from "./globalVariable.util"
 import {
-  toGlobalVariableId,
-  toGlobalVariableValueId,
-  toPatternId,
-} from "./globalVariable.util"
-
-import type {
-  GlobalVariable,
-  GlobalVariableValue,
-  Pattern,
+  buildGlobalVariable,
+  buildGlobalVariableBind,
+  buildPattern,
+  type GlobalVariable,
+  type GlobalVariableBind,
+  type Pattern,
 } from "./globalVariable"
 
 export const genGlobalVariable = (
   id: string,
   params?: Partial<GlobalVariable>,
-): GlobalVariable => ({
-  id: toGlobalVariableId(id),
-  name: "variable",
-  description: "description",
-  schema: "any",
-  ...params,
-})
+): GlobalVariable =>
+  buildGlobalVariable(toGlobalVariableId(id), {
+    namespace: "vars",
+    name: "variable",
+    description: "description",
+    schema: "any",
+    boundIn: "global",
+    ...params,
+  })
 
-export const getGlobalVariableValue = (
+export const getGlobalVariableBind = (
   id: string,
   patternId: string,
   globalVariableId: string,
-  params?: Partial<GlobalVariableValue>,
-): GlobalVariableValue => ({
-  id: toGlobalVariableValueId(id),
-  patternId: toPatternId(patternId),
-  globalVariableId: toGlobalVariableId(globalVariableId),
-  value: {
-    type: "string",
-    value: "TEST",
-  },
-  ...params,
-})
+  params?: Partial<GlobalVariableBind>,
+): GlobalVariableBind =>
+  buildGlobalVariableBind(id, {
+    patternId: toPatternId(patternId),
+    globalVariableId: toGlobalVariableId(globalVariableId),
+    value: {
+      type: "string",
+      value: "TEST",
+    },
+    ...params,
+  })
 
-export const genPattern = (id: string, params?: Partial<Pattern>): Pattern => ({
-  id: toPatternId(id),
-  name: "pattern",
-  description: "description",
-  ...params,
-})
+export const genPattern = (id: string, params?: Partial<Pattern>): Pattern =>
+  buildPattern(id, {
+    name: "pattern",
+    description: "description",
+    ...params,
+  })

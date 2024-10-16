@@ -1,16 +1,24 @@
-import { SwitchActionInstanceTypeError } from "./node.error"
+import { display, eq, type ActionSourceIdentifier } from "../action/identifier"
+import { mergeActionParameter } from "../action/actionParameter"
 
-import type { ActionId, ResolvedAction } from "../action/action"
-import type { Expression } from "../value/expression"
-import type {
-  ActionInstance,
-  ActionInstanceId,
-  ResolvedActionInstance,
-  RestCallActionInstanceParameter,
+import { CannotChangeActionTypeError } from "./node.error"
+import {
+  buildUnknownActionInstance,
+  resolveBinderActionInstance,
+  resolveRestCallActionInstance,
+  resolveValidatorActionInstance,
+  type ActionInstance,
+  type ActionInstanceId,
+  type RawResolvedActionInstance,
+  type ResolvedActionInstance,
 } from "./actionInstance"
+
+import type { LocalVariable, LocalVariableId } from "../variable/variable"
+import type { StripeSymbol, Transition } from "../type"
+import type { ResolvedAction } from "../action/action"
+import type { Expression } from "../value/expression"
 import type { Id, OmitId } from "@/utils/idType"
 import type { Replace } from "@/utils/typeUtil"
-import type { Receiver } from "@/lib/receiver"
 
 export type LoopConfig = {
   times: number
@@ -21,12 +29,25 @@ export type NodeConfig = {
   loop: LoopConfig
 }
 
-export type NodeId = Id & { __nodeId: never }
+declare const _node: unique symbol
+export type NodeId = Id & { [_node]: never }
 export type PrimitiveNode = {
+  [_node]: never
   id: NodeId
   name: string
   actionInstances: ActionInstance[]
   config: NodeConfig
+}
+export type RawPrimitiveNode = StripeSymbol<PrimitiveNode>
+
+export const buildPrimitiveNode = (
+  id: string,
+  params: OmitId<RawPrimitiveNode>,
+) => {
+  return {
+    id,
+    ...params,
+  } as PrimitiveNode
 }
 
 export type Node = Replace<
@@ -34,32 +55,62 @@ export type Node = Replace<
   "actionInstances",
   ResolvedActionInstance[]
 >
-
-// レシーバーの要件を満たすか微妙
-export const createNode = (node: OmitId<PrimitiveNode, "name">) => {
-  return node
-}
-export const buildNode = (
-  id: NodeId,
-  name: string,
-  nodeParam: OmitId<PrimitiveNode, "name">,
-  actionMap: Map<ActionId, ResolvedAction>,
-): PrimitiveNode => {
+export type RawNode = Replace<
+  RawPrimitiveNode,
+  "actionInstances",
+  RawResolvedActionInstance[]
+>
+export const buildNode = (id: string, params: OmitId<RawNode>) => {
   return {
     id,
-    name,
-    ...nodeParam,
-    actionInstances: nodeParam.actionInstances.map((ai) => {
-      if (ai.type === "rest_call") {
-        const action = actionMap.get(ai.actionRef.actionId)
+    ...params,
+  } as Node
+}
 
+export const resolvePrimitveNode = (
+  primitiveNode: PrimitiveNode,
+  actionMap: Map<string, ResolvedAction>,
+  variableMap: Map<LocalVariableId, LocalVariable>,
+): Node => {
+  return buildNode(primitiveNode.id, {
+    ...primitiveNode,
+    actionInstances: primitiveNode.actionInstances.map((ai) => {
+      if (ai.type === "rest_call") {
+        const action = actionMap.get(display(ai.actionIdentifier))
+        if (action == null) {
+          throw new Error("action not found")
+        }
+        return resolveRestCallActionInstance(
+          ai,
+          action as ResolvedAction<"rest_call">,
+        )
+      } else if (ai.type === "validator") {
+        return resolveValidatorActionInstance(ai)
+      } else if (ai.type === "binder") {
+        return resolveBinderActionInstance(ai, variableMap)
+      } else {
+        return buildUnknownActionInstance(ai.id, ai)
+      }
+    }),
+  })
+}
+
+export const applyInitialValue = (node: Node) => {
+  return {
+    ...node,
+    actionInstances: node.actionInstances.map((ai) => {
+      if (ai.type === "rest_call" && ai.action.type === "rest_call") {
+        const example = ai.action.schema.examples[0]
         return {
           ...ai,
-          instanceParameter: {
-            ...action?.parameter?.example,
-            description:
-              actionMap.get(ai.actionRef.actionId)?.description ?? "",
-          } satisfies RestCallActionInstanceParameter,
+          instanceParameter:
+            example != null
+              ? mergeActionParameter(
+                  "rest_call",
+                  example,
+                  ai.action.schema.base,
+                )
+              : ai.instanceParameter,
         }
       } else {
         return ai
@@ -69,15 +120,18 @@ export const buildNode = (
 }
 
 // NodeConfigを更新する
-export const updateNodeConfig = ((node: PrimitiveNode, config: NodeConfig) => {
+export const updateNodeConfig: Transition<PrimitiveNode> = (
+  node: PrimitiveNode,
+  config: NodeConfig,
+) => {
   return {
     ...node,
     config,
   }
-}) satisfies Receiver<PrimitiveNode>
+}
 
 // action instance parameterを更新する
-export const updateActionInstanceParameter = ((
+export const updateActionInstanceParameter: Transition<PrimitiveNode> = (
   node: PrimitiveNode,
   actionInstanceId: ActionInstanceId,
   actionInstance: ActionInstance,
@@ -85,10 +139,10 @@ export const updateActionInstanceParameter = ((
   return {
     ...node,
     actionInstances: node.actionInstances.map((ai) => {
-      if (ai.actionInstanceId === actionInstanceId) {
+      if (ai.id === actionInstanceId) {
         if (ai.type !== actionInstance.type) {
           // Typeの変更は許可しない
-          throw new SwitchActionInstanceTypeError()
+          throw new CannotChangeActionTypeError()
         }
         return actionInstance
       } else {
@@ -96,28 +150,28 @@ export const updateActionInstanceParameter = ((
       }
     }),
   }
-}) satisfies Receiver<PrimitiveNode>
+}
 
 // actionを入れ替える
-export const replaceAction = ((
+export const replaceAction: Transition<PrimitiveNode> = (
   node: PrimitiveNode,
-  oldActionId: ActionId,
-  newActionId: ActionId,
+  oldActionIdentifier: ActionSourceIdentifier,
+  newActionIdentifier: ActionSourceIdentifier,
 ) => {
   return {
     ...node,
     actionInstances: node.actionInstances.map((ai) => {
-      if (ai.actionRef != null && ai.actionRef.actionId == oldActionId) {
+      if (
+        ai.actionIdentifier != null &&
+        eq(ai.actionIdentifier, oldActionIdentifier)
+      ) {
         return {
           ...ai,
-          actionRef: {
-            ...ai.actionRef,
-            actionId: newActionId,
-          },
+          actionIdentifier: newActionIdentifier,
         }
       } else {
         return ai
       }
     }),
   }
-}) satisfies Receiver<PrimitiveNode>
+}

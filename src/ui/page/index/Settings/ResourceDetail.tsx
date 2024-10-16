@@ -12,6 +12,7 @@ import { Editor2 } from "@/ui/lib/editor/Editor2"
 import { jsonToYaml } from "@/utils/yaml"
 import { Button } from "@/ui/components/common/Button"
 import { FormModal } from "@/ui/lib/common/FormModal"
+import { getIdentifier } from "@/domain/entity/action/action"
 
 type SectionProps = {
   title?: string
@@ -37,7 +38,9 @@ export const ResourceDetail = ({ resourceId }: ResourceDetailProps) => {
   const resource = useResource(resourceId)
 
   const actions = useActions().filter(
-    (action) => action.source === "resoure" && action.resourceId === resourceId,
+    (action) =>
+      action.resourceType === "resource" &&
+      action.resourceIdentifier.resourceId === resourceId,
   )
 
   const uploadButton = (
@@ -66,7 +69,10 @@ export const ResourceDetail = ({ resourceId }: ResourceDetailProps) => {
       <Section title="追加されたアクション">
         <div className="grid max-h-[400px] grid-cols-2 gap-2 overflow-y-auto">
           {actions.map((action) => (
-            <ApiCallTile key={action.id} actionId={action.id} />
+            <ApiCallTile
+              key={action.id}
+              actionIdentifier={getIdentifier(action)}
+            />
           ))}
         </div>
       </Section>

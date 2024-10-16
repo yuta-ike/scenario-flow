@@ -1,14 +1,18 @@
 import { toUpperCase } from "effect/String"
 
-import { toResourceActionId } from "../entity/resource/resource.util"
 import { toMethodAndPath } from "../entity/resource/identifier.utli"
+import {
+  buildOpenApiResourceIdentifierWithMethodAndPath,
+  buildOpenApiResourceIdentifierWithOperationId,
+  type OpenApiResourceLocalIdentifier as OpenApiResourceLocalIdentifier,
+  type ResourceActionLocalIdentifier,
+} from "../entity/resource/identifier"
 
 import { generateExampleFromOperationObject } from "./example"
 
+import type { RestCallActionParameterSchema } from "../entity/action/action"
+import type { RestCallActionParameterForopen_api } from "../entity/action/actionParameter"
 import type { OpenAPIObject } from "openapi3-ts/oas31"
-import type { ResolvedResourceAction } from "../entity/action/action"
-import type { RestCallACtionParameter } from "../entity/action/actionParameter"
-import type { OpenApiResourceIdentifier } from "../entity/resource/identifier"
 import type { Resource } from "../entity/resource/resource"
 import type { Expression } from "../entity/value/expression"
 
@@ -18,19 +22,19 @@ import { toLowerCase } from "@/utils/string"
 const lowerHttpMethods = HTTP_METHODS.map(toLowerCase)
 
 /**
- * OpenApiのpathをExpressionに変換する
+ * open_apiのpathをExpressionに変換する
  */
 export const parsePathToExpression = (path: string): Expression => {
   return path as Expression
 }
 
 // Open Api
-export const resolveOpenApiResource = (
+export const resolveopen_apiResource = (
   resource: Resource,
-  identifier: OpenApiResourceIdentifier,
+  identifier: OpenApiResourceLocalIdentifier,
 ): {
   meta: { name: string; description: string }
-  parameter: RestCallACtionParameter
+  parameter: RestCallActionParameterForopen_api
 } | null => {
   const pathsObject = resource.content as unknown as OpenAPIObject
 
@@ -57,7 +61,6 @@ export const resolveOpenApiResource = (
             method: method.toUpperCase() as HttpMethod,
             path: parsePathToExpression(path),
             baseUrl: "https://example.com",
-            operationObject,
           },
         }
       }
@@ -69,7 +72,9 @@ export const resolveOpenApiResource = (
 
 export const retrieveAllActionFromOpenApiResource = (
   resource: Resource,
-): ResolvedResourceAction[] => {
+): (RestCallActionParameterSchema & {
+  identifier: OpenApiResourceLocalIdentifier
+})[] => {
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (resource.content == null) {
     return []
@@ -77,43 +82,51 @@ export const retrieveAllActionFromOpenApiResource = (
 
   const pathsObject = resource.content as unknown as OpenAPIObject
 
-  const actions: ResolvedResourceAction[] = []
+  const actions: (RestCallActionParameterSchema & {
+    identifier: OpenApiResourceLocalIdentifier
+  })[] = []
   for (const [path, pathObject] of Object.entries(pathsObject.paths ?? {})) {
     for (const method of lowerHttpMethods) {
       const operationObject = pathObject[method]
       if (operationObject == null) {
         continue
       }
+      const baseUrl =
+        resource.content.servers?.[0]?.url ?? "https://example.com"
       actions.push({
-        type: "rest_call",
-        id: toResourceActionId(
-          operationObject.operationId ?? `${method} ${path}`,
-        ),
-        name: operationObject.operationId ?? `${method} ${path}`,
-        description: operationObject.description ?? "",
-        parameter: {
-          method: toUpperCase(method),
-          path: parsePathToExpression(path),
-          baseUrl: "https://example.com",
-          operationObject: operationObject,
-          example: generateExampleFromOperationObject(operationObject),
-        },
-        source: "resoure",
-        resourceId: resource.id,
-        resourceActionId: toResourceActionId(
-          operationObject.operationId ?? `${method} ${path}`,
-        ),
         identifier:
           operationObject.operationId != null
-            ? {
-                operationId: operationObject.operationId,
-              }
-            : {
-                methodAndPath: toMethodAndPath(toUpperCase(method), path),
-              },
+            ? buildOpenApiResourceIdentifierWithOperationId(
+                operationObject.operationId,
+              )
+            : buildOpenApiResourceIdentifierWithMethodAndPath(
+                toUpperCase(method),
+                path,
+              ),
+        base: {
+          method: toUpperCase(method),
+          path: parsePathToExpression(path),
+          baseUrl,
+        },
+        examples: [
+          generateExampleFromOperationObject(
+            toUpperCase(method),
+            path,
+            baseUrl,
+            operationObject,
+          ),
+        ],
+        jsonSchema: operationObject,
       })
     }
   }
 
   return actions
 }
+
+export const retrieveAllResourceActionLocalIdentifier = (
+  resource: Resource,
+): ResourceActionLocalIdentifier[] =>
+  retrieveAllActionFromOpenApiResource(resource).map(
+    ({ identifier }) => identifier,
+  )

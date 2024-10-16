@@ -5,117 +5,54 @@ import {
   userDefinedActionAtom,
   userDefinedTypeActionIdsAtom,
 } from "../datasource/userDefinedAction"
-import { resolveOpenApiResource } from "../openapi/resolveResources"
-import { toUserDefinedActionId } from "../entity/userDefinedAction/userDefinedAction.util"
 import {
-  resourceActionToActionId,
-  toActionId,
-} from "../entity/action/action.util"
-
-import { ResourceActionNotFoundError } from "./action.error"
+  buildResolvedActionFromUserDefinedAction,
+  type ResolvedAction,
+} from "../entity/action/action"
 import {
-  resourceActionAtom,
-  resourceActionIdsAtom,
-  resourceAtom,
-} from "./resource"
+  buildActionSourceIdentifier,
+  display,
+} from "../entity/action/identifier"
 
-import type { Action, ActionId, ResolvedAction } from "../entity/action/action"
+import { resourceActionAtom, resourceActionIdentifiersAtom } from "./resource"
 
-import { tryFn } from "@/utils/result"
-
-export type ActionKey = {
-  id: ActionId
-  source: "resource" | "userDefined"
-}
+import type { ActionSourceIdentifier } from "../entity/action/identifier"
 
 export const actionIdsAtom = atom((get) => {
-  const resourceActionIds = get(resourceActionIdsAtom)
-  const userDefinedActionIds = get(userDefinedTypeActionIdsAtom)
-  return new Set([
-    ...resourceActionIds,
-    ...userDefinedActionIds.values().toArray(),
-  ])
+  const resourceActionIds = get(resourceActionIdentifiersAtom)
+  const userDefinedActionIds = get(userDefinedTypeActionIdsAtom).map((udaId) =>
+    buildActionSourceIdentifier({
+      resourceType: "user_defined",
+      resourceIdentifier: { userDefinedActionId: udaId },
+    }),
+  )
+  return new Set([...resourceActionIds, ...userDefinedActionIds])
 })
 actionIdsAtom.debugLabel = "actionIdsAtom"
 
-// TODO: actionIdをなくして、UdaID or ResourceId+Indentifierを使うようにする。
-// ActionNotFoundとなった時のエラー量が増える & resourceIdActionIdCacheが不要になる
-const actionAtom = atomFamily<ActionId, Atom<Action>>((actionId: ActionId) =>
-  atom((get) => {
-    const resourceAction = tryFn(() => get(resourceActionAtom(actionId)))
-    if (resourceAction.result === "success") {
-      const value = resourceAction.value
-      return {
-        ...value,
-        resourceActionId: value.id,
-        id: resourceActionToActionId(value.id, value.resourceId),
-      } satisfies Action
+export const resolvedActionAtom = atomFamily<
+  ActionSourceIdentifier,
+  Atom<ResolvedAction>
+>((actionIdentifier: ActionSourceIdentifier) => {
+  const createdAtom = atom((get) => {
+    if (actionIdentifier.resourceType === "resource") {
+      return get(resourceActionAtom(actionIdentifier.resourceIdentifier))
+    } else {
+      const userDefinedAction = get(
+        userDefinedActionAtom(
+          actionIdentifier.resourceIdentifier.userDefinedActionId,
+        ),
+      )
+      return buildResolvedActionFromUserDefinedAction(userDefinedAction)
     }
-
-    const userDefinedAction = tryFn(() =>
-      get(userDefinedActionAtom(toUserDefinedActionId(actionId))),
-    )
-    if (userDefinedAction.result === "success") {
-      const value = userDefinedAction.value
-      return {
-        ...value,
-        source: "userDefined",
-        userDefinedActionId: toUserDefinedActionId(value.id),
-        id: toActionId(value.id),
-      } satisfies Action
-    }
-
-    return {
-      id: actionId,
-      source: "missing",
-      type: "unknown",
-    } satisfies Action
-  }),
-)
-
-export const resolvedActionAtom = atomFamily<ActionId, Atom<ResolvedAction>>(
-  (actionId: ActionId) => {
-    const createdAtom = atom((get) => {
-      const action = get(actionAtom(actionId))
-
-      if (action.source === "userDefined") {
-        const userDefinedAction = get(
-          userDefinedActionAtom(action.userDefinedActionId),
-        )
-        return {
-          ...userDefinedAction,
-          ...action,
-        } satisfies ResolvedAction
-      } else if (action.source === "resoure") {
-        const { resourceId, identifier } = action
-        const resource = get(resourceAtom(resourceId))
-        const res = resolveOpenApiResource(resource, identifier)
-        if (res == null) {
-          throw new ResourceActionNotFoundError()
-        }
-        return {
-          name: res.meta.name,
-          description: res.meta.description,
-          parameter: res.parameter,
-          ...action,
-        } satisfies ResolvedAction
-      } else {
-        return {
-          name: "Unknown",
-          description: "Unknown",
-          parameter: null,
-          ...action,
-        }
-      }
-    })
-    createdAtom.debugLabel = `resolvedActionAtom(${actionId})`
-    return createdAtom
-  },
-)
+  })
+  createdAtom.debugLabel = `resolvedActionAtom(${display(actionIdentifier)})`
+  return createdAtom
+})
 
 export const actionsAtom = atom((get) =>
   get(actionIdsAtom)
     .values()
-    .map((id) => get(resolvedActionAtom(id)))
+    .map((identifier) => get(resolvedActionAtom(identifier)))
     .toArray(),
 )

@@ -16,7 +16,7 @@
     "lint:inspect": "eslint --inspect-config",
     "format": "prettier --cache --ignore-path .prettierignore --check .",
     "format:fix": "pnpm run format --write",
-    "type-check": "pnpm exec tsc --noEmit",
+    "type-check": "pnpm exec tsc -p ./tsconfig.app.json --noEmit",
     "check": "run-p lint format type-check",
     "fix": "run-p lint:fix format:fix type-check"
   },

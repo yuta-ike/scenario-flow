@@ -8,3 +8,20 @@ export type PartialDict<Dict, Key extends keyof Dict> = {
 } & Partial<{
   [K in Key]?: Dict[K]
 }>
+
+export type If<Cond, Is, Then, Else = never> = Cond extends Is ? Then : Else
+
+export type IsArray<T> = T extends any[] ? T : never
+
+export type IsDict<T> =
+  T extends Record<string, any>
+    ? T extends { length: never }
+      ? T
+      : never
+    : never
+
+export type PartialPartial<T, RequiredKey extends keyof T> = {
+  [K in Exclude<keyof T, RequiredKey>]?: T[K]
+} & {
+  [K in RequiredKey]: T[K]
+}

@@ -1,13 +1,22 @@
 import { atom } from "jotai"
 import { atomFamily } from "jotai/utils"
 
-import { retrieveAllActionFromOpenApiResource } from "../openapi/resolveResources"
-import { resourceActionToActionId } from "../entity/action/action.util"
+import {
+  retrieveAllActionFromOpenApiResource,
+  retrieveAllResourceActionLocalIdentifier,
+} from "../openapi/resolveResources"
+import {
+  buildActionSourceIdentifier,
+  type ResourceActionIdentifier,
+} from "../entity/action/identifier"
+import { display, eq } from "../entity/resource/identifier"
+import { identifierToActionId } from "../entity/action/action.util"
+import {
+  buildResolvedAction,
+  type ResolvedAction,
+} from "../entity/action/action"
 
-import { ResourceActionNotFoundError } from "./action.error"
-
-import type { ActionId } from "../entity/action/action"
-import type { Getter, SetStateAction, Setter } from "jotai"
+import type { Atom, SetStateAction } from "jotai"
 import type { Resource, ResourceId } from "../entity/resource/resource"
 
 import { atomWithId } from "@/lib/jotai/atomWithId"
@@ -15,36 +24,34 @@ import { atomSet } from "@/lib/jotai/atomSet"
 
 // cache
 // どのactionIdがどのresourceを参照しているかを保持する
-const resourceIdActionIdCache = atom(new Map<ActionId, ResourceId>())
-resourceIdActionIdCache.debugLabel = "resourceIdActionIdCache"
-const updateCache = (
-  get: Getter,
-  set: Setter,
-  newResourceIds: Set<ResourceId>,
-  prevResourceIds: Set<ResourceId>,
-) => {
-  // 追加されたものと削除されたものを取得
-  const addedValues = newResourceIds.difference(prevResourceIds)
-  const deletedValues = prevResourceIds.difference(newResourceIds)
-  addedValues.forEach((resourceId) => {
-    const resource = get(resourceAtom(resourceId))
-    const actions = retrieveAllActionFromOpenApiResource(resource)
-    actions.forEach((action) => {
-      get(resourceIdActionIdCache).set(
-        resourceActionToActionId(action.id, action.resourceId),
-        resourceId,
-      )
-    })
-  })
-  deletedValues.forEach((resourceId) => {
-    set(
-      resourceIdActionIdCache,
-      (prev) => new Map(prev.entries().filter(([_, v]) => v !== resourceId)),
-    )
-  })
-}
-
-// TODO: 今はJSONをcontentにぶち込んでいるが、LocationTypeごとにFetcherを作成し、読み込み → パース → キャッシュ保持 を行うようにする
+// const resourceIdActionIdCache = atom(new Map<ActionId, ResourceId>())
+// resourceIdActionIdCache.debugLabel = "resourceIdActionIdCache"
+// const updateCache = (
+//   get: Getter,
+//   set: Setter,
+//   newResourceIds: Set<ResourceId>,
+//   prevResourceIds: Set<ResourceId>,
+// ) => {
+//   // 追加されたものと削除されたものを取得
+//   const addedValues = newResourceIds.difference(prevResourceIds)
+//   const deletedValues = prevResourceIds.difference(newResourceIds)
+//   addedValues.forEach((resourceId) => {
+//     const resource = get(resourceAtom(resourceId))
+//     const actions = retrieveAllActionFromopen_apiResource(resource)
+//     actions.forEach((action) => {
+//       get(resourceIdActionIdCache).set(
+//         resourceActionToActionId(action.id, action.resourceId),
+//         resourceId,
+//       )
+//     })
+//   })
+//   deletedValues.forEach((resourceId) => {
+//     set(
+//       resourceIdActionIdCache,
+//       (prev) => new Map(prev.entries().filter(([_, v]) => v !== resourceId)),
+//     )
+//   })
+// }
 
 // atom
 const _resourceIdsAtom = atomSet<ResourceId>([])
@@ -52,15 +59,9 @@ _resourceIdsAtom.debugLabel = "resourceIdsAtom/core"
 
 export const resourceIdsAtom = atom(
   (get) => get(_resourceIdsAtom),
-  (get, set, update: SetStateAction<Set<ResourceId>>) => {
+  (_, set, update: SetStateAction<Set<ResourceId>>) => {
     set(_resourceIdsAtom, (prevValue) => {
-      const newValues =
-        typeof update === "function" ? update(prevValue) : update
-
-      // キャッシュの更新
-      updateCache(get, set, newValues, prevValue)
-
-      return newValues
+      return typeof update === "function" ? update(prevValue) : update
     })
   },
 )
@@ -75,37 +76,67 @@ export const resourcesAtom = atom((get) => {
 })
 resourcesAtom.debugLabel = "resourcesAtom"
 
-export const resourceActionAtom = atomFamily((actionId: ActionId) => {
+export const resourceActionAtom = atomFamily<
+  ResourceActionIdentifier,
+  Atom<ResolvedAction>
+>((actionIdentifier: ResourceActionIdentifier) => {
   const newAtom = atom((get) => {
-    const resourceId = get(resourceIdActionIdCache).get(actionId)
-    if (resourceId == null) {
-      throw new ResourceActionNotFoundError()
-    }
-    const resource = get(resourceAtom(resourceId))
-    // TODO: この結果もキャッシュしておいた方が無難
+    const resource = get(resourceAtom(actionIdentifier.resourceId))
     const actions = retrieveAllActionFromOpenApiResource(resource)
-    const action = actions.find(
-      (action) =>
-        resourceActionToActionId(action.id, action.resourceId) === actionId,
+    const res = actions.find(({ identifier: _identifier }) =>
+      eq(actionIdentifier.identifier, _identifier),
     )
-    if (action == null) {
-      throw new Error("action not found")
+    const id = identifierToActionId(
+      buildActionSourceIdentifier({
+        resourceType: "resource",
+        resourceIdentifier: actionIdentifier,
+      }),
+    )
+    if (res == null) {
+      return buildResolvedAction(id, {
+        type: "unknown",
+        name: "Unknown",
+        description: "",
+        resourceType: "resource",
+        resourceIdentifier: actionIdentifier,
+        schema: {
+          base: {},
+          examples: [],
+        },
+      })
     }
-    return action
+
+    const { identifier: _, ...parameterSchema } = res
+    return buildResolvedAction(id, {
+      type: "rest_call",
+      name:
+        parameterSchema.jsonSchema?.operationId ??
+        `${parameterSchema.base.method!} ${parameterSchema.base.path!}`,
+      description: parameterSchema.jsonSchema?.description ?? "",
+      schema: parameterSchema,
+      resourceType: "resource",
+      resourceIdentifier: actionIdentifier,
+    })
   })
-  newAtom.debugLabel = `resourceActionAtom(${actionId})`
+  newAtom.debugLabel = `resourceActionAtom(${display(actionIdentifier.identifier)})`
   return newAtom
 })
 
 // selector get all resource action
-export const resourceActionIdsAtom = atom((get) => {
+export const resourceActionIdentifiersAtom = atom((get) => {
   const resources = get(resourcesAtom)
-  const actionIds = resources.flatMap((resource) =>
-    retrieveAllActionFromOpenApiResource(resource).map((resourceAction) =>
-      resourceActionToActionId(resourceAction.id, resourceAction.resourceId),
+  const actionIdentifiers = resources.flatMap((resource) =>
+    retrieveAllResourceActionLocalIdentifier(resource).map((localIdentifier) =>
+      buildActionSourceIdentifier({
+        resourceType: "resource",
+        resourceIdentifier: {
+          resourceId: resource.id,
+          identifier: localIdentifier,
+        },
+      }),
     ),
   )
-  return actionIds
+  return actionIdentifiers
 })
 
 export const resourceActionsAtom = atom((get) => {
@@ -122,7 +153,7 @@ export const resourceActionIdsByResourceIdAtom = atomFamily(
   (resourceId: ResourceId) => {
     const newAtom = atom((get) => {
       const resource = get(resourceAtom(resourceId))
-      return retrieveAllActionFromOpenApiResource(resource).map(({ id }) => id)
+      return retrieveAllResourceActionLocalIdentifier(resource)
     })
     newAtom.debugLabel = `resourceActionIdsByResourceIdAtom(${resourceId})`
     return newAtom

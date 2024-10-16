@@ -5,7 +5,8 @@ import {
 import { getParametersMap } from "./getParametersMap"
 
 import type { OperationObject } from "openapi3-ts/oas31"
-import type { RestCallActionInstanceParameter } from "../../entity/node/actionInstance"
+import type { RestCallActionParameter } from "@/domain/entity/action/actionParameter"
+import type { HttpMethod } from "@/utils/http"
 
 import {
   genResponseJsonSampleFromSchema,
@@ -19,11 +20,17 @@ import { emptyJson } from "@/utils/json"
  * @returns OperationObjectをもとに、RestCallActionInstanceParameterを生成する
  */
 export const generateExampleFromOperationObject = (
+  method: HttpMethod,
+  path: string,
+  baseUrl: string,
   operationObject: OperationObject,
-): RestCallActionInstanceParameter => {
+): RestCallActionParameter => {
   const parametersMap = getParametersMap(operationObject.parameters)
 
   return {
+    method,
+    path,
+    baseUrl,
     headers: parametersMap?.get("header") ?? [],
     queryParams: parametersMap?.get("query") ?? [],
     pathParams: parametersMap?.get("path") ?? [],
@@ -41,6 +48,5 @@ export const generateExampleFromOperationObject = (
           [],
       },
     },
-    description: "",
   }
 }

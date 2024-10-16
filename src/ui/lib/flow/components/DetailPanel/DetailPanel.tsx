@@ -26,12 +26,10 @@ const DetailPanelInner = ({ nodeId }: DetailPanelInnerProps) => {
   const { actionInstances } = useNode(nodeId)
 
   const [selectedInstanceId, setSelectedInstanceId] =
-    useState<ActionInstanceId | null>(
-      actionInstances[0]?.actionInstanceId ?? null,
-    )
+    useState<ActionInstanceId | null>(actionInstances[0]?.id ?? null)
 
   const targetActionInstance = actionInstances.find(
-    (ai) => ai.actionInstanceId === selectedInstanceId,
+    (ai) => ai.id === selectedInstanceId,
   )
 
   return (
@@ -39,10 +37,10 @@ const DetailPanelInner = ({ nodeId }: DetailPanelInnerProps) => {
       <div className="flex w-full items-center border-b border-b-slate-200 pb-0">
         {actionInstances.map((ai) => (
           <button
-            key={ai.actionInstanceId}
+            key={ai.id}
             type="button"
-            aria-pressed={ai.actionInstanceId === selectedInstanceId}
-            onClick={() => setSelectedInstanceId(ai.actionInstanceId)}
+            aria-pressed={ai.id === selectedInstanceId}
+            onClick={() => setSelectedInstanceId(ai.id)}
             className="relative px-3 py-2.5 text-xs text-slate-600 hover:bg-slate-100 aria-[pressed=true]:text-black aria-[pressed=true]:before:absolute aria-[pressed=true]:before:inset-x-0 aria-[pressed=true]:before:bottom-0 aria-[pressed=true]:before:h-[2px] aria-[pressed=true]:before:rounded-sm aria-[pressed=true]:before:bg-slate-500"
           >
             {ai.type === "rest_call"
