@@ -1,0 +1,1 @@
+export { default } from "@scenario-flow/eslint-config/react.js"

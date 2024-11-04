@@ -1,0 +1,22 @@
+version: "3"
+
+tasks:
+  gen-schema:
+    vars:
+      MY_DIR: ./src/schemas
+    dir: "{{.MY_DIR}}"
+    sources:
+      - runn/type/**/*.ts
+      - exclude: runn/type/**/*.gen.ts
+      - exclude: runn/type/index.ts
+    cmds:
+      - for: sources
+        task: gen-schema-per-file
+        vars:
+          PATH: "{{joinPath .MY_DIR .ITEM}}"
+  # Internal task
+  gen-schema-per-file:
+    internal: true
+    cmds:
+      - pnpm exec quicktype {{.PATH}} -t RunBook -o {{trimSuffix ".ts" .PATH}}.gen.json --lang schema
+      - pnpm exec quicktype {{trimSuffix ".ts" .PATH}}.gen.json -t RunBook -o {{trimSuffix ".ts" .PATH}}.gen.ts --lang ts

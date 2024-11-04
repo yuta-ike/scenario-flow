@@ -15,7 +15,7 @@
     "jsx": "react-jsx",
     "incremental": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./packages/core/src/*"]
     },
 
     /* Linting */
@@ -27,6 +27,5 @@
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
     "forceConsistentCasingInFileNames": true
-  },
-  "include": ["**/*.ts", "**/*.tsx"]
+  }
 }

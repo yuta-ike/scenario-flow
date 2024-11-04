@@ -1,0 +1,14 @@
+{
+  "name": "@scenario-flow/tailwind-config",
+  "version": "0.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "tailwindcss": "^3.4.14",
+    "@tailwindcss/container-queries": "^0.1.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

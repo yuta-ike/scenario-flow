@@ -1,0 +1,4 @@
+{
+  "extends": "@scenario-flow/typescript-config/vite-config.json",
+  "include": ["vite.config.ts"]
+}
