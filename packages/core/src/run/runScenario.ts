@@ -30,6 +30,7 @@ export const runScenario = async (
 
   const result = await runner({
     scenarios: scenarioWithPath,
+    // @ts-expect-error
     command: () => {}, // Injectorから取得
   })
 

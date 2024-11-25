@@ -1,4 +1,5 @@
 import { TbCheck, TbFlag2 } from "react-icons/tb"
+import { useAtomValue } from "jotai"
 
 import type { RouteId } from "@/domain/entity/route/route"
 
@@ -13,6 +14,7 @@ import { runScenario } from "@/run/runScenario"
 import { runAsync } from "@/ui/lib/effect/run"
 import { runAndUpdateNodeStates } from "@/domain/workflow/nodeStates"
 import { useProjectContext } from "@/ui/context/context"
+import { enginePluginAtom } from "@/domain/datasource/plugin"
 
 type Props = {
   initialSelected?: RouteId[]
@@ -26,12 +28,15 @@ export const RunModalContent = ({ initialSelected }: Props) => {
     initialSelected ?? routes.map((route) => route.id),
   )
 
+  const enginePlugin = useAtomValue(enginePluginAtom)
+
   const handleSubmit = async () => {
     onClose()
 
     const result = await runAsync(
       runAndUpdateNodeStates(
-        (runId, routeIds) => runScenario(runId, context.entry, routeIds),
+        (runId, routeIds) =>
+          runScenario(runId, context.entry, routeIds, enginePlugin),
         selected,
       ),
     )

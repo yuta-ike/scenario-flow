@@ -12,7 +12,7 @@ import { generateExampleFromOperationObject } from "./example"
 
 import type { RestCallActionParameterSchema } from "../entity/action/action"
 import type { RestCallActionParameterForopen_api } from "../entity/action/actionParameter"
-import type { OpenAPIObject } from "openapi3-ts/oas31"
+import type { OpenAPIObject, OperationObject } from "openapi3-ts/oas31"
 import type { Resource } from "../entity/resource/resource"
 import type { Expression } from "../entity/value/expression"
 
@@ -40,6 +40,7 @@ export const resolveopen_apiResource = (
 
   for (const [path, pathObject] of Object.entries(pathsObject.paths ?? {})) {
     for (const method of lowerHttpMethods) {
+      // @ts-expect-error
       const operationObject = pathObject[method]
       if (operationObject == null) {
         continue
@@ -47,6 +48,7 @@ export const resolveopen_apiResource = (
 
       if (
         (identifier.operationId != null &&
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           operationObject.operationId === identifier.operationId) ||
         (identifier.methodAndPath != null &&
           toMethodAndPath(toUpperCase(method), path) ===
@@ -55,6 +57,7 @@ export const resolveopen_apiResource = (
         return {
           meta: {
             name: `${method} ${path}`,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             description: operationObject.description ?? "",
           },
           parameter: {
@@ -87,6 +90,7 @@ export const retrieveAllActionFromOpenApiResource = (
   })[] = []
   for (const [path, pathObject] of Object.entries(pathsObject.paths ?? {})) {
     for (const method of lowerHttpMethods) {
+      // @ts-expect-error
       const operationObject = pathObject[method]
       if (operationObject == null) {
         continue
@@ -95,8 +99,10 @@ export const retrieveAllActionFromOpenApiResource = (
         resource.content.servers?.[0]?.url ?? "https://example.com"
       actions.push({
         identifier:
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           operationObject.operationId != null
             ? buildOpenApiResourceIdentifierWithOperationId(
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 operationObject.operationId,
               )
             : buildOpenApiResourceIdentifierWithMethodAndPath(
@@ -113,7 +119,7 @@ export const retrieveAllActionFromOpenApiResource = (
             toUpperCase(method),
             path,
             baseUrl,
-            operationObject,
+            operationObject as OperationObject,
           ),
         ],
         jsonSchema: operationObject,

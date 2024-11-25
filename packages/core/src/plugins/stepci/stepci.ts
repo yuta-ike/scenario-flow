@@ -1,6 +1,5 @@
-import type { LibFormat } from ".."
 import type { Workflow } from "@stepci/runner"
-import type { Decomposed } from "@/domain/entity/decompose/decomposed"
+import type { EnginePluginSerializer } from "../type"
 
 import { typedValueToValue } from "@/domain/entity/value/dataType"
 import { kvToRecordNullable } from "@/ui/lib/kv"
@@ -10,9 +9,9 @@ import { safelyParseJson } from "@/utils/json"
 const makeUndefinedIfEmpty = <T extends object>(data: T) =>
   typeof data === "object" && Object.keys(data).length === 0 ? undefined : data
 
-export const convertDecomposedToStepci = (
-  decomposed: Decomposed,
-): LibFormat<Workflow> => {
+export const convertDecomposedToStepci: EnginePluginSerializer<Workflow> = (
+  decomposed,
+) => {
   return {
     meta: {
       id: decomposed.id,

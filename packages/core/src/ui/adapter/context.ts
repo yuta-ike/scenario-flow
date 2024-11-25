@@ -184,6 +184,7 @@ export const buildContext = (store: Store) =>
         .get(getRouteIdsByNodeId(nodeId))
         .map((routeId) => store.get(primitiveRouteAtom(routeId))),
     ),
+    // @ts-expect-error
     Context.add(GetParentNodesById, (nodeId) => {
       return store.get(getParentByNodeId(nodeId))
     }),

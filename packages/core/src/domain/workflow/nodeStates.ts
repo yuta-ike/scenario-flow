@@ -127,10 +127,7 @@ export const addNodeResults = ({
                   result: stepResult.result,
                 }
 
-          map.set(stepResult.nodeId, [
-            ...(map.get(stepResult.nodeId) ?? []),
-            newStatus,
-          ])
+          map.set(stepResult.id, [...(map.get(stepResult.id) ?? []), newStatus])
         })
       })
       return map

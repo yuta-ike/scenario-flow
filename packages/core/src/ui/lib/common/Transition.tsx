@@ -1,4 +1,6 @@
-import React, { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+
+import type React from "react"
 
 type TransitionProps = {
   children: React.ReactNode
@@ -12,11 +14,11 @@ export const Transition = ({
   delay = 500,
 }: TransitionProps) => {
   const [delayedShow, setDelayedShow] = useState(show)
-  const timerRef = useRef<number | null>(null)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     if (show) {
-      if (timerRef.current) {
+      if (timerRef.current != null) {
         clearTimeout(timerRef.current)
         timerRef.current = null
       }

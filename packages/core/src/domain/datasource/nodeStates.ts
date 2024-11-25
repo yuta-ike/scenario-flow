@@ -27,7 +27,7 @@ export const latestResolvedNodeRunResultAtom = atomFamily((nodeId: NodeId) => {
     } else {
       return {
         ...result,
-        results: result.results.map(({ routeId, ...rest }) => ({
+        results: result.results?.map(({ routeId, ...rest }) => ({
           routeId,
           route: get(routeAtom(routeId)),
           ...rest,
