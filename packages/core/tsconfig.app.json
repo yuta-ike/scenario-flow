@@ -1,3 +1,4 @@
 {
-  "extends": "@scenario-flow/typescript-config/app.json"
+  "extends": "@scenario-flow/typescript-config/app.json",
+  "exclude": ["./src/worker.ts"]
 }

@@ -35,7 +35,7 @@ export const ResultChips = ({ nodeId }: Props) => {
 
   return (
     <div className="flex flex-col items-start gap-1">
-      {nodeStates.results.map((result) => {
+      {nodeStates.results?.map((result) => {
         return (
           <div
             key={result.route.id}
