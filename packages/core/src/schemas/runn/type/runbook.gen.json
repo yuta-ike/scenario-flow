@@ -130,84 +130,94 @@
                     "title": "vars"
                 },
                 "steps": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "desc": {
-                                "type": "string",
-                                "title": "desc"
-                            },
-                            "if": {
-                                "type": "string",
-                                "title": "if"
-                            },
-                            "loop": {
-                                "anyOf": [
-                                    {
-                                        "type": "object",
-                                        "properties": {
-                                            "count": {
-                                                "type": "number",
-                                                "title": "count"
-                                            },
-                                            "interval": {
-                                                "type": "number",
-                                                "title": "interval"
-                                            },
-                                            "minInterval": {
-                                                "type": [
-                                                    "string",
-                                                    "number"
-                                                ],
-                                                "title": "minInterval"
-                                            },
-                                            "maxInterval": {
-                                                "type": [
-                                                    "string",
-                                                    "number"
-                                                ],
-                                                "title": "maxInterval"
-                                            },
-                                            "jutter": {
-                                                "type": "number",
-                                                "title": "jutter"
-                                            },
-                                            "multiplier": {
-                                                "type": "number",
-                                                "title": "multiplier"
-                                            },
-                                            "until": {
-                                                "type": "string",
-                                                "title": "until"
-                                            }
-                                        },
-                                        "additionalProperties": false
-                                    },
-                                    {
-                                        "type": "number"
-                                    }
-                                ],
-                                "title": "loop"
-                            },
-                            "req": {
-                                "$ref": "#/definitions/RunBookStepPathsObject",
-                                "title": "req"
-                            },
-                            "test": {
-                                "type": "string",
-                                "title": "test"
-                            },
-                            "bind": {
-                                "$ref": "#/definitions/Record<string,string>",
-                                "title": "bind"
-                            }
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Record<string,RunBookStep>"
                         },
-                        "additionalProperties": false,
-                        "required": [
-                            "desc"
-                        ]
-                    },
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "desc": {
+                                        "type": "string",
+                                        "title": "desc"
+                                    },
+                                    "if": {
+                                        "type": "string",
+                                        "title": "if"
+                                    },
+                                    "loop": {
+                                        "anyOf": [
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "count": {
+                                                        "type": "number",
+                                                        "title": "count"
+                                                    },
+                                                    "interval": {
+                                                        "type": [
+                                                            "string",
+                                                            "number"
+                                                        ],
+                                                        "title": "interval"
+                                                    },
+                                                    "minInterval": {
+                                                        "type": [
+                                                            "string",
+                                                            "number"
+                                                        ],
+                                                        "title": "minInterval"
+                                                    },
+                                                    "maxInterval": {
+                                                        "type": [
+                                                            "string",
+                                                            "number"
+                                                        ],
+                                                        "title": "maxInterval"
+                                                    },
+                                                    "jutter": {
+                                                        "type": "number",
+                                                        "title": "jutter"
+                                                    },
+                                                    "multiplier": {
+                                                        "type": "number",
+                                                        "title": "multiplier"
+                                                    },
+                                                    "until": {
+                                                        "type": "string",
+                                                        "title": "until"
+                                                    }
+                                                },
+                                                "additionalProperties": false
+                                            },
+                                            {
+                                                "type": "number"
+                                            }
+                                        ],
+                                        "title": "loop"
+                                    },
+                                    "req": {
+                                        "$ref": "#/definitions/RunBookStepPathsObject",
+                                        "title": "req"
+                                    },
+                                    "test": {
+                                        "type": "string",
+                                        "title": "test"
+                                    },
+                                    "bind": {
+                                        "$ref": "#/definitions/Record<string,string>",
+                                        "title": "bind"
+                                    }
+                                },
+                                "additionalProperties": false,
+                                "required": [
+                                    "desc"
+                                ]
+                            }
+                        }
+                    ],
                     "title": "steps"
                 },
                 "hostRules": {
@@ -249,8 +259,8 @@
                 "desc"
             ]
         },
-        "LoopConfig": {
-            "title": "LoopConfig",
+        "RunBookStepLoopConfig": {
+            "title": "RunBookStepLoopConfig",
             "anyOf": [
                 {
                     "type": "object",
@@ -260,7 +270,10 @@
                             "title": "count"
                         },
                         "interval": {
-                            "type": "number",
+                            "type": [
+                                "string",
+                                "number"
+                            ],
                             "title": "interval"
                         },
                         "minInterval": {
@@ -353,7 +366,10 @@
                                     "title": "count"
                                 },
                                 "interval": {
-                                    "type": "number",
+                                    "type": [
+                                        "string",
+                                        "number"
+                                    ],
                                     "title": "interval"
                                 },
                                 "minInterval": {
@@ -408,6 +424,11 @@
             "required": [
                 "desc"
             ]
+        },
+        "Record<string,RunBookStep>": {
+            "title": "Record<string,RunBookStep>",
+            "type": "object",
+            "additionalProperties": false
         },
         "Record<string,string>": {
             "title": "Record<string,string>",

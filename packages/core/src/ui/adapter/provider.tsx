@@ -4,6 +4,8 @@ import { Provider as JotaiProvider } from "jotai"
 import { DevTools } from "jotai-devtools"
 import { useEffect, useRef } from "react"
 
+import { projectContextAtom, type ProjectContext } from "../context/context"
+
 import { buildContext } from "./context"
 import { store } from "./store"
 
@@ -22,23 +24,48 @@ import { genId } from "@/utils/uuid"
 import { toGlobalVariableValueId } from "@/domain/entity/globalVariable/globalVariable.util"
 import { buildGlobalVariableBind } from "@/domain/entity/globalVariable/globalVariable"
 import { userDefinedActionAtom } from "@/domain/datasource/userDefinedAction"
+import {
+  currentEnginePluginIdAtom,
+  supportedEnginePluginsAtom,
+} from "@/domain/datasource/plugin"
+import { exportPlugins } from "@/plugins"
+import { toEnginePluginId } from "@/domain/entity/plugin/toEnginePlugin"
 
 export type ProviderProps = {
   children: React.ReactNode
-  projectEntry: ProjectEntry
+  context: ProjectContext
 }
 
-export const Provider = ({ children, projectEntry }: ProviderProps) => {
+export const Provider = ({
+  children,
+  context: { entry, config },
+}: ProviderProps) => {
   const initialized = useRef<Map<ProjectEntry, true>>(new Map())
 
   useEffect(() => {
     const init = async () => {
-      if (initialized.current.get(projectEntry)) {
+      if (initialized.current.get(entry)) {
         return
       }
-      initialized.current.set(projectEntry, true)
+      initialized.current.set(entry, true)
 
-      const entities = await load(projectEntry)
+      const enginePlugin = exportPlugins[toEnginePluginId(config.engine)]
+      if (enginePlugin == null) {
+        throw new Error("Unknown plugin name")
+      }
+
+      // context
+      store.set(projectContextAtom, context)
+
+      // plugin
+      store.set(currentEnginePluginIdAtom, toEnginePluginId(config.engine))
+      // TODO: プラグインの設定
+      store.set(
+        supportedEnginePluginsAtom,
+        new Map([[toEnginePluginId(config.engine), enginePlugin]]),
+      )
+
+      const entities = await load(entry, enginePlugin.deserialize)
 
       // User defined action
       entities.userDefinedActions.map((action) => {
@@ -75,7 +102,7 @@ export const Provider = ({ children, projectEntry }: ProviderProps) => {
     }
 
     void init()
-  }, [projectEntry])
+  }, [config.engine, entry])
 
   return (
     <JotaiProvider store={store.store}>

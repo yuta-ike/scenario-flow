@@ -32,7 +32,7 @@ export type RunResultWithNodeId = {
   id: string
   result: "success" | "failure" | "skipped"
   steps: {
-    nodeId: NodeId
+    id: NodeId
     result: "success" | "failure" | "skipped"
   }[]
 }[]

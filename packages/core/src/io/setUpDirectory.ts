@@ -1,19 +1,14 @@
 import { EMPTY_CONFIG } from "./config/emptyConfig"
 
-import type { Resource } from "@/domain/entity/resource/resource"
-import type { JsonObject } from "@/utils/json"
+import type { ConfigFormat } from "@/schemas/configFormat/type/configFormat"
 
 import { getInjectedContent, type ProjectEntry } from "@/main"
 import { safelyParseJson } from "@/utils/json"
+import { validateConfigFormat } from "@/schemas/configFormat"
 
-export type ConfigFileFormat = {
-  version: "0.0.1"
-  resources: {
-    local_files?: Record<Resource["name"], string>[] // ローカルパスの配列
-  }
-}
-
-export const setUpDirectory = async (projectEntry: ProjectEntry) => {
+export const setUpDirectory = async (
+  projectEntry: ProjectEntry,
+): Promise<ConfigFormat> => {
   const {
     io: { getOrCreateFile, writeFile, readFile },
   } = getInjectedContent()
@@ -23,12 +18,19 @@ export const setUpDirectory = async (projectEntry: ProjectEntry) => {
   const json =
     rawContent === ""
       ? null
-      : safelyParseJson<JsonObject, null>(rawContent, {
+      : safelyParseJson<any, null>(rawContent, {
           orElse: null,
         })
 
   // まだ設定ファイルがない場合は書き込み
   if (json == null) {
     await writeFile(configFile, JSON.stringify(EMPTY_CONFIG, null, 2))
+    return EMPTY_CONFIG
   }
+
+  if (!validateConfigFormat(json)) {
+    throw new Error("Invalid config format")
+  }
+
+  return json
 }

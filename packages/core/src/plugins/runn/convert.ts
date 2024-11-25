@@ -1,10 +1,7 @@
 import { toLowerCase } from "effect/String"
 
-import type { LibFormat } from ".."
-import type {
-  Decomposed,
-  DecomposedStep,
-} from "@/domain/entity/decompose/decomposed"
+import type { EnginePluginSerializer } from "../type"
+import type { DecomposedStep } from "@/domain/entity/decompose/decomposed"
 import type {
   RunBookStepLoopConfig,
   RunBook,
@@ -108,9 +105,9 @@ const convertDecomposedStep = (step: DecomposedStep): RunBookStep => {
   } satisfies RunBookStep
 }
 
-export const convertDecomposedToRunn = (
-  decomposed: Decomposed,
-): LibFormat<RunBook> => {
+export const convertDecomposedToRunn: EnginePluginSerializer<RunBook> = (
+  decomposed,
+) => {
   const libFormat = {
     meta: {
       id: decomposed.id,

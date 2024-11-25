@@ -10,16 +10,16 @@ import {
 import { useSetState } from "@/ui/utils/useSetState"
 import { ErrorDisplay } from "@/ui/components/ErrorDisplay"
 import { runScenario } from "@/run/runScenario"
-import { useProjectEntry } from "@/ui/lib/context/ProjectEntryProvider"
 import { runAsync } from "@/ui/lib/effect/run"
 import { runAndUpdateNodeStates } from "@/domain/workflow/nodeStates"
+import { useProjectContext } from "@/ui/context/context"
 
 type Props = {
   initialSelected?: RouteId[]
 }
 export const RunModalContent = ({ initialSelected }: Props) => {
   const routes = useRoutes()
-  const projectEntry = useProjectEntry()
+  const context = useProjectContext()
   const { onClose } = useCustomModal()
 
   const [selected, { toggle }] = useSetState(
@@ -31,7 +31,7 @@ export const RunModalContent = ({ initialSelected }: Props) => {
 
     const result = await runAsync(
       runAndUpdateNodeStates(
-        (runId, routeIds) => runScenario(runId, projectEntry, routeIds),
+        (runId, routeIds) => runScenario(runId, context.entry, routeIds),
         selected,
       ),
     )

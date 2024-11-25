@@ -6,9 +6,9 @@ tasks:
       MY_DIR: ./src/schemas
     dir: "{{.MY_DIR}}"
     sources:
-      - runn/type/**/*.ts
-      - exclude: runn/type/**/*.gen.ts
-      - exclude: runn/type/index.ts
+      - "**/*.ts"
+      - exclude: "**/*.gen.ts"
+      - exclude: "**/index.ts"
     cmds:
       - for: sources
         task: gen-schema-per-file

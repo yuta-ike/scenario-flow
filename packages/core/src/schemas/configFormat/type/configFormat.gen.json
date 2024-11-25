@@ -1,0 +1,52 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "ConfigFormat": {
+            "type": "object",
+            "properties": {
+                "version": {
+                    "type": "string",
+                    "enum": [
+                        "0.0.1"
+                    ],
+                    "title": "version"
+                },
+                "resources": {
+                    "type": "object",
+                    "properties": {
+                        "local_files": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Record<string,string>"
+                            },
+                            "title": "local_files"
+                        }
+                    },
+                    "additionalProperties": false,
+                    "title": "resources"
+                },
+                "engine": {
+                    "enum": [
+                        "",
+                        "runn",
+                        "scenarigo",
+                        "stepcity"
+                    ],
+                    "type": "string",
+                    "title": "engine"
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "engine",
+                "resources",
+                "version"
+            ]
+        },
+        "Record<string,string>": {
+            "title": "Record<string,string>",
+            "type": "object",
+            "additionalProperties": false
+        }
+    }
+}

@@ -74,7 +74,7 @@ export type InjectedContent<
           paths: { id: string; path: string }[],
         ) => Promise<Result<RunResult, RunScenarioError>>
       }
-    > // TODO: 型をつける
+    >
   }
 
   fetch: {

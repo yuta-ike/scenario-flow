@@ -14,7 +14,7 @@ import { useNode } from "@/ui/adapter/query"
 import { ErrorBoundary } from "@/ui/components/ErrorBoundary"
 import { ErrorDisplay } from "@/ui/components/ErrorDisplay"
 import { appendActionInstance } from "@/ui/adapter/command"
-import { Resizable, ResizeHandle } from "@/ui/components/Resizable"
+import { Resizable } from "@/ui/components/Resizable"
 
 export const DetailPanel = () => {
   const focusedNodeId = useFocusedNodeId()
@@ -25,7 +25,7 @@ export const DetailPanel = () => {
 
   return (
     <Resizable initialWidth={600}>
-      <div className="relative w-full border-0 border-l border-l-slate-200 bg-white empty:hidden">
+      <div className="relative w-full bg-white empty:hidden">
         <Fragment key={focusedNodeId}>
           <ErrorBoundary fallback={<ErrorDisplay />}>
             <NodeTitleSection nodeId={focusedNodeId} />
@@ -34,9 +34,9 @@ export const DetailPanel = () => {
             <DetailPanelInner nodeId={focusedNodeId} />
           </ErrorBoundary>
         </Fragment>
-        <ResizeHandle>
+        {/* <ResizeHandle>
           <div className="absolute left-0 top-1/2 h-[40px] w-[12px] bg-black" />
-        </ResizeHandle>
+        </ResizeHandle> */}
       </div>
     </Resizable>
   )

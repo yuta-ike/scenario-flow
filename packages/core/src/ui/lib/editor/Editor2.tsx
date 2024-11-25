@@ -23,8 +23,6 @@ const highlightVariables = (
   model: monacoEditor.ITextModel,
   decorators: string[][],
 ) => {
-  // 変数のハイライト
-  // TODO: ハイライトを消す部分は未実装
   const ret = model
     .findMatches(`\\{\\{[^\\{\\}]+\\}\\}`, false, true, false, null, false)
     .map((match) =>
@@ -176,7 +174,7 @@ export const Editor2 = forwardRef<EditorRef, Props>(
               const suggests = getVariableSuggests(bind.variable)
               return suggests.map(({ name, template, type }) => {
                 return {
-                  label: `{{${name}}}`,
+                  label: name,
                   detail: `[${type}] ${bind.variable.description} ([${bind.variable.boundIn === "global" ? "グローバル変数" : "変数"}])`,
                   documentation: bind.variable.description,
                   kind: languages.CompletionItemKind.Keyword,

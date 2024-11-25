@@ -1,12 +1,12 @@
 import { EMPTY_CONFIG } from "./emptyConfig"
 
-import type { ConfigFileFormat } from "../setUpDirectory"
 import type {
   LocalFileLocation,
   Resource,
 } from "@/domain/entity/resource/resource"
 import type { ProjectEntry } from "@/injector"
 import type { Json, JsonObject } from "@/utils/json"
+import type { ConfigFormat } from "@/schemas/configFormat/type/configFormat"
 
 import { getInjectedContent } from "@/injector"
 import { safelyParseJson } from "@/utils/json"
@@ -23,7 +23,7 @@ export const updateConfigResource = async (
 
   const configFile = await getOrCreateFile(projectEntry, CONFIG_FILENAME)
   const rawContent = await readFile(configFile)
-  const json = safelyParseJson<ConfigFileFormat, ConfigFileFormat>(rawContent, {
+  const json = safelyParseJson<ConfigFormat, ConfigFormat>(rawContent, {
     orElse: EMPTY_CONFIG,
   })
 

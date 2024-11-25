@@ -164,7 +164,7 @@ export const Flow = () => {
           </div>
         </ErrorBoundary>
         <ErrorBoundary fallback={<ErrorDisplay />}>
-          <div className="z-10 max-w-[600px] shrink-0 overflow-hidden">
+          <div className="z-10 max-w-[600px] shrink-0 overflow-hidden overflow-y-auto border-0 border-l border-l-slate-200">
             <DetailPanel />
           </div>
         </ErrorBoundary>

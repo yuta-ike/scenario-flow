@@ -1,14 +1,8 @@
 import { IdCache } from "./helper/idCache"
 
-import type {
-  Decomposed,
-  DecomposedStep,
-} from "@/domain/entity/decompose/decomposed"
-import type {
-  RunBook,
-  RunBookStep,
-  RunBookStepPathsObject,
-} from "@/schemas/runn/type"
+import type { EnginePluginDeserializer } from "../type"
+import type { DecomposedStep } from "@/domain/entity/decompose/decomposed"
+import type { RunBookStep, RunBookStepPathsObject } from "@/schemas/runn/type"
 import type { Json } from "@/utils/json"
 
 import { buildGlobalVariable } from "@/domain/entity/globalVariable/globalVariable"
@@ -21,6 +15,7 @@ import { toRouteId } from "@/domain/entity/route/route.util"
 import { COLORS } from "@/utils/pcss"
 import { parsePath } from "@/utils/url"
 import { parseTime } from "@/domain/entity/value/time"
+import { validateRunn } from "@/schemas/runn"
 
 const getFirstEntry = <T>(
   obj: Record<string, T>,
@@ -133,7 +128,11 @@ const revertRunnStepToDecomposedStep = (
   } satisfies DecomposedStep
 }
 
-export const revertRunnToDecomposed = (runbooks: RunBook[]): Decomposed[] => {
+export const revertRunnToDecomposed: EnginePluginDeserializer = (
+  jsons: Json[],
+) => {
+  const runbooks = jsons.filter((json) => validateRunn(json))
+
   const stepIdStepKeyCache = new IdCache()
 
   return runbooks.map((runbook, i) => {

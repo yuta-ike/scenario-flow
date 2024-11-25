@@ -11,6 +11,9 @@ importers:
       '@eslint/js':
         specifier: ^9.12.0
         version: 9.12.0
+      '@go-task/cli':
+        specifier: ^3.39.2
+        version: 3.39.2
       '@scenario-flow/eslint-config':
         specifier: workspace:*
         version: link:packages/eslint-config
@@ -870,6 +873,13 @@ packages:
 
   '@glideapps/ts-necessities@2.3.2':
     resolution: {integrity: sha512-tOXo3SrEeLu+4X2q6O2iNPXdGI1qoXEz/KrbkElTsWiWb69tFH4GzWz2K++0nBD6O3qO2Ft1C4L4ZvUfE2QDlQ==}
+
+  '@go-task/cli@3.39.2':
+    resolution: {integrity: sha512-cRd5MWweIWwJF5CJvLRUAvnBVd7T07dkXnh1djv1eHxfILhjLKtqBm6jS6kUHezGfjjsgjLTqQ5oAdm0hy1n7w==}
+
+  '@go-task/go-npm@0.2.0':
+    resolution: {integrity: sha512-vQbdtBvesHm8EUFHX8QKg4rbBodmu9VsAXH1ozpbiN5jdTMOYHTCMM31EurAYmY+rNNtxJQ4JGy6t383RPlqbw==}
+    hasBin: true
 
   '@grpc/grpc-js@1.12.2':
     resolution: {integrity: sha512-bgxdZmgTrJZX50OjyVwz3+mNEnCTNkh3cIqGPWVNeW9jX6bn1ZkU80uPd+67/ZpIJIjRQ9qaHCjhavyoWYxumg==}
@@ -3098,7 +3108,6 @@ packages:
     resolution: {integrity: sha512-Quz3MvAwHxVYNXsOByL7xI5EB2WYOeFswqaHIA3qOK3isRWTxiplBEocmmru6XmxDB2L7jDNYtYA4FyimoAFEw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
-    bundledDependencies: []
 
   jsonfile@6.1.0:
     resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
@@ -4933,6 +4942,12 @@ snapshots:
 
   '@glideapps/ts-necessities@2.3.2': {}
 
+  '@go-task/cli@3.39.2':
+    dependencies:
+      '@go-task/go-npm': 0.2.0
+
+  '@go-task/go-npm@0.2.0': {}
+
   '@grpc/grpc-js@1.12.2':
     dependencies:
       '@grpc/proto-loader': 0.7.13
@@ -5896,7 +5911,7 @@ snapshots:
       eslint: 9.12.0(jiti@1.21.6)
     optionalDependencies:
       typescript: 5.6.3
-      vitest: 2.1.3(@types/node@22.8.1)(@vitest/ui@2.1.3)
+      vitest: 2.1.3(@types/node@16.18.115)(@vitest/ui@2.1.3)
 
   '@vitest/expect@2.1.3':
     dependencies:
@@ -5949,7 +5964,7 @@ snapshots:
       sirv: 2.0.4
       tinyglobby: 0.2.9
       tinyrainbow: 1.2.0
-      vitest: 2.1.3(@types/node@22.8.1)(@vitest/ui@2.1.3)
+      vitest: 2.1.3(@types/node@16.18.115)(@vitest/ui@2.1.3)
 
   '@vitest/utils@2.1.3':
     dependencies:

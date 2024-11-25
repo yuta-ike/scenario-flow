@@ -3,45 +3,35 @@ import type { ProjectEntry } from "@/injector"
 import type { Id } from "@/utils/idType"
 import type { Result } from "@/utils/result"
 import type { RunResultWithNodeId } from "@/domain/workflow/nodeStates"
+import type { EnginePlugin } from "@/plugins/type"
+import type { NodeId } from "@/domain/entity/node/node"
 
-import { exportPluginIdAtom } from "@/domain/datasource/plugin"
 import { decomposedForLibAtom } from "@/domain/selector/decomposedForPlugin"
 import { store } from "@/ui/adapter/store"
-import { getInjectedContent } from "@/injector"
 import { error, success } from "@/utils/result"
-import { routeAtom } from "@/domain/datasource/route"
-import { associateBy } from "@/utils/set"
 
 export const runScenario = async (
   runId: Id,
   projectEntry: ProjectEntry,
   routeIds: RouteId[],
+  enginePlugin: EnginePlugin,
 ): Promise<Result<{ runId: Id; results: RunResultWithNodeId }, string>> => {
-  const exportPluginId = store.get(exportPluginIdAtom)
-  const run = getInjectedContent().exec.libs?.[exportPluginId]?.run
-  if (run == null) {
-    // TODO: エラークラス
-    return error("ブラウザでは実行できません")
-  }
+  const runner = enginePlugin.runner
 
   const scenarios = store.get(decomposedForLibAtom)
   const targetScenarios = scenarios.filter((scenario) =>
-    routeIds.includes(scenario.meta.id),
+    (routeIds as string[]).includes(scenario.meta.id),
   )
 
-  // 結果から逆引きできるように
-  const routes = routeIds.map((routeId) => store.get(routeAtom(routeId)))
-  const nodeNameMap = associateBy(
-    routes.flatMap((route) => route.path),
-    "name",
-  )
+  const scenarioWithPath = targetScenarios.map((scenario) => ({
+    ...scenario,
+    path: `${projectEntry.path}/${scenario.meta.title}.yaml`,
+  }))
 
-  const result = await run(
-    targetScenarios.map((scenario) => ({
-      id: scenario.meta.id,
-      path: `${projectEntry.path}/${scenario.meta.title}.yaml`,
-    })),
-  )
+  const result = await runner({
+    scenarios: scenarioWithPath,
+    command: () => {}, // Injectorから取得
+  })
 
   if (result.result === "error") {
     // TODO: エラークラス
@@ -54,7 +44,7 @@ export const runScenario = async (
       ...runResult,
       steps: runResult.steps.map((stepResult) => ({
         ...stepResult,
-        nodeId: nodeNameMap.get(stepResult.key)!.id,
+        id: stepResult.id as NodeId,
       })),
     })),
   })

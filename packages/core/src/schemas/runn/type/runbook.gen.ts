@@ -13,20 +13,21 @@ export interface RunBook {
 }
 
 export interface Definitions {
-    JsonPrimitive:              JSONPrimitive;
-    JsonArray:                  JSONArray;
-    JsonObject:                 JSONObject;
-    Json:                       JSON;
-    ContentType:                ContentType;
-    RunBook:                    RunBookClass;
-    LoopConfig:                 Loop;
-    RunBookStepPathsObject:     RecordStringString;
-    RunBookStepPathItemObject:  RecordStringString;
-    RunBookStepOperationObject: RunBookStepOperationObject;
-    RunBookStepMediaTypeObject: RunBookStepMediaTypeObject;
-    RunBookStep:                RunBookStep;
-    "Record<string,string>":    RecordStringString;
-    "Record<ContentType,Json>": RecordContentTypeJSON;
+    JsonPrimitive:                JSONPrimitive;
+    JsonArray:                    JSONArray;
+    JsonObject:                   JSONObject;
+    Json:                         JSON;
+    ContentType:                  ContentType;
+    RunBook:                      RunBookClass;
+    RunBookStepLoopConfig:        RunBookStepLoopConfig;
+    RunBookStepPathsObject:       RecordStringRunBookStep;
+    RunBookStepPathItemObject:    RecordStringRunBookStep;
+    RunBookStepOperationObject:   RunBookStepOperationObject;
+    RunBookStepMediaTypeObject:   RunBookStepMediaTypeObject;
+    RunBookStep:                  RunBookStep;
+    "Record<string,RunBookStep>": RecordStringRunBookStep;
+    "Record<string,string>":      RecordStringRunBookStep;
+    "Record<ContentType,Json>":   RecordContentTypeJSON;
 }
 
 export interface ContentType {
@@ -82,32 +83,6 @@ export interface JSONPrimitive {
     type:  TypeElement[];
 }
 
-export interface Loop {
-    title: string;
-    anyOf: LoopConfigAnyOf[];
-}
-
-export interface LoopConfigAnyOf {
-    type:                  string;
-    properties?:           AnyOfProperties;
-    additionalProperties?: boolean;
-}
-
-export interface AnyOfProperties {
-    count:       Debug;
-    interval:    Debug;
-    minInterval: JSONPrimitive;
-    maxInterval: JSONPrimitive;
-    jutter:      Debug;
-    multiplier:  Debug;
-    until:       Debug;
-}
-
-export interface Debug {
-    type:  TypeElement;
-    title: string;
-}
-
 export interface RecordContentTypeJSON {
     title:                string;
     type:                 string;
@@ -126,7 +101,7 @@ export interface ApplicationFormData {
     title: string;
 }
 
-export interface RecordStringString {
+export interface RecordStringRunBookStep {
     title:                string;
     type:                 string;
     additionalProperties: boolean;
@@ -161,6 +136,11 @@ export interface Concurrency {
     title: string;
 }
 
+export interface Debug {
+    type:  TypeElement;
+    title: string;
+}
+
 export interface Labels {
     type:  string;
     items: Items;
@@ -178,9 +158,14 @@ export interface Needs {
 }
 
 export interface Steps {
-    type:  string;
-    items: RunBookStep;
+    anyOf: StepsAnyOf[];
     title: string;
+}
+
+export interface StepsAnyOf {
+    $ref?:  string;
+    type?:  string;
+    items?: RunBookStep;
 }
 
 export interface RunBookStep {
@@ -193,10 +178,31 @@ export interface RunBookStep {
 export interface RunBookStepProperties {
     desc: Debug;
     if:   Debug;
-    loop: Loop;
+    loop: RunBookStepLoopConfig;
     req:  ApplicationFormData;
     test: Debug;
     bind: ApplicationFormData;
+}
+
+export interface RunBookStepLoopConfig {
+    anyOf: RunBookStepLoopConfigAnyOf[];
+    title: string;
+}
+
+export interface RunBookStepLoopConfigAnyOf {
+    type:                  string;
+    properties?:           AnyOfProperties;
+    additionalProperties?: boolean;
+}
+
+export interface AnyOfProperties {
+    count:       Debug;
+    interval:    JSONPrimitive;
+    minInterval: JSONPrimitive;
+    maxInterval: JSONPrimitive;
+    jutter:      Debug;
+    multiplier:  Debug;
+    until:       Debug;
 }
 
 export interface RunBookStepOperationObject {
@@ -388,13 +394,14 @@ const typeMap: any = {
         { json: "Json", js: "Json", typ: r("JSON") },
         { json: "ContentType", js: "ContentType", typ: r("ContentType") },
         { json: "RunBook", js: "RunBook", typ: r("RunBookClass") },
-        { json: "LoopConfig", js: "LoopConfig", typ: r("Loop") },
-        { json: "RunBookStepPathsObject", js: "RunBookStepPathsObject", typ: r("RecordStringString") },
-        { json: "RunBookStepPathItemObject", js: "RunBookStepPathItemObject", typ: r("RecordStringString") },
+        { json: "RunBookStepLoopConfig", js: "RunBookStepLoopConfig", typ: r("RunBookStepLoopConfig") },
+        { json: "RunBookStepPathsObject", js: "RunBookStepPathsObject", typ: r("RecordStringRunBookStep") },
+        { json: "RunBookStepPathItemObject", js: "RunBookStepPathItemObject", typ: r("RecordStringRunBookStep") },
         { json: "RunBookStepOperationObject", js: "RunBookStepOperationObject", typ: r("RunBookStepOperationObject") },
         { json: "RunBookStepMediaTypeObject", js: "RunBookStepMediaTypeObject", typ: r("RunBookStepMediaTypeObject") },
         { json: "RunBookStep", js: "RunBookStep", typ: r("RunBookStep") },
-        { json: "Record<string,string>", js: "Record<string,string>", typ: r("RecordStringString") },
+        { json: "Record<string,RunBookStep>", js: "Record<string,RunBookStep>", typ: r("RecordStringRunBookStep") },
+        { json: "Record<string,string>", js: "Record<string,string>", typ: r("RecordStringRunBookStep") },
         { json: "Record<ContentType,Json>", js: "Record<ContentType,Json>", typ: r("RecordContentTypeJSON") },
     ], false),
     "ContentType": o([
@@ -434,28 +441,6 @@ const typeMap: any = {
         { json: "title", js: "title", typ: "" },
         { json: "type", js: "type", typ: a(r("TypeElement")) },
     ], false),
-    "Loop": o([
-        { json: "title", js: "title", typ: "" },
-        { json: "anyOf", js: "anyOf", typ: a(r("LoopConfigAnyOf")) },
-    ], false),
-    "LoopConfigAnyOf": o([
-        { json: "type", js: "type", typ: "" },
-        { json: "properties", js: "properties", typ: u(undefined, r("AnyOfProperties")) },
-        { json: "additionalProperties", js: "additionalProperties", typ: u(undefined, true) },
-    ], false),
-    "AnyOfProperties": o([
-        { json: "count", js: "count", typ: r("Debug") },
-        { json: "interval", js: "interval", typ: r("Debug") },
-        { json: "minInterval", js: "minInterval", typ: r("JSONPrimitive") },
-        { json: "maxInterval", js: "maxInterval", typ: r("JSONPrimitive") },
-        { json: "jutter", js: "jutter", typ: r("Debug") },
-        { json: "multiplier", js: "multiplier", typ: r("Debug") },
-        { json: "until", js: "until", typ: r("Debug") },
-    ], false),
-    "Debug": o([
-        { json: "type", js: "type", typ: r("TypeElement") },
-        { json: "title", js: "title", typ: "" },
-    ], false),
     "RecordContentTypeJSON": o([
         { json: "title", js: "title", typ: "" },
         { json: "type", js: "type", typ: "" },
@@ -471,7 +456,7 @@ const typeMap: any = {
         { json: "$ref", js: "$ref", typ: "" },
         { json: "title", js: "title", typ: "" },
     ], false),
-    "RecordStringString": o([
+    "RecordStringRunBookStep": o([
         { json: "title", js: "title", typ: "" },
         { json: "type", js: "type", typ: "" },
         { json: "additionalProperties", js: "additionalProperties", typ: true },
@@ -502,6 +487,10 @@ const typeMap: any = {
     "Concurrency": o([
         { json: "title", js: "title", typ: "" },
     ], false),
+    "Debug": o([
+        { json: "type", js: "type", typ: r("TypeElement") },
+        { json: "title", js: "title", typ: "" },
+    ], false),
     "Labels": o([
         { json: "type", js: "type", typ: "" },
         { json: "items", js: "items", typ: r("Items") },
@@ -516,9 +505,13 @@ const typeMap: any = {
         { json: "title", js: "title", typ: "" },
     ], false),
     "Steps": o([
-        { json: "type", js: "type", typ: "" },
-        { json: "items", js: "items", typ: r("RunBookStep") },
+        { json: "anyOf", js: "anyOf", typ: a(r("StepsAnyOf")) },
         { json: "title", js: "title", typ: "" },
+    ], false),
+    "StepsAnyOf": o([
+        { json: "$ref", js: "$ref", typ: u(undefined, "") },
+        { json: "type", js: "type", typ: u(undefined, "") },
+        { json: "items", js: "items", typ: u(undefined, r("RunBookStep")) },
     ], false),
     "RunBookStep": o([
         { json: "type", js: "type", typ: "" },
@@ -529,10 +522,28 @@ const typeMap: any = {
     "RunBookStepProperties": o([
         { json: "desc", js: "desc", typ: r("Debug") },
         { json: "if", js: "if", typ: r("Debug") },
-        { json: "loop", js: "loop", typ: r("Loop") },
+        { json: "loop", js: "loop", typ: r("RunBookStepLoopConfig") },
         { json: "req", js: "req", typ: r("ApplicationFormData") },
         { json: "test", js: "test", typ: r("Debug") },
         { json: "bind", js: "bind", typ: r("ApplicationFormData") },
+    ], false),
+    "RunBookStepLoopConfig": o([
+        { json: "anyOf", js: "anyOf", typ: a(r("RunBookStepLoopConfigAnyOf")) },
+        { json: "title", js: "title", typ: "" },
+    ], false),
+    "RunBookStepLoopConfigAnyOf": o([
+        { json: "type", js: "type", typ: "" },
+        { json: "properties", js: "properties", typ: u(undefined, r("AnyOfProperties")) },
+        { json: "additionalProperties", js: "additionalProperties", typ: u(undefined, true) },
+    ], false),
+    "AnyOfProperties": o([
+        { json: "count", js: "count", typ: r("Debug") },
+        { json: "interval", js: "interval", typ: r("JSONPrimitive") },
+        { json: "minInterval", js: "minInterval", typ: r("JSONPrimitive") },
+        { json: "maxInterval", js: "maxInterval", typ: r("JSONPrimitive") },
+        { json: "jutter", js: "jutter", typ: r("Debug") },
+        { json: "multiplier", js: "multiplier", typ: r("Debug") },
+        { json: "until", js: "until", typ: r("Debug") },
     ], false),
     "RunBookStepOperationObject": o([
         { json: "type", js: "type", typ: "" },

@@ -1,12 +1,15 @@
 import { parseToEntities } from "./parseToEntities"
 
+import type { EnginePluginDeserializer } from "@/plugins/type"
+
 import { getInjectedContent, type ProjectEntry } from "@/injector"
-import { validateRunn } from "@/schemas/runn"
 import { parseYaml } from "@/ui/lib/yaml/yamlToJson"
 import { nonNull } from "@/utils/assert"
-import { revertRunnToDecomposed } from "@/plugins/runn/revert"
 
-export const load = async (projectEntry: ProjectEntry) => {
+export const load = async (
+  projectEntry: ProjectEntry,
+  deserializer: EnginePluginDeserializer,
+) => {
   const {
     io: { readFile },
   } = getInjectedContent()
@@ -22,15 +25,11 @@ export const load = async (projectEntry: ProjectEntry) => {
         return null
       }
 
-      const json = result.value
-      if (!validateRunn(json)) {
-        return null
-      }
-      return json
+      return result.value
     }),
   )
   const runbooks = _runbooks.filter(nonNull)
-  const decomposed = revertRunnToDecomposed(runbooks)
+  const decomposed = deserializer(runbooks)
   const entities = parseToEntities(decomposed)
   return entities
 }

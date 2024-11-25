@@ -3,6 +3,8 @@ import { TbFlag2 } from "react-icons/tb"
 
 import { Editor2 } from "../editor/Editor2"
 
+import type { Json } from "@/utils/json"
+
 import { useDecomposedForLib } from "@/ui/adapter/query"
 import { jsonToYaml } from "@/utils/yaml"
 
@@ -13,7 +15,7 @@ export const Code = () => {
     () =>
       runnFormats.map(({ meta, contents }) => ({
         meta,
-        yaml: jsonToYaml(contents),
+        yaml: jsonToYaml(contents as Json),
       })),
     [runnFormats],
   )
