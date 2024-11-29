@@ -17,6 +17,7 @@ export const convertDecomposedToStepci: EnginePluginSerializer<Workflow> = (
       id: decomposed.id,
       title: decomposed.title,
       color: decomposed.color,
+      page: decomposed.page,
     },
     contents: {
       version: "1.0",
