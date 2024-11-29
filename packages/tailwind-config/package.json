@@ -5,8 +5,8 @@
   "license": "MIT",
   "type": "module",
   "devDependencies": {
-    "tailwindcss": "^3.4.14",
-    "@tailwindcss/container-queries": "^0.1.1"
+    "tailwindcss": "catalog:",
+    "@tailwindcss/container-queries": "catalog:"
   },
   "publishConfig": {
     "access": "public"

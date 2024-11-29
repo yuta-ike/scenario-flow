@@ -236,6 +236,7 @@ export const _createAndAddNode = (
 const _appendNodeToRoutePath = (
   id: NodeId,
   parentNodeId: NodeId,
+  page: string,
 ): Effect.Effect<
   void,
   never,
@@ -280,7 +281,7 @@ const _appendNodeToRoutePath = (
                   Effect.succeed(path),
                   Effect.map((path) => ({
                     path: [...path, parentNodeId, id],
-                    page: 0,
+                    page,
                   })),
                   Effect.flatMap((_) => _createAndAddRoute(_)),
                 ),
@@ -296,6 +297,7 @@ const _appendNodeToRoutePath = (
 export const appendNode = (
   nodeParam: OmitId<RawPrimitiveNode, "name">,
   parentNodeId: NodeId,
+  page: string,
 ): Effect.Effect<
   void,
   never,
@@ -305,7 +307,7 @@ export const appendNode = (
     // ノードの作成と追加
     _createAndAddNode(nodeParam),
     // 親ノードの最後にノードを追加する
-    Effect.tap((_) => _appendNodeToRoutePath(_.id, parentNodeId)),
+    Effect.tap((_) => _appendNodeToRoutePath(_.id, parentNodeId, page)),
     Effect.asVoid,
   )
 
@@ -474,6 +476,7 @@ export const deleteNode = (
 export const moveNode = (
   nodeId: NodeId,
   newParentNodeId: NodeId,
+  page: string,
 ): Effect.Effect<
   void,
   never,
@@ -481,7 +484,7 @@ export const moveNode = (
 > =>
   Effect.Do.pipe(
     Effect.tap(_removeNodeFromAllRoutes(nodeId)),
-    Effect.tap(_appendNodeToRoutePath(nodeId, newParentNodeId)),
+    Effect.tap(_appendNodeToRoutePath(nodeId, newParentNodeId, page)),
     Effect.asVoid,
   )
 
@@ -558,7 +561,7 @@ export const connectNodes = (fromNodeId: NodeId, toNodeId: NodeId) =>
                     id: _,
                     name: "",
                     path: routePath,
-                    page: 0,
+                    page: "0",
                   }),
                 ),
               ),
@@ -586,7 +589,7 @@ export const createRootNode = (node: OmitId<RawPrimitiveNode, "name">) =>
     Effect.flatMap((_) =>
       _createAndAddRoute({
         path: [_],
-        page: 0,
+        page: "0",
       }),
     ),
   )

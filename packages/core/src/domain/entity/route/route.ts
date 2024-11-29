@@ -7,7 +7,7 @@ declare const _route: unique symbol
 export type RouteId = Id & { [_route]: never }
 
 export type Color = string
-export type Page = number
+export type Page = string
 
 export type Route = {
   [_route]: never

@@ -76,7 +76,9 @@ const parseDecomposedActionToActionInstance = (
   }
 }
 
-export const parseToEntities = (decomposedList: Decomposed[]) => {
+export const parseToEntities = (
+  decomposedList: (Decomposed & { page: string })[],
+) => {
   // ud action
   const _userDefinedActions = decomposedList
     .map((decomposed) =>
@@ -134,7 +136,7 @@ export const parseToEntities = (decomposedList: Decomposed[]) => {
   const routes = decomposedList.map((decomposed) => {
     return buildPrimitiveRoute(genId(), {
       name: decomposed.title,
-      page: 0,
+      page: decomposed.page,
       color: decomposed.color,
       path: decomposed.steps.map((step) => toNodeId(`${step.id}`)),
     })

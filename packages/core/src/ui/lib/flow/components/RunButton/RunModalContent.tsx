@@ -14,7 +14,11 @@ import { runScenario } from "@/run/runScenario"
 import { runAsync } from "@/ui/lib/effect/run"
 import { runAndUpdateNodeStates } from "@/domain/workflow/nodeStates"
 import { useProjectContext } from "@/ui/context/context"
-import { enginePluginAtom } from "@/domain/datasource/plugin"
+import {
+  currentEnginePluginIdAtom,
+  enginePluginAtom,
+} from "@/domain/datasource/plugin"
+import { useInjectedContent } from "@/injector"
 
 type Props = {
   initialSelected?: RouteId[]
@@ -29,16 +33,39 @@ export const RunModalContent = ({ initialSelected }: Props) => {
   )
 
   const enginePlugin = useAtomValue(enginePluginAtom)
+  const enginePluginId = useAtomValue(currentEnginePluginIdAtom)
+  const injectedStore = useInjectedContent()
 
   const handleSubmit = async () => {
     onClose()
 
+    if (enginePluginId == null) {
+      window.alert("実行可能なライブラリが見つかりません")
+      return
+    }
+    const exec = injectedStore.exec.libs?.[enginePluginId]?.run
+    if (exec == null) {
+      window.alert("実行可能なライブラリが見つかりません")
+      return
+    }
+
     const result = await runAsync(
-      runAndUpdateNodeStates(
-        (runId, routeIds) =>
-          runScenario(runId, context.entry, routeIds, enginePlugin),
-        selected,
-      ),
+      runAndUpdateNodeStates(async (runId, routeIds) => {
+        try {
+          const res = await runScenario(
+            runId,
+            context.entry,
+            routeIds,
+            enginePlugin,
+            exec,
+          )
+          console.log(res)
+          return res
+        } catch (e) {
+          console.log(e)
+          throw e
+        }
+      }, selected),
     )
 
     if (result.result === "error") {

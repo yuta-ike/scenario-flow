@@ -77,6 +77,9 @@ const convertDecomposedLoopConfig = (
     loop.interval == null &&
     loop.maxElapsedTime == null
   ) {
+    if (loop.maxRetries === 0) {
+      return undefined
+    }
     return loop.maxRetries
   }
   return {
@@ -113,6 +116,7 @@ export const convertDecomposedToRunn: EnginePluginSerializer<RunBook> = (
       id: decomposed.id,
       title: decomposed.title,
       color: decomposed.color,
+      page: decomposed.page,
     },
     contents: {
       desc: decomposed.title,

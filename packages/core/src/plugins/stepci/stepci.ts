@@ -60,11 +60,10 @@ export const convertDecomposedToStepci: EnginePluginSerializer<Workflow> = (
                       json: (restCallAction.body ?? undefined) as object,
                     },
               check: makeUndefinedIfEmpty({
-                // @ts-expect-error
                 ...(validatorAction == null
                   ? undefined
                   : safelyParseJson(validatorAction.contents, {
-                      orElse: undefined,
+                      orElse: {},
                     })),
                 ...(binderAction == null
                   ? undefined

@@ -100,6 +100,7 @@ export const createRootNode = (actionIdentifier: ActionSourceIdentifier) => {
 export const appendNode = (
   nodeId: NodeId,
   actionIdentifier: ActionSourceIdentifier,
+  page: string,
 ) => {
   run(
     appendNodeWf(
@@ -134,6 +135,7 @@ export const appendNode = (
         config: {},
       },
       nodeId,
+      page,
     ),
   )
 }

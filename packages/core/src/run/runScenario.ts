@@ -1,5 +1,5 @@
 import type { RouteId } from "@/domain/entity/route/route"
-import type { ProjectEntry } from "@/injector"
+import type { InjectedContentExecRunner, ProjectEntry } from "@/injector"
 import type { Id } from "@/utils/idType"
 import type { Result } from "@/utils/result"
 import type { RunResultWithNodeId } from "@/domain/workflow/nodeStates"
@@ -9,33 +9,40 @@ import type { NodeId } from "@/domain/entity/node/node"
 import { decomposedForLibAtom } from "@/domain/selector/decomposedForPlugin"
 import { store } from "@/ui/adapter/store"
 import { error, success } from "@/utils/result"
+import { decomposedAtom } from "@/domain/selector/decomposed"
 
 export const runScenario = async (
   runId: Id,
   projectEntry: ProjectEntry,
   routeIds: RouteId[],
   enginePlugin: EnginePlugin,
+  exec: InjectedContentExecRunner,
 ): Promise<Result<{ runId: Id; results: RunResultWithNodeId }, string>> => {
   const runner = enginePlugin.runner
 
-  const scenarios = store.get(decomposedForLibAtom)
-  const targetScenarios = scenarios.filter((scenario) =>
-    (routeIds as string[]).includes(scenario.meta.id),
+  const scenarios = store.get(decomposedAtom)
+
+  const nodeTitleIdMap = new Map(
+    scenarios.flatMap((scenario) =>
+      scenario.steps.map((step) => [step.title, step.id]),
+    ),
   )
 
-  const scenarioWithPath = targetScenarios.map((scenario) => ({
-    ...scenario,
-    path: `${projectEntry.path}/${scenario.meta.title}.yaml`,
-  }))
+  const targetScenarios = store
+    .get(decomposedForLibAtom)
+    .filter((scenario) => (routeIds as string[]).includes(scenario.meta.id))
+    .map((scenario) => ({
+      ...scenario,
+      path: `${projectEntry.path}/${scenario.meta.title}.yaml`,
+    }))
 
   const result = await runner({
-    scenarios: scenarioWithPath,
-    // @ts-expect-error
-    command: () => {}, // Injectorから取得
+    scenarios: targetScenarios,
+    command: exec,
   })
 
   if (result.result === "error") {
-    // TODO: エラークラス
+    console.error(result.error)
     return error("実行に失敗しました")
   }
 
@@ -45,7 +52,7 @@ export const runScenario = async (
       ...runResult,
       steps: runResult.steps.map((stepResult) => ({
         ...stepResult,
-        id: stepResult.id as NodeId,
+        id: nodeTitleIdMap.get(stepResult.id) as NodeId,
       })),
     })),
   })

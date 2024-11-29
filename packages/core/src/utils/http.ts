@@ -35,11 +35,6 @@ const HTTP_METHODS_DATA = [
     color: "#E67E22",
   },
   {
-    id: "CONNECT",
-    label: "CONNECT",
-    color: "#1ABC9C",
-  },
-  {
     id: "TRACE",
     label: "TRACE",
     color: "#7F8C8D",
@@ -59,7 +54,6 @@ export const HTTP_METHODS = [
   "OPTIONS",
   "HEAD",
   "TRACE",
-  "CONNECT",
 ] as const
 
 export const HTTP_METHODS_MAP = Object.fromEntries(

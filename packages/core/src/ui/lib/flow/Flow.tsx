@@ -10,6 +10,7 @@ import {
   SelectionMode,
 } from "@xyflow/react"
 import { useMemo, useState } from "react"
+import { atom, useAtomValue } from "jotai"
 
 import { BasicEdge } from "./edges/BasicEdge"
 import { StartNode } from "./nodes/StartNode"
@@ -18,11 +19,12 @@ import { RoutePanel } from "./components/RoutePanel"
 import { DetailPanel } from "./components/DetailPanel"
 import { FlowProvider } from "./FlowProvider"
 import { RunButton } from "./components/RunButton"
+import { PagePanel } from "./components/PagePanel"
 
 import type { EdgeTypes, NodeTypes, ReactFlowInstance } from "@xyflow/react"
 import type { NodeId } from "@/domain/entity/node/node"
 
-import { useEdges, useNodeIds } from "@/ui/adapter/query"
+import { useEdges } from "@/ui/adapter/query"
 import { toNodeId } from "@/domain/entity/node/node.util"
 import { getLayout } from "@/lib/incremental-auto-layout/getLayout"
 import { ErrorBoundary } from "@/ui/components/ErrorBoundary"
@@ -32,6 +34,20 @@ import { useReleaseHighlight } from "@/ui/state/highlightedNodeId"
 import { connectNodes } from "@/ui/adapter/command"
 import { useMapState } from "@/ui/utils/useMapState"
 import { useSwitchFocusedRouteId } from "@/ui/state/focusedRouteId"
+import { currentPageAtom } from "@/ui/state/page"
+import { primitiveRoutesAtom } from "@/domain/datasource/route"
+
+const currentPageNodeIds = atom((get) => {
+  const page = get(currentPageAtom)
+  const routes = get(primitiveRoutesAtom)
+  return new Set(
+    routes
+      .filter((route) => route.page === page)
+      .flatMap((route) => route.path),
+  )
+    .values()
+    .toArray()
+})
 
 const nodeTypes: NodeTypes = {
   startNode: StartNode,
@@ -45,6 +61,10 @@ const edgeTypes: EdgeTypes = {
 
 const initialNodeId = toNodeId("$root")
 
+const currentPageRoutes = atom((get) => {
+  const page = get(currentPageAtom)
+  return get(primitiveRoutesAtom).filter((route) => route.page === page)
+})
 export const Flow = () => {
   const [reactFlow, setReactFlow] = useState<ReactFlowInstance | null>(null)
   const [nodeSize, { updateItem }] = useMapState<{
@@ -52,8 +72,8 @@ export const Flow = () => {
     height: number
   }>()
 
-  const nodeIds = useNodeIds()
-  const edges = useEdges(initialNodeId)
+  const routes = useAtomValue(currentPageRoutes)
+  const edges = useEdges(routes, initialNodeId)
 
   const layout = useMemo(() => {
     try {
@@ -67,6 +87,11 @@ export const Flow = () => {
       return undefined
     }
   }, [edges, nodeSize])
+
+  const nodeIds = useMemo(
+    () => new Set(routes.flatMap((route) => route.path)).values().toArray(),
+    [routes],
+  )
 
   const switchFocusedRouteId = useSwitchFocusedRouteId()
 
@@ -158,11 +183,14 @@ export const Flow = () => {
             </div>
           </ErrorBoundary>
         </ReactFlow>
-        <ErrorBoundary fallback={<ErrorDisplay />}>
-          <div className="absolute left-2 top-2 w-[240px]">
+        <div className="absolute left-2 top-2 flex w-[240px] flex-col gap-4">
+          <ErrorBoundary fallback={<ErrorDisplay />}>
+            <PagePanel />
+          </ErrorBoundary>
+          <ErrorBoundary fallback={<ErrorDisplay />}>
             <RoutePanel />
-          </div>
-        </ErrorBoundary>
+          </ErrorBoundary>
+        </div>
         <ErrorBoundary fallback={<ErrorDisplay />}>
           <div className="z-10 max-w-[600px] shrink-0 overflow-hidden overflow-y-auto border-0 border-l border-l-slate-200">
             <DetailPanel />

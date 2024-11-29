@@ -7,6 +7,7 @@ export type LibMetaFormat<T> = {
     id: string
     title: string
     color: string
+    page: string
   }
   contents: T & Record<`x-${string}`, JsonPrimitive>
 }

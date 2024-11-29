@@ -3,30 +3,35 @@
   "version": "1.0.0",
   "description": "",
   "license": "MIT",
+  "scripts": {
+    "dev:web": "pnpm --filter @scenario-flow/web dev",
+    "dev:desktop": "pnpm --filter @scenario-flow/desktop dev"
+  },
   "devDependencies": {
-    "@eslint/js": "^9.12.0",
-    "@go-task/cli": "^3.39.2",
+    "@eslint/js": "catalog:",
+    "@go-task/cli": "catalog:",
     "@scenario-flow/eslint-config": "workspace:*",
     "@scenario-flow/prettier-config": "workspace:*",
     "@scenario-flow/tailwind-config": "workspace:*",
     "@scenario-flow/typescript-config": "workspace:*",
-    "@vitest/eslint-plugin": "^1.1.7",
+    "@types/node": "catalog:",
+    "@vitest/eslint-plugin": "catalog:",
     "@vitest/ui": "^2.1.3",
-    "eslint": "^9.12.0",
-    "eslint-config-flat-gitignore": "^0.3.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-unused-imports": "^4.1.4",
-    "npm-run-all": "^4.1.5",
-    "prettier": "^3.3.3",
-    "quicktype": "^23.0.170",
+    "eslint": "catalog:",
+    "eslint-config-flat-gitignore": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-import": "catalog:",
+    "eslint-plugin-unused-imports": "catalog:",
+    "npm-run-all": "catalog:",
+    "prettier": "catalog:",
+    "quicktype": "catalog:",
     "typescript": "^5.6.3",
-    "typescript-eslint": "^8.9.0",
-    "vite": "^5.4.9",
-    "vitest": "^2.1.3"
+    "typescript-eslint": "catalog:",
+    "vite": "^6.0.1",
+    "vitest": "catalog:"
   },
   "packageManager": "pnpm@9.12.3",
   "volta": {
-    "node": "20.18.0"
+    "node": "20.18.1"
   }
 }

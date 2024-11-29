@@ -147,6 +147,7 @@ export const revertRunnToDecomposed: EnginePluginDeserializer = (
       color: COLORS[i % COLORS.length]!,
       title: runbook.desc,
       endpoint: "",
+      page: "",
       globalVariables: Object.entries(runbook.vars ?? {}).map(
         ([key, value]) => ({
           ...buildGlobalVariable(genId(), {

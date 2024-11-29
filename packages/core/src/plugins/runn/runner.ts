@@ -23,10 +23,13 @@ export const runnRunner: EnginePluginRunner<string[]> = async ({
   command,
   scenarios,
 }) => {
+  console.log(scenarios)
   // node.titleとnode.idの対応
   const nodeNameMap = new Map(
     scenarios.flatMap((scenario) =>
-      scenario.contents.steps.map((step) => [step.id, step.title] as const),
+      Object.entries(scenario.contents.steps).map(
+        ([id, step]) => [id, step.title] as const,
+      ),
     ),
   )
 
@@ -34,22 +37,31 @@ export const runnRunner: EnginePluginRunner<string[]> = async ({
   const pathIdMap = new Map(
     scenarios.map((scenario) => [scenario.path, scenario.meta.id]),
   )
-  const result = await command(scenarios.map((scenario) => scenario.path))
+  const paths = scenarios.map((scenario) => scenario.path)
 
-  if (result.result === "error" || result.value.length === 0) {
-    return error(`${result.error as any}`)
-  }
+  try {
+    const result = await command(paths)
 
-  const runnResult: RunnResult = JSON.parse(result.value)
+    if (result.result === "error" || result.value.length === 0) {
+      return error(`${result.error as any}`)
+    }
 
-  return success(
-    runnResult.results.map(({ steps, result, path }) => ({
-      id: pathIdMap.get(path)!,
-      result,
-      steps: steps.map((stepResult) => ({
-        id: nodeNameMap.get(stepResult.key)!,
-        result: stepResult.result,
+    const runnResult: RunnResult = JSON.parse(result.value)
+    console.log(nodeNameMap)
+    console.log(runnResult)
+
+    return success(
+      runnResult.results.map(({ steps, result }, index) => ({
+        id: scenarios[index]!.meta.id,
+        result,
+        steps: steps.map((stepResult) => ({
+          id: stepResult.key,
+          result: stepResult.result,
+        })),
       })),
-    })),
-  )
+    )
+  } catch (e) {
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    return error(`${e}`)
+  }
 }

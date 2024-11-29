@@ -18,7 +18,7 @@ export const genPrimitiveRoute = (
     path: path.map(toNodeId),
     name: `route ${id}`,
     color: "#000000",
-    page: 0,
+    page: "0",
     ...overrides,
   })
 
@@ -31,6 +31,6 @@ export const genRoute = (
     path,
     name: `route ${id}`,
     color: "#000000",
-    page: 0,
+    page: "0",
     ...overrides,
   })

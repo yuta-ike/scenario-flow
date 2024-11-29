@@ -55,7 +55,7 @@ export const Provider = ({
       }
 
       // context
-      store.set(projectContextAtom, context)
+      store.set(projectContextAtom, { entry, config })
 
       // plugin
       store.set(currentEnginePluginIdAtom, toEnginePluginId(config.engine))
@@ -102,7 +102,7 @@ export const Provider = ({
     }
 
     void init()
-  }, [config.engine, entry])
+  }, [config, config.engine, entry])
 
   return (
     <JotaiProvider store={store.store}>

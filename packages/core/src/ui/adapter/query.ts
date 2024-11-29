@@ -2,10 +2,12 @@ import { atom, useAtom, useAtomValue } from "jotai"
 import { useMemo } from "react"
 import { atomFamily } from "jotai/utils"
 
+import { currentPageAtom } from "../state/page"
+
 import type { ResolvedAction } from "@/domain/entity/action/action"
 import type { NodeId } from "@/domain/entity/node/node"
 import type { ResourceId } from "@/domain/entity/resource/resource"
-import type { RouteId } from "@/domain/entity/route/route"
+import type { PrimitiveRoute, RouteId } from "@/domain/entity/route/route"
 import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
 
 import { nodeAtom, nodeIdsAtom } from "@/domain/datasource/node"
@@ -81,13 +83,19 @@ export const useNullablePrimitiveRoute = (routeId: RouteId | null) =>
 export const useRoutes = () => useAtomValue(primitiveRoutesAtom)
 
 export const routeIdsBetweenAtom = atomFamily(
-  ({ source, target }: { source: NodeId | null; target: NodeId }) =>
-    atom((get) => {
+  ({ source, target }: { source: NodeId | null; target: NodeId }) => {
+    const newAtom = atom((get) => {
+      const page = get(currentPageAtom)
       if (source == null) {
-        return get(getRouteIdsByNodeId(target))
+        return get(getRouteIdsByNodeId(target)).filter(
+          (routeId) => get(primitiveRouteAtom(routeId)).page === page,
+        )
       }
-      const routes = get(getRoutesByNodeId(target))
+      const routes = get(getRoutesByNodeId(target)).filter(
+        (route) => route.page === page,
+      )
       return routes
+
         .filter((route) => {
           const sourceIndex = route.path.indexOf(source)
           const targetIndex = route.path.indexOf(target)
@@ -98,8 +106,12 @@ export const routeIdsBetweenAtom = atomFamily(
           )
         })
         .map((route) => route.id)
-    }),
+    })
+    newAtom.debugLabel = `routeIdsBetweenAtom(${source}, ${target})`
+    return newAtom
+  },
 )
+
 export const useRouteIdsBetween = (source: NodeId, target: NodeId) => {
   return useAtomValue(
     useMemo(
@@ -112,9 +124,8 @@ export const useRouteIdsBetween = (source: NodeId, target: NodeId) => {
     ),
   )
 }
-export const useEdges = (initialNodeId: NodeId) => {
-  const routes = useRoutes()
 
+export const useEdges = (routes: PrimitiveRoute[], initialNodeId: NodeId) => {
   return useMemo(() => {
     const rootNodeIds = new Set(
       routes.map((route) => route.path[0]).filter((nodeId) => nodeId != null),

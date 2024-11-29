@@ -12,7 +12,7 @@ import { kvToRecordNullable } from "@/ui/lib/kv"
 
 const decomposeStepItem = (node: Node): DecomposedStep => {
   return {
-    id: node.name,
+    id: node.id,
     title: node.name,
     actions: node.actionInstances.flatMap((ai) => {
       if (ai.type === "rest_call") {
@@ -68,6 +68,7 @@ const decomposeRoute = (
     globalVariables,
     endpoint: meta.endpoint,
     steps: route.path.map(decomposeStepItem),
+    page: route.page,
   } satisfies Decomposed
 }
 

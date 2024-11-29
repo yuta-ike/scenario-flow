@@ -1,0 +1,4 @@
+{
+  "extends": "@scenario-flow/typescript-config/plugin.json",
+  "include": ["src"]
+}

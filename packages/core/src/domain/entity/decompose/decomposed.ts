@@ -51,4 +51,5 @@ export type Decomposed = {
   })[]
   endpoint: string // TODO: 暫定
   steps: DecomposedStep[]
+  page: string
 }

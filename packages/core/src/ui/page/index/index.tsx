@@ -20,6 +20,7 @@ export const IndexPage = () => {
   const handleSetUp = async () => {
     const entry = await openDir()
     const config = await setUpDirectory(entry)
+    console.log({ entry, config })
     setProjectContext({ entry, config })
   }
 

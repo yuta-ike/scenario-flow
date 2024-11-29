@@ -1,4 +1,3 @@
-import type { RunScenarioError } from "./error"
 import type { Result } from "@/utils/result"
 
 export type RunResult = {
@@ -28,6 +27,19 @@ export type FileEntry<
   name: string
   path: string
 } & EntryAdditional
+
+export type InjectedContentExecRunner = (
+  paths: string[],
+) => Promise<Result<string, string>>
+
+export type InjectedContentExec = {
+  libs?: Record<
+    string,
+    {
+      run?: InjectedContentExecRunner
+    }
+  >
+}
 
 export type InjectedContent<
   FileEntryAdditional extends Record<string, unknown> = Record<string, unknown>,
@@ -66,16 +78,7 @@ export type InjectedContent<
     openFile: () => Promise<FileEntry<FileEntryAdditional>>
   }
 
-  exec: {
-    libs?: Record<
-      string,
-      {
-        run?: (
-          paths: { id: string; path: string }[],
-        ) => Promise<Result<RunResult, RunScenarioError>>
-      }
-    >
-  }
+  exec: InjectedContentExec
 
   fetch: {
     fetch?: typeof window.fetch

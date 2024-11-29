@@ -2,6 +2,7 @@ import { memo } from "react"
 import { Handle, NodeToolbar, Position, useConnection } from "@xyflow/react"
 import { HiPlus } from "react-icons/hi2"
 import { FiTrash } from "react-icons/fi"
+import { useAtomValue } from "jotai"
 
 import { OpenCreateDropdown } from "../../components/OpenCreateDropdown"
 import { ApiCallSection } from "../sections/ApiCallSection"
@@ -22,6 +23,7 @@ import { useIsNodeHighlighted } from "@/ui/state/highlightedNodeId"
 import { useHotkey } from "@/ui/lib/hotkey"
 import { IconButton } from "@/ui/components/common/IconButton"
 import { useObserveElementSize } from "@/ui/utils/useObserveElementSize"
+import { currentPageAtom } from "@/ui/state/page"
 
 type ApiCallNodeProps = NodeProps<GeneralUiNode>
 
@@ -40,9 +42,10 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
   const isFocused = useIsNodeFocused(nodeId)
   const isHighlighted = useIsNodeHighlighted(nodeId)
   const focusedRoute = useFocusedRouteByNodeId(nodeId)
+  const page = useAtomValue(currentPageAtom)
 
   const handleCreateNewApiCallNode = (actionId: ActionSourceIdentifier) => {
-    appendNode(nodeId, actionId)
+    appendNode(nodeId, actionId, page)
   }
 
   const keyRef = useHotkey<HTMLButtonElement>("Backspace", {

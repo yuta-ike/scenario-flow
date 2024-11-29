@@ -5,7 +5,7 @@ import {
 
 import type { UserDefinedAction } from "../userDefinedAction/userDefinedAction"
 import type { OperationObject } from "openapi3-ts/oas31"
-import type { BuilderParams, Builder, BuilderReturn } from "../type"
+import type { BuilderParams, Builder } from "../type"
 import type {
   BinderActionParameter,
   RestCallActionParameter,
@@ -29,10 +29,8 @@ export type Action = {
   description: string
 } & ActionSourceIdentifier // TODO:
 export const buildAction: Builder<Action> = (id, params) => {
-  return { id, ...params } satisfies BuilderReturn<Action> as Action
+  return { id, ...params } as Action
 }
-
-export type RawAction = Omit<Action, "_action">
 
 // ResolvedAction
 export type RestCallActionParameterSchema = {
@@ -85,7 +83,6 @@ export const buildResolvedAction = <AType extends ActionType = ActionType>(
   id: string,
   params: BuilderParams<ResolvedAction<AType>>,
 ) => {
-  // @ts-expect-error
   return { id, ...params } as ResolvedAction<AType>
 }
 

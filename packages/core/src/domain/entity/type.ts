@@ -1,3 +1,5 @@
+import type { DistributiveOmit } from "@/utils/typeUtil"
+
 export type Transition<Entity, Args extends any[] = any[], Return = Entity> = (
   entity: Entity,
   ...args: Args
@@ -48,7 +50,7 @@ export type StripeSymbol<Model> =
  * IDと、symbol型を指定するキーをとりのぞいたModelの型を返す
  */
 export type BuilderParams<Model extends Record<string, any>> = StripeSymbol<
-  Omit<Model, "id">
+  DistributiveOmit<Model, "id">
 >
 
 export type BuilderReturn<
@@ -66,7 +68,7 @@ export type Builder<
   Rest extends any[] = never[],
 > = (
   id: Model["id"] extends string ? string : never,
-  params: BuilderParams<Omit<Model, "id">>,
+  params: BuilderParams<DistributiveOmit<Model, "id">>,
   ...rest: Rest
 ) => Model
 
@@ -77,10 +79,3 @@ export type SimpleBuilder<Model, Args extends any[] = any[]> = (
 export type Equal<Model> = (a: Model, b: Model) => boolean
 
 export type Receiver<Model, Return> = (model: Model, ...rest: any) => Return
-
-type Flat<T> = T extends object ? { [K in keyof T]: Flat<T[K]> } : T
-
-type Model = {
-  jsonSchema?: number
-}
-type X = Flat<StripeSymbol<Model>>

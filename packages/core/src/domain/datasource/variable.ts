@@ -35,10 +35,10 @@ export const variableAtom = wrapAtomFamily(_variableAtom, {
         param.create.id as LocalVariableId,
       )
       if (hasData) {
-        // @ts-expect-error
+        // @ts-expect-error 型推論が効かないので
         param.create = undefined
       } else {
-        // @ts-expect-error
+        // @ts-expect-error 型推論が効かないので
         param.update = undefined
       }
     }
