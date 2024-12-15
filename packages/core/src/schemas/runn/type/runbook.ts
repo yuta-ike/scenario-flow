@@ -52,14 +52,23 @@ export type RunBookStepOperationObject = {
   cookies?: Record<string, string>
   body?: Record<ContentType, RunBookStepMediaTypeObject>
   trace?: boolean
+  meta?: {
+    "x-action-id"?: string
+  }
 }
 export type RunBookStepMediaTypeObject = Json
 
+export type RunBookStepIncludeObject = {
+  path: string
+  vars: Record<string, string>
+}
+
 export type RunBookStep = {
-  desc: string
+  desc?: string
   if?: string
   loop?: RunBookStepLoopConfig
   req?: RunBookStepPathsObject
   test?: string
+  include?: RunBookStepIncludeObject
   bind?: Record<string, string>
 }

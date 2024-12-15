@@ -1,4 +1,4 @@
-export const verifyRemoteopen_api = async (
+export const verifyRemoteOpenApi = async (
   url: string,
 ): Promise<true | string> => {
   try {
@@ -7,7 +7,6 @@ export const verifyRemoteopen_api = async (
       return "リクエストを取得できませんでした"
     }
     await res.json()
-    // TODO: バリデーション
     return true
   } catch (e) {
     console.error(structuredClone(e))

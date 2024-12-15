@@ -34,7 +34,7 @@ describe("actionInstance > resolvedActionInstanceAtom", () => {
     resourceAtom(
       toResourceId("r1"),
       buildResource("r1", {
-        type: "open_api",
+        type: "openapi",
         name: "Resource 1",
         description: "",
         content: {

@@ -69,7 +69,8 @@
     "react-hook-form": "catalog:",
     "react-icons": "catalog:",
     "rollup-plugin-visualizer": "catalog:",
-    "thememirror": "catalog:"
+    "thememirror": "catalog:",
+    "throttle-debounce": "catalog:"
   },
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "catalog:",
@@ -80,6 +81,7 @@
     "@types/node": "catalog:",
     "@types/react": "^18.3.11",
     "@types/react-dom": "catalog:",
+    "@types/throttle-debounce": "catalog:",
     "@types/wicg-file-system-access": "catalog:",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^2.1.3",

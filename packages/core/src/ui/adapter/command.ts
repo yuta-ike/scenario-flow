@@ -1,12 +1,12 @@
 import { run } from "../lib/effect/run"
+import { currentPageAtom } from "../state/page"
 
 import { store } from "./store"
 
+import type { Context } from "./context"
 import type { Effect } from "effect/Effect"
 import type { OpenAPIObject } from "openapi3-ts/oas31"
 import type { Json } from "@/utils/json"
-import type { PrimitiveRoute, RouteId } from "@/domain/entity/route/route"
-import type { OmitId } from "@/utils/idType"
 import type { NodeId } from "@/domain/entity/node/node"
 import type { ActionType } from "@/domain/entity/action/action"
 import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
@@ -14,6 +14,7 @@ import type { Result } from "@/utils/result"
 import type { JsonParseError } from "@/lib/json-schema/error"
 import type { Resource } from "@/domain/entity/resource/resource"
 import type { StripeSymbol } from "@/domain/entity/type"
+import type { RouteId } from "@/domain/entity/route/route"
 
 import {
   buildResource,
@@ -23,11 +24,15 @@ import { resourceAtom, resourceIdsAtom } from "@/domain/datasource/resource"
 import { addResource, putResource } from "@/domain/workflow/resource"
 import { addSetOp } from "@/utils/set"
 import { genId } from "@/utils/uuid"
-import { updateRoute as updateRouteEntity } from "@/domain/workflow/route"
-import { primitiveRouteAtom } from "@/domain/datasource/route"
+import {
+  addRoute as addRouteWf,
+  deleteRoute as deleteRouteWf,
+  updatePageName as updatePageNameWf,
+  updateRoute as updateRouteWf,
+} from "@/domain/workflow/route"
 import {
   appendNode as appendNodeWf,
-  createRootNode as createRootNodeWf,
+  createRestCallRootNode as createRestCallRootNodeWf,
   updateActionInstancesParameter,
   upsertVariables as upsertVariablesWf,
   replaceAction as replaceActionWf,
@@ -36,6 +41,9 @@ import {
   appendActionInstance as appendActionInstanceWf,
   deleteNode as deleteNodeWf,
   connectNodes as connectNodesWf,
+  disconnectNodes as disconnectNodesWf,
+  insertNode as insertNodeWf,
+  unshiftNode as unshiftNodeWf,
 } from "@/domain/workflow/node"
 import {
   addGlobalVariable as addGlobalVariableWf,
@@ -49,7 +57,7 @@ import { success } from "@/utils/result"
 
 export const applyRunner =
   <
-    Eff extends (...args: any[]) => Effect<unknown, unknown, unknown>,
+    Eff extends (...args: any[]) => Effect<unknown, unknown, Context>,
     Args extends Parameters<Eff>,
   >(
     effect: Eff,
@@ -57,43 +65,91 @@ export const applyRunner =
   (...args: Args) =>
     run(effect(...args))
 
-export const createRootNode = (actionIdentifier: ActionSourceIdentifier) => {
+export const createRestCallRootNode = (
+  actionIdentifier: ActionSourceIdentifier,
+  page: string,
+) => {
   run(
-    createRootNodeWf({
-      actionInstances: [
-        {
-          id: toActionInstanceId(genId()),
-          type: "rest_call",
-          description: "",
-          instanceParameter: {},
-          config: {
-            followRedirect: false,
-            useCookie: false,
+    createRestCallRootNodeWf(
+      {
+        description: "",
+        actionInstances: [
+          {
+            id: toActionInstanceId(genId()),
+            type: "rest_call",
+            description: "",
+            instanceParameter: {},
+            config: {
+              followRedirect: false,
+              useCookie: false,
+            },
+            actionIdentifier: actionIdentifier,
           },
-          actionIdentifier: actionIdentifier,
-        },
-        {
-          id: toActionInstanceId(genId()),
-          type: "validator",
-          instanceParameter: {
-            contents: toExpression(""),
+          {
+            id: toActionInstanceId(genId()),
+            type: "validator",
+            instanceParameter: {
+              contents: toExpression(""),
+            },
           },
-        },
-        {
-          id: toActionInstanceId(genId()),
-          type: "binder",
-          instanceParameter: {
-            assignments: [],
+          {
+            id: toActionInstanceId(genId()),
+            type: "binder",
+            instanceParameter: {
+              assignments: [],
+            },
           },
-        },
-      ],
-      config: {
-        condition: toExpression("true"),
-        loop: {
-          maxRetries: 0,
+        ],
+        config: {
+          condition: toExpression("true"),
+          loop: {
+            maxRetries: 0,
+          },
         },
       },
-    }),
+      page,
+    ),
+  )
+}
+
+export const createIncludeRootNode = (routeId: RouteId, page: string) => {
+  run(
+    createRestCallRootNodeWf(
+      {
+        description: "",
+        actionInstances: [
+          {
+            id: toActionInstanceId(genId()),
+            type: "include",
+            instanceParameter: {
+              ref: routeId,
+              parameters: [],
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "validator",
+            instanceParameter: {
+              contents: toExpression(""),
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "binder",
+            instanceParameter: {
+              assignments: [],
+            },
+          },
+        ],
+        config: {
+          condition: toExpression("true"),
+          loop: {
+            maxRetries: 0,
+          },
+        },
+      },
+      page,
+    ),
   )
 }
 
@@ -105,6 +161,7 @@ export const appendNode = (
   run(
     appendNodeWf(
       {
+        description: "",
         actionInstances: [
           {
             id: toActionInstanceId(genId()),
@@ -140,6 +197,205 @@ export const appendNode = (
   )
 }
 
+export const appendIncludeNode = (
+  nodeId: NodeId,
+  routeId: RouteId,
+  page: string,
+) => {
+  run(
+    appendNodeWf(
+      {
+        description: "",
+        actionInstances: [
+          {
+            id: toActionInstanceId(genId()),
+            type: "include",
+            instanceParameter: {
+              ref: routeId,
+              parameters: [],
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "validator",
+            instanceParameter: {
+              contents: toExpression(""),
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "binder",
+            instanceParameter: {
+              assignments: [],
+            },
+          },
+        ],
+        config: {},
+      },
+      nodeId,
+      page,
+    ),
+  )
+}
+
+export const insertNode = (
+  nodeId: NodeId,
+  actionIdentifier: ActionSourceIdentifier,
+  page: string,
+) =>
+  run(
+    insertNodeWf(
+      {
+        description: "",
+        actionInstances: [
+          {
+            id: toActionInstanceId(genId()),
+            type: "rest_call",
+            description: "",
+            instanceParameter: {},
+            config: {
+              followRedirect: false,
+              useCookie: false,
+            },
+            actionIdentifier,
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "validator",
+            instanceParameter: {
+              contents: toExpression(""),
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "binder",
+            instanceParameter: {
+              assignments: [],
+            },
+          },
+        ],
+        config: {},
+      },
+      nodeId,
+      page,
+    ),
+  )
+
+export const insertIncludeNode = (
+  nodeId: NodeId,
+  routeId: RouteId,
+  page: string,
+) =>
+  run(
+    insertNodeWf(
+      {
+        description: "",
+        actionInstances: [
+          {
+            id: toActionInstanceId(genId()),
+            type: "include",
+            instanceParameter: {
+              ref: routeId,
+              parameters: [],
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "validator",
+            instanceParameter: {
+              contents: toExpression(""),
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "binder",
+            instanceParameter: {
+              assignments: [],
+            },
+          },
+        ],
+        config: {},
+      },
+      nodeId,
+      page,
+    ),
+  )
+
+export const unshiftNode = (
+  routeId: RouteId,
+  actionIdentifier: ActionSourceIdentifier,
+) =>
+  run(
+    unshiftNodeWf(
+      {
+        description: "",
+        actionInstances: [
+          {
+            id: toActionInstanceId(genId()),
+            type: "rest_call",
+            description: "",
+            instanceParameter: {},
+            config: {
+              followRedirect: false,
+              useCookie: false,
+            },
+            actionIdentifier,
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "validator",
+            instanceParameter: {
+              contents: toExpression(""),
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "binder",
+            instanceParameter: {
+              assignments: [],
+            },
+          },
+        ],
+        config: {},
+      },
+      routeId,
+    ),
+  )
+
+export const unshiftIncludeNode = (routeId: RouteId) =>
+  run(
+    unshiftNodeWf(
+      {
+        description: "",
+        actionInstances: [
+          {
+            id: toActionInstanceId(genId()),
+            type: "include",
+            instanceParameter: {
+              ref: routeId,
+              parameters: [],
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "validator",
+            instanceParameter: {
+              contents: toExpression(""),
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "binder",
+            instanceParameter: {
+              assignments: [],
+            },
+          },
+        ],
+        config: {},
+      },
+      routeId,
+    ),
+  )
 // action instanceを追加する
 export const appendActionInstance = (
   nodeId: NodeId,
@@ -162,7 +418,7 @@ export const uploadOpenApiFile = async (
       name,
       description,
       content: content.value,
-      type: "open_api",
+      type: "openapi",
       location: {
         locationType: "local_file" as const,
         path,
@@ -195,7 +451,7 @@ export const putOpenApiFile = async (
     name,
     description,
     content: content.value,
-    type: "open_api",
+    type: "openapi",
     location: {
       locationType: "local_file",
       path,
@@ -211,24 +467,22 @@ export const putOpenApiFile = async (
   return success(null)
 }
 
-export const updteRoute = (
-  routeId: RouteId,
-  param: Partial<Pick<PrimitiveRoute, "name" | "color" | "page">>,
-) => {
-  updateRouteEntity(routeId, param, {
-    getRoute: (routeId: RouteId) => store.get(primitiveRouteAtom(routeId)),
-    updateRoute: (routeId: RouteId, route: OmitId<PrimitiveRoute>) => {
-      store.set(primitiveRouteAtom(routeId), {
-        update: (prevRoute) => ({
-          ...prevRoute,
-          ...route,
-        }),
-      })
-    },
-  })
+export const addRoute = applyRunner(addRouteWf)
+
+export const updteRoute = applyRunner(updateRouteWf)
+
+export const updatePageName = (args: { prevPage: string; newPage: string }) => {
+  run(updatePageNameWf(args))
+  if (store.get(currentPageAtom) === args.prevPage) {
+    store.set(currentPageAtom, args.newPage)
+  }
 }
 
+export const deleteRoute = applyRunner(deleteRouteWf)
+
 export const updateNode = applyRunner(updateNodeWf)
+
+export const disconnectNodes = applyRunner(disconnectNodesWf)
 
 export const updateNodeConfig = applyRunner(updateNodeConfigWf)
 

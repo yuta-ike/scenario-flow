@@ -92,7 +92,6 @@ export const routesAtom = atom((get) => {
 })
 
 // cache
-// TODO: color周りはここで管理するのは微妙な気がする
 const routeColorCache = atom((get) => {
   const routes = get(routeIdsAtom)
     .values()

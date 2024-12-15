@@ -41,11 +41,13 @@ export const getLayout = (
 
   layout(graph)
 
+  const basePos = graph.node(baseNodeId)
+
   const nodeMap = graph.nodes().reduce((map, nodeId) => {
     const node = graph.node(nodeId)
     map.set(nodeId, {
-      x: node.x - (nodeSize.get(nodeId)?.width ?? 240) / 2,
-      y: node.y - (nodeSize.get(nodeId)?.height ?? 76) / 2,
+      x: node.x - (nodeSize.get(nodeId)?.width ?? 240) / 2 - basePos.x,
+      y: node.y - (nodeSize.get(nodeId)?.height ?? 76) / 2 - basePos.y,
     })
     return map
   }, new Map<string, Pos>())

@@ -1,24 +1,27 @@
-import { memo } from "react"
+import { memo, useCallback } from "react"
 import { Handle, NodeToolbar, Position, useConnection } from "@xyflow/react"
 import { HiPlus } from "react-icons/hi2"
 import { FiTrash } from "react-icons/fi"
-import { useAtomValue } from "jotai"
+import { useAtomCallback } from "jotai/utils"
 
 import { OpenCreateDropdown } from "../../components/OpenCreateDropdown"
 import { ApiCallSection } from "../sections/ApiCallSection"
 import { ValidatorSection } from "../sections/ValidatorSection"
 import { useUpdateNodeSize } from "../../FlowProvider"
+import { IncludeSection } from "../sections/IncludeSection"
 
 import { ResultChips } from "./ResultChips"
 
 import type { NodeProps } from "@xyflow/react"
 import type { GeneralUiNode } from "../../type"
 import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
+import type { ActionInstance } from "@/domain/entity/node/actionInstance"
+import type { RouteId } from "@/domain/entity/route/route"
 
 import { useNode } from "@/ui/adapter/query"
 import { useIsNodeFocused } from "@/ui/state/focusedNodeId"
 import { useFocusedRouteByNodeId } from "@/ui/state/focusedRouteId"
-import { appendNode, deleteNode } from "@/ui/adapter/command"
+import { appendIncludeNode, appendNode, deleteNode } from "@/ui/adapter/command"
 import { useIsNodeHighlighted } from "@/ui/state/highlightedNodeId"
 import { useHotkey } from "@/ui/lib/hotkey"
 import { IconButton } from "@/ui/components/common/IconButton"
@@ -27,8 +30,20 @@ import { currentPageAtom } from "@/ui/state/page"
 
 type ApiCallNodeProps = NodeProps<GeneralUiNode>
 
-// 新しくノードをつなぐ
-// インラインエディタ
+const NotFound = () => <div>ノードが見つかりません</div>
+
+const getComponent = (type: ActionInstance["type"]) => {
+  if (type === "rest_call") {
+    return ApiCallSection
+  } else if (type === "validator") {
+    return ValidatorSection
+  } else if (type === "include") {
+    return IncludeSection
+  } else if (type === "unknown") {
+    return NotFound
+  }
+  return () => null
+}
 
 export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
   const connection = useConnection()
@@ -42,11 +57,30 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
   const isFocused = useIsNodeFocused(nodeId)
   const isHighlighted = useIsNodeHighlighted(nodeId)
   const focusedRoute = useFocusedRouteByNodeId(nodeId)
-  const page = useAtomValue(currentPageAtom)
 
-  const handleCreateNewApiCallNode = (actionId: ActionSourceIdentifier) => {
-    appendNode(nodeId, actionId, page)
-  }
+  const handleCreateNewApiCallNode = useAtomCallback(
+    useCallback(
+      (get, _, actionId: ActionSourceIdentifier) => {
+        appendNode(nodeId, actionId, get(currentPageAtom))
+      },
+      [nodeId],
+    ),
+  )
+
+  const handleCreateNewIncludeNode = useAtomCallback(
+    useCallback(
+      (get, _, routeId: RouteId) => {
+        appendIncludeNode(nodeId, routeId, get(currentPageAtom))
+      },
+      [nodeId],
+    ),
+  )
+
+  const handleChangePage = useAtomCallback(
+    useCallback((_, set, page: string) => {
+      set(currentPageAtom, page)
+    }, []),
+  )
 
   const keyRef = useHotkey<HTMLButtonElement>("Backspace", {
     meta: false,
@@ -70,7 +104,13 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
           size="sm"
           icon={FiTrash}
           ref={keyRef}
-          onClick={() => deleteNode(nodeId)}
+          onClick={() => {
+            try {
+              deleteNode(nodeId)
+            } catch (e) {
+              console.error(e)
+            }
+          }}
         />
       </NodeToolbar>
       <div
@@ -90,26 +130,33 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
             className="absolute !inset-0 !z-10 !h-full !w-full !translate-x-0 !translate-y-0 !rounded-lg !bg-red-600/20 transition hover:!bg-red-600/30"
           />
         )}
-        <div className="line-clamp-1 p-1 pb-0 text-sm transition empty:hidden group-hover:line-clamp-none group-hover:whitespace-pre-line group-hover:empty:hidden">
-          {node.name}
+        <div className="pointer-events-none flex flex-col">
+          <div className="line-clamp-1 p-1 pb-0 text-[13px] text-slate-800 transition empty:hidden group-hover:line-clamp-none group-hover:whitespace-pre-line group-hover:empty:hidden">
+            {node.name}
+          </div>
+          <div className="z-10 line-clamp-1 max-h-[1.2lh] p-1 pb-0 text-xs text-slate-600 transition empty:hidden group-hover:line-clamp-none group-hover:w-[600px] group-hover:whitespace-pre-line group-hover:empty:hidden">
+            {node.description}
+          </div>
         </div>
-        {node.actionInstances.map((actionInstance) => (
-          <div key={actionInstance.id} className="w-full empty:hidden">
-            {actionInstance.type === "rest_call" ? (
-              <ApiCallSection
+        {node.actionInstances.map((actionInstance) => {
+          const Component = getComponent(actionInstance.type)
+          return (
+            <div key={actionInstance.id} className="w-full empty:hidden">
+              <Component
                 nodeId={node.id}
                 actionInstance={actionInstance}
+                onChangePage={handleChangePage}
               />
-            ) : actionInstance.type === "validator" ? (
-              <ValidatorSection actionInstance={actionInstance} />
-            ) : actionInstance.type === "unknown" ? (
-              <div className="">ノードが見つかりません</div>
-            ) : null}
-          </div>
-        ))}
+            </div>
+          )
+        })}
         {/* Add Button */}
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[40%]">
-          <OpenCreateDropdown onCreateApiCall={handleCreateNewApiCallNode}>
+          <OpenCreateDropdown
+            mode="append"
+            onCreateApiCall={handleCreateNewApiCallNode}
+            onCreateIclude={handleCreateNewIncludeNode}
+          >
             <button
               type="button"
               className="relative rounded-full border-[3px] border-white bg-[#D9DCDF] p-1 text-[#333333] transition hover:bg-[#cdd0d3] focus:outline-none data-[state=open]:bg-[#cdd0d3]"

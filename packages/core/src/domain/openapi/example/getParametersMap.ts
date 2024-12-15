@@ -20,7 +20,7 @@ export const getParametersMap = (
         {
           id: name,
           key: name,
-          value: getExample(example, examples),
+          value: getExample(example, examples) ?? "",
         },
       ])
       return map

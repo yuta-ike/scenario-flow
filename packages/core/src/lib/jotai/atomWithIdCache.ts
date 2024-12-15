@@ -72,8 +72,6 @@ export const atomWithIdCache = <Param extends { id: string | number }, Cache>(
           cache.set(id, newCacheValue)
           set(cacheAtom, cache)
         }
-        // TODO: キャッシュの削除
-
         // イベント呼び出し
         execSubscriptions("UPDATED", {
           id,

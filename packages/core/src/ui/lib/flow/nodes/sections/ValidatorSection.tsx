@@ -1,18 +1,30 @@
-import type { ValidatorActionInstance } from "@/domain/entity/node/actionInstance"
+import type { SectionComponentInterface } from "./interface"
 
-type ValidatorSectionProps = {
-  actionInstance: ValidatorActionInstance
-}
+import { useFocusNode } from "@/ui/state/focusedNodeId"
 
-export const ValidatorSection = ({ actionInstance }: ValidatorSectionProps) => {
+export const ValidatorSection: SectionComponentInterface = ({
+  nodeId,
+  actionInstance,
+}) => {
+  const focus = useFocusNode()
+
+  if (actionInstance.type !== "validator") {
+    return null
+  }
+
   if (actionInstance.instanceParameter.contents.length === 0) {
     return null
   }
+
   return (
-    <div className="group flex items-center justify-between rounded-lg bg-white px-3 py-2 text-start shadow-object transition hover:bg-slate-100 active:translate-y-0.5">
+    <button
+      type="button"
+      onClick={() => focus(nodeId)}
+      className="group flex w-full items-center justify-between rounded-lg bg-white px-3 py-2 text-start shadow-object transition hover:bg-slate-100 active:translate-y-0.5"
+    >
       <div className="flex w-full items-center gap-1 truncate font-mono text-xs">
         {actionInstance.instanceParameter.contents}
       </div>
-    </div>
+    </button>
   )
 }

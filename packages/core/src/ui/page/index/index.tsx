@@ -1,30 +1,29 @@
 import { useState } from "react"
 import { FiPlus } from "react-icons/fi"
+import { Provider as JotaiProvider } from "jotai"
+import { DevTools as JotaiDevTools } from "jotai-devtools"
 
 import { Main } from "./Main"
 
 import type { ProjectContext } from "@/ui/context/context"
 
-import { useInjectedContent } from "@/injector/injector"
 import { Button } from "@/ui/components/common/Button"
-import { useWriteDecomposed } from "@/ui/adapter/subscribe"
+import { useWriteOutSubscription } from "@/ui/adapter/subscribe"
 import { setUpDirectory } from "@/io/setUpDirectory"
-import { Provider } from "@/ui/adapter/provider"
+import { ProjectContextProvider } from "@/ui/adapter/ProjectContext"
+import { useInjected } from "@/ui/adapter/container"
+import { Initializer, ResourceImport } from "@/ui/adapter/initializer"
+import { store } from "@/ui/adapter/store"
 
 export const IndexPage = () => {
-  const {
-    io: { openDir },
-  } = useInjectedContent()
   const [projectContext, setProjectContext] = useState<ProjectContext | null>()
+  const injected = useInjected()
 
   const handleSetUp = async () => {
-    const entry = await openDir()
-    const config = await setUpDirectory(entry)
-    console.log({ entry, config })
+    const entry = await injected.io.openDir()
+    const config = await setUpDirectory(entry, injected)
     setProjectContext({ entry, config })
   }
-
-  useWriteDecomposed(projectContext ?? null)
 
   if (projectContext == null) {
     return (
@@ -37,10 +36,32 @@ export const IndexPage = () => {
       </div>
     )
   }
-
   return (
-    <Provider context={projectContext}>
-      <Main />
-    </Provider>
+    <JotaiProvider store={store.store}>
+      <ProjectContextProvider context={projectContext}>
+        <Inner />
+      </ProjectContextProvider>
+      <JotaiDevTools />
+    </JotaiProvider>
   )
+}
+
+const Inner = () => {
+  return (
+    <ResourceImport>
+      <Initializer>
+        <Inner2 />
+      </Initializer>
+    </ResourceImport>
+  )
+}
+
+const Inner2 = () => {
+  return <Inner3 />
+}
+
+const Inner3 = () => {
+  useWriteOutSubscription()
+
+  return <Main />
 }

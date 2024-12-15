@@ -3,12 +3,15 @@ import {
   readDir,
   open as openFs,
   create,
+  remove,
   watch,
   readTextFile,
   writeTextFile,
+  mkdir,
 } from "@tauri-apps/plugin-fs"
 
-import type { InjectedContent, ProjectEntry } from "@scenario-flow/core"
+import type { InjectedContent } from "@/injector/injector"
+import type { DirHandle } from "@/injector/parts/io"
 
 export const createFile: InjectedContent["io"]["createFile"] = async (
   entry,
@@ -22,10 +25,37 @@ export const createFile: InjectedContent["io"]["createFile"] = async (
   }
 }
 
+export const createDir: InjectedContent["io"]["createDir"] = async (
+  entry,
+  name,
+) => {
+  const path = `${entry.path}/${name}`
+  try {
+    await mkdir(path)
+    return {
+      name,
+      path,
+      files: [],
+      children: [],
+    }
+  } catch (e) {
+    if (typeof e === "string" && e.includes("os error 17")) {
+      return {
+        name,
+        path,
+        files: [],
+        children: [],
+      }
+    }
+    throw e
+  }
+}
+
 export const openDir: InjectedContent["io"]["openDir"] =
-  async (): Promise<ProjectEntry> => {
+  async (): Promise<DirHandle> => {
     const path = await open({
       directory: true,
+      recursive: true,
     })
     if (path == null) {
       throw new Error("No path selected")
@@ -36,7 +66,7 @@ export const openDir: InjectedContent["io"]["openDir"] =
 const _getAllFilesRecursively = async (
   name: string,
   dir: string,
-): Promise<ProjectEntry> => {
+): Promise<DirHandle> => {
   const entries = await readDir(dir)
   const files = entries
     .filter(
@@ -74,6 +104,7 @@ const _getAllFilesRecursively = async (
 export const openFile: InjectedContent["io"]["openFile"] = async () => {
   const path = await open({
     directory: false,
+    recursive: true,
   })
   if (path == null) {
     throw new Error("No path selected")
@@ -82,6 +113,14 @@ export const openFile: InjectedContent["io"]["openFile"] = async () => {
     name: path.split("/").pop()!,
     path,
   }
+}
+
+export const deleteFile: InjectedContent["io"]["deleteFile"] = async (
+  { path },
+  name,
+) => {
+  console.log(path, name)
+  await remove(`${path}/${name}`)
 }
 
 export const watchDir: InjectedContent["io"]["watchDir"] = async (
@@ -93,8 +132,21 @@ export const watchDir: InjectedContent["io"]["watchDir"] = async (
   })
 }
 
+export const deleteDir: InjectedContent["io"]["deleteDir"] = async (
+  entity,
+  name,
+) => {
+  await remove(`${entity.path}/${name}`)
+}
+
+const decode = (buffer: ArrayBuffer) => {
+  const decoder = new TextDecoder()
+  return decoder.decode(buffer)
+}
+
 export const readFile: InjectedContent["io"]["readFile"] = async ({ path }) => {
-  return await readTextFile(path)
+  const raw: string | ArrayBuffer = await readTextFile(path)
+  return typeof raw === "string" ? raw : decode(raw)
 }
 
 export const writeFile: InjectedContent["io"]["writeFile"] = async (

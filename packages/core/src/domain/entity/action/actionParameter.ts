@@ -27,7 +27,7 @@ export type RestCallActionParameter = {
   baseUrl: string
 }
 
-export type RestCallActionParameterForopen_api = PartialPartial<
+export type RestCallActionParameterForOpenApi = PartialPartial<
   RestCallActionParameter,
   "method" | "path" | "baseUrl"
 >

@@ -1,10 +1,10 @@
 import { atom, useAtomValue } from "jotai"
 
-import type { ProjectEntry } from "@/injector"
 import type { ConfigFormat } from "@/schemas/configFormat/type/configFormat"
+import type { DirHandle } from "@/injector/parts/io"
 
 export type ProjectContext = {
-  entry: ProjectEntry
+  entry: DirHandle
   config: ConfigFormat
 }
 

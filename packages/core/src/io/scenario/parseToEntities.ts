@@ -1,11 +1,20 @@
+import { resolvePath } from "./resolvePath"
+import { extractPathParams } from "./extractPathParams"
+
 import type {
   Decomposed,
   DecomposedStep,
 } from "@/domain/entity/decompose/decomposed"
 import type { ActionInstance } from "@/domain/entity/node/actionInstance"
+import type { Expression } from "@/domain/entity/value/expression"
+import type { Resource } from "@/domain/entity/resource/resource"
+import type { KVItem } from "@/ui/lib/kv"
+import type { ResourceActionIdentifier } from "@/domain/entity/action/identifier"
+import type { ResolvedAction } from "@/domain/entity/action/action"
 
 import {
   buildBinderActionInstance,
+  buildIncludeActionInstance,
   buildRestCallActionInstance,
   buildValidatorActionInstance,
 } from "@/domain/entity/node/actionInstance"
@@ -18,30 +27,83 @@ import { buildUserDefinedAction } from "@/domain/entity/userDefinedAction/userDe
 import { parseHttpMethod } from "@/utils/http"
 import { dedupe } from "@/lib/array/utils"
 import { toMethodAndPath } from "@/domain/entity/resource/identifier.utli"
+import { buildOpenApiResourceIdentifierWithOperationId } from "@/domain/entity/resource/identifier"
+
+export type ResourceContext = {
+  resourceNameMap: Map<string, Resource>
+  getResourceAction: (id: ResourceActionIdentifier) => ResolvedAction
+}
+
+const parseXActionId = (
+  xActionId: string | undefined,
+  resourceNameMap: Map<string, Resource>,
+) => {
+  if (xActionId == null) return null
+  const [resourceName, operationId] = xActionId.split(":")
+  if (typeof resourceName === "string" && typeof operationId === "string") {
+    const resourceId = resourceNameMap.get(resourceName)?.id
+    if (resourceId == null) {
+      return null
+    }
+    return {
+      resourceId,
+      identifier: buildOpenApiResourceIdentifierWithOperationId(operationId),
+    }
+  }
+  return null
+}
 
 const parseDecomposedActionToActionInstance = (
   action: DecomposedStep["actions"][number],
+  page: string,
+  pathRouteIdMap: Map<string, string>,
+  context: ResourceContext,
 ): ActionInstance => {
   if (action.type === "rest_call") {
     const method = parseHttpMethod(action.path) ?? "GET"
     const udaId = toMethodAndPath(method, action.path)
 
+    const resourceIdentifier = parseXActionId(
+      action.meta?.["x-action-id"],
+      context.resourceNameMap,
+    )
+
+    // NOTE: パスパラーメータの解決
+    let pathParams: KVItem[] = []
+    let path: string | undefined = undefined
+    if (resourceIdentifier != null) {
+      const resourceAction = context.getResourceAction(resourceIdentifier)
+      path =
+        "path" in resourceAction.schema.base
+          ? resourceAction.schema.base.path
+          : undefined
+      if (path != null) {
+        pathParams = extractPathParams(path, action.path)
+      }
+    }
+
     return buildRestCallActionInstance(genId(), {
       type: "rest_call",
       description: action.description ?? "",
-      actionIdentifier: buildActionSourceIdentifier({
-        resourceType: "user_defined",
-        resourceIdentifier: {
-          userDefinedActionId: udaId,
-        },
-      }),
+      actionIdentifier:
+        resourceIdentifier != null
+          ? buildActionSourceIdentifier({
+              resourceType: "resource",
+              resourceIdentifier,
+            })
+          : buildActionSourceIdentifier({
+              resourceType: "user_defined",
+              resourceIdentifier: {
+                userDefinedActionId: udaId,
+              },
+            }),
       instanceParameter: {
         method: action.method,
-        path: action.path,
+        path,
         headers: action.headers,
         cookies: action.cookies,
         queryParams: action.queryParams,
-        pathParams: [], // TODO:
+        pathParams: pathParams.length === 0 ? undefined : pathParams,
         body:
           action.body != null
             ? {
@@ -66,11 +128,25 @@ const parseDecomposedActionToActionInstance = (
         })),
       },
     })
-  } else {
+  } else if (action.type === "validator") {
     return buildValidatorActionInstance(genId(), {
       type: "validator",
       instanceParameter: {
         contents: action.contents,
+      },
+    })
+  } else {
+    console.log(resolvePath(page, action.ref))
+    return buildIncludeActionInstance(genId(), {
+      type: "include",
+      instanceParameter: {
+        ref: pathRouteIdMap.get(
+          action.ref.startsWith("/") ? action.ref : `/${action.ref}`,
+        )!,
+        parameters: action.parameters.map(({ variable, value }) => ({
+          variable,
+          value: value as Expression,
+        })),
       },
     })
   }
@@ -78,7 +154,16 @@ const parseDecomposedActionToActionInstance = (
 
 export const parseToEntities = (
   decomposedList: (Decomposed & { page: string })[],
+  context: ResourceContext,
 ) => {
+  // path routeId Map
+  const pathRouteIdMap = new Map(
+    decomposedList.map(({ id, title, page }) => {
+      const path = `${page}/${title}.yml`
+      return [path, id]
+    }),
+  )
+
   // ud action
   const _userDefinedActions = decomposedList
     .map((decomposed) =>
@@ -86,8 +171,6 @@ export const parseToEntities = (
         step.actions
           .filter((action) => action.type === "rest_call")
           .map((action) => {
-            // [x-operationId] が存在しないもののみを取り出す
-
             const method = parseHttpMethod(action.path) ?? "GET"
             const id = toMethodAndPath(method, action.path)
             return buildUserDefinedAction(id, {
@@ -106,6 +189,7 @@ export const parseToEntities = (
       ),
     )
     .flat(2)
+
   const userDefinedActions = dedupe(
     _userDefinedActions,
     (action) => action.name,
@@ -115,26 +199,31 @@ export const parseToEntities = (
   const globalVariables = decomposedList.flatMap(
     (decomposed) => decomposed.globalVariables,
   )
-
   // node
-  const nodes = decomposedList
-    .flatMap((decomposed) => decomposed.steps)
-    .map((step) =>
+  const nodes = decomposedList.flatMap((decomposed) =>
+    decomposed.steps.map((step) =>
       buildPrimitiveNode(`${step.id}`, {
         name: step.title,
-        actionInstances: step.actions.map(
-          parseDecomposedActionToActionInstance,
+        description: step.description,
+        actionInstances: step.actions.map((ai) =>
+          parseDecomposedActionToActionInstance(
+            ai,
+            decomposed.page,
+            pathRouteIdMap,
+            context,
+          ),
         ),
         config: {
           condition: step.condition,
           loop: step.loop,
         },
       }),
-    )
+    ),
+  )
 
   // route
   const routes = decomposedList.map((decomposed) => {
-    return buildPrimitiveRoute(genId(), {
+    return buildPrimitiveRoute(decomposed.id, {
       name: decomposed.title,
       page: decomposed.page,
       color: decomposed.color,

@@ -2,12 +2,15 @@ import * as Popover from "@radix-ui/react-popover"
 import clsx from "clsx"
 import { useEffect, useMemo, useState } from "react"
 import { RxCaretLeft, RxCaretRight, RxPlus } from "react-icons/rx"
-import { TbApi, TbArrowRightCircle } from "react-icons/tb"
+import { TbApi, TbArrowRightCircle, TbFlag2 } from "react-icons/tb"
 import { Handle, Position } from "@xyflow/react"
 
 import { Transition } from "../../common/Transition"
 
+import { IncludeSelectPage } from "./IncludeSelectPage"
+
 import type { Action } from "@/domain/entity/action/action"
+import type { RouteId } from "@/domain/entity/route/route"
 
 import { type ActionSourceIdentifier } from "@/domain/entity/action/identifier"
 import { HTTP_METHODS, type HttpMethod } from "@/utils/http"
@@ -20,14 +23,18 @@ import { getIdentifier } from "@/domain/entity/action/action"
 type OpenCreateDropdownProps = {
   children: React.ReactNode
   onCreateApiCall: (actionId: ActionSourceIdentifier) => void
+  onCreateIclude: (routeId: RouteId) => void
+  mode: "append" | "insert"
 }
 
 export const OpenCreateDropdown = ({
   children,
   onCreateApiCall,
+  onCreateIclude,
+  mode,
 }: OpenCreateDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false)
-  const [page, setPage] = useState<1 | 2>(1)
+  const [page, setPage] = useState<1 | 2 | 3>(1)
   const [filters, { toggle: toggleFilter }] = useSetState([] as HttpMethod[])
 
   const actions = useActions().filter((action) => action.type === "rest_call")
@@ -59,6 +66,11 @@ export const OpenCreateDropdown = ({
 
   const handleSelectApiCall = (action: Action) => {
     onCreateApiCall(getIdentifier(action))
+    setIsOpen(false)
+  }
+
+  const handleSelectInclude = (routeId: RouteId) => {
+    onCreateIclude(routeId)
     setIsOpen(false)
   }
 
@@ -99,28 +111,42 @@ export const OpenCreateDropdown = ({
                 className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-4 py-3 text-sm leading-none text-slate-700 data-[active=true]:hover:bg-slate-100 data-[active=true]:hover:text-slate-900 data-[active=true]:hover:outline-none"
               >
                 <TbApi size={24} className="text-red-500" />
-                呼び出しを追加
+                API呼び出し
                 <RxCaretRight size={18} className="ml-auto" />
               </button>
-              <div className="relative">
-                <button
-                  type="button"
-                  data-active={page === 1}
-                  className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-4 py-3 text-sm leading-none text-slate-700 data-[active=true]:hover:bg-slate-100 data-[active=true]:hover:text-slate-900 data-[active=true]:hover:outline-none"
-                  onPointerDown={() => setIsDragging(true)}
-                >
-                  <TbArrowRightCircle
-                    size={24}
-                    className="-rotate-45 text-purple-500"
-                  />
-                  他のノードに接続する
-                  <Handle
-                    type="source"
-                    position={Position.Top}
-                    className="!absolute !inset-0 !h-full !w-full !translate-x-0 !translate-y-0 !rounded-none"
-                  />
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setPage(3)}
+                className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-4 py-3 text-sm leading-none text-slate-700 hover:bg-slate-100 hover:text-slate-900 hover:outline-none"
+              >
+                <TbFlag2
+                  size={20}
+                  strokeWidth={2.5}
+                  className="m-0.5 fill-current text-orange-500"
+                />
+                シナリオ呼び出し
+                <RxCaretRight size={18} className="ml-auto" />
+              </button>
+              {mode === "append" && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-4 py-3 text-sm leading-none text-slate-700 hover:bg-slate-100 hover:text-slate-900 hover:outline-none"
+                    onPointerDown={() => setIsDragging(true)}
+                  >
+                    <TbArrowRightCircle
+                      size={24}
+                      className="-rotate-45 text-purple-500"
+                    />
+                    他のノードに接続する
+                    <Handle
+                      type="source"
+                      position={Position.Top}
+                      className="!absolute !inset-0 !h-full !w-full !translate-x-0 !translate-y-0 !rounded-none"
+                    />
+                  </button>
+                </div>
+              )}
             </div>
           </Transition>
 
@@ -173,6 +199,24 @@ export const OpenCreateDropdown = ({
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {page === 3 && (
+            <div className="flex w-full animate-slideIn flex-col gap-2 p-2">
+              <div>
+                <button
+                  type="button"
+                  className="rounded p-1 transition hover:bg-slate-100"
+                  onClick={() => setPage(1)}
+                >
+                  <RxCaretLeft size={18} />
+                </button>
+              </div>
+
+              <div>
+                <IncludeSelectPage onCreate={handleSelectInclude} />
               </div>
             </div>
           )}

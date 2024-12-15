@@ -20,7 +20,6 @@ export const routeNodeMap = atom((get) => {
   return map
 })
 
-// TODO: 再レンダリングを防ぐ方法
 export const getRouteIdsByNodeId = atomFamily((nodeId: NodeId) => {
   const newAtom = atom(
     (get) => get(routeNodeMap).get(nodeId)?.values().toArray() ?? [],

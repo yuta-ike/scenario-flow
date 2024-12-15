@@ -1,5 +1,5 @@
 import type { RouteId } from "@/domain/entity/route/route"
-import type { InjectedContentExecRunner, ProjectEntry } from "@/injector"
+import type { InjectedContentExecRunner, DirHandle } from "@/injector"
 import type { Id } from "@/utils/idType"
 import type { Result } from "@/utils/result"
 import type { RunResultWithNodeId } from "@/domain/workflow/nodeStates"
@@ -13,7 +13,7 @@ import { decomposedAtom } from "@/domain/selector/decomposed"
 
 export const runScenario = async (
   runId: Id,
-  projectEntry: ProjectEntry,
+  projectEntry: DirHandle,
   routeIds: RouteId[],
   enginePlugin: EnginePlugin,
   exec: InjectedContentExecRunner,

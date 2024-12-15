@@ -54,8 +54,8 @@ export const FormModal = ({
     >
       <Dialog.Trigger asChild>{children}</Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/40 data-[state=open]:animate-overlayShow" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] flex max-h-[85vh] w-[90vw] max-w-[450px] translate-x-[-50%] translate-y-[-50%] flex-col overflow-hidden rounded-lg border-slate-200 bg-white text-slate-700 focus:outline-none data-[state=open]:animate-contentShow">
+        <Dialog.Overlay className="fixed inset-0 z-10 bg-black/40 data-[state=open]:animate-overlayShow" />
+        <Dialog.Content className="fixed left-[50%] top-[50%] z-10 flex max-h-[85vh] w-[90vw] max-w-[450px] translate-x-[-50%] translate-y-[-50%] flex-col overflow-hidden rounded-lg border-slate-200 bg-white text-slate-700 focus:outline-none data-[state=open]:animate-contentShow">
           <FormModalContext.Provider value={contextValue}>
             {modal}
           </FormModalContext.Provider>

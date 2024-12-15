@@ -22,7 +22,6 @@ export const buildRoute: Builder<Route> = (id, params) => {
 }
 
 export type PrimitiveRoute = Replace<Route, "path", NodeId[]>
-export type RawPrimitiveRoute = Omit<PrimitiveRoute, typeof _route>
 export const buildPrimitiveRoute: Builder<PrimitiveRoute> = (id, params) => {
   return {
     id,
@@ -40,24 +39,31 @@ export const appendNodesToRoute: Transition<PrimitiveRoute, NodeId[]> = (
   }
 }
 
-export const insertNodeToRoute: Transition<PrimitiveRoute> = (
-  route,
-  nodeId: NodeId,
-  parentNodeId: NodeId,
-) => {
-  const index = route.path.indexOf(parentNodeId)
+export const insertNodeToRoute: Transition<
+  PrimitiveRoute,
+  [NodeId, NodeId | null]
+> = (route, nodeId, parentNodeId) => {
+  if (parentNodeId == null) {
+    return {
+      ...route,
+      path: [nodeId, ...route.path],
+    }
+  } else {
+    const index = route.path.indexOf(parentNodeId)
 
-  if (index < -1) {
-    throw new Error("parentNode is not found in route")
-  }
+    if (index < -1) {
+      throw new Error("parentNode is not found in route")
+    }
 
-  return {
-    ...route,
-    path: [
-      ...route.path.slice(0, index),
-      nodeId,
-      ...route.path.slice(index + 1),
-    ],
+    return {
+      ...route,
+      path: [
+        ...route.path.slice(0, index),
+        parentNodeId,
+        nodeId,
+        ...route.path.slice(index + 1),
+      ],
+    }
   }
 }
 
@@ -78,5 +84,16 @@ export const removeNodeFromRoute: Transition<PrimitiveRoute, [NodeId]> = (
   return {
     ...route,
     path: route.path.filter((id) => id !== nodeId),
+  }
+}
+
+export const sliceRoute: Transition<PrimitiveRoute, [NodeId]> = (
+  route,
+  nodeId,
+) => {
+  const index = route.path.indexOf(nodeId)
+  return {
+    ...route,
+    path: route.path.slice(0, index),
   }
 }

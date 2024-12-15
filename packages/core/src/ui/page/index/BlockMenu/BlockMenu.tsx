@@ -85,11 +85,11 @@ export const BlockMenu = () => {
     <>
       <div className="flex max-h-full w-full flex-col p-2">
         <div className="flex h-full w-full flex-col gap-2 overflow-hidden">
-          <input
+          {/* <input
             placeholder="検索"
             type="text"
             className="w-full rounded border border-transparent bg-slate-100 px-2 py-1.5 text-xs leading-none transition focus:border-slate-200 focus:outline-none"
-          />
+          /> */}
           <div className="flex flex-wrap gap-1">
             {resourceIds.map((resourceId) => (
               <ResourceTile key={resourceId} resourceId={resourceId} />

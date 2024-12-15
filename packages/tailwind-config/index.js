@@ -28,6 +28,9 @@ export default {
           '0%': { transform: 'translateX(100%)' },
           '100%': { transform: 'translateX(0)' },
         }
+      },
+      cursor: {
+        "arrowhead": `url("cursor/cursor.svg"), default`
       }
     },
   },

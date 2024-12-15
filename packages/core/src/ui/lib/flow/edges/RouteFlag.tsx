@@ -19,7 +19,7 @@ export const RouteFlag = ({ routeId, expanded }: Props) => {
       data-focused={isFocused}
       data-expanded={expanded}
       type="button"
-      className="focused:border-slate-50 group/button w-full rounded border border-transparent px-1.5 py-1 data-[expanded=false]:data-[focused=true]:rounded-full data-[focused=true]:border-[var(--color)] data-[focused=true]:bg-[var(--color)]"
+      className="focused:border-slate-50 group/button w-full rounded border border-transparent px-1.5 py-1 hover:bg-slate-100 data-[expanded=false]:data-[focused=true]:rounded-full data-[focused=true]:border-[var(--color)] data-[focused=true]:bg-[var(--color)]"
       style={{
         "--color": route.color,
       }}

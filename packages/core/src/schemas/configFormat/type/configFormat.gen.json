@@ -14,12 +14,16 @@
                 "resources": {
                     "type": "object",
                     "properties": {
-                        "local_files": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/Record<string,string>"
+                        "openapi": {
+                            "type": "object",
+                            "properties": {
+                                "local_files": {
+                                    "$ref": "#/definitions/Record<string,string>",
+                                    "title": "local_files"
+                                }
                             },
-                            "title": "local_files"
+                            "additionalProperties": false,
+                            "title": "openapi"
                         }
                     },
                     "additionalProperties": false,

@@ -5,6 +5,8 @@ import clsx from "clsx"
 import { getBezierPath } from "../utils/getBezierPath"
 
 import { RouteFlag } from "./RouteFlag"
+import { DeleteButton } from "./DeleteButton"
+import { InsertButton } from "./InsertButton"
 
 import type { Edge, EdgeProps } from "@xyflow/react"
 import type { Replace } from "@/utils/typeUtil"
@@ -141,11 +143,28 @@ export const BasicEdge = memo<EdgeProps<Replace<Edge, "data", EdgeData>>>(
               onPointerLeave={setFalse}
               data-expanded={hovered}
               data-focused={focusedRouteId != null}
-              className="group pointer-events-auto flex items-center gap-0.5 rounded-full border border-[var(--color)] bg-white p-1 empty:hidden data-[expanded=true]:flex-col data-[expanded=true]:rounded-lg data-[focused=true]:border-2 data-[expanded=true]:shadow-sm"
+              className="group pointer-events-auto flex items-center gap-1 rounded-full border border-[var(--color)] bg-white p-1 empty:hidden data-[expanded=true]:flex-col data-[expanded=true]:rounded-lg data-[focused=true]:border-2 data-[expanded=true]:shadow-sm"
             >
               {routeIds.map((routeId) => (
                 <RouteFlag key={routeId} routeId={routeId} expanded={hovered} />
               ))}
+
+              {hovered && (
+                <>
+                  <div className="h-px w-full border-t border-t-slate-300" />
+                  <InsertButton
+                    expanded={hovered}
+                    routeIds={routeIds}
+                    fromNodeId={toNodeId(source)}
+                    toNodeId={toNodeId(target)}
+                  />
+                  <DeleteButton
+                    expanded={hovered}
+                    fromNodeId={toNodeId(source)}
+                    toNodeId={toNodeId(target)}
+                  />
+                </>
+              )}
             </div>
           </div>
         </EdgeLabelRenderer>

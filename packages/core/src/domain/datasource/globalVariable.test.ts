@@ -250,7 +250,5 @@ describe("globalVariable", () => {
     )
 
     expect(subscribers.get(1)!).toHaveBeenCalledOnce()
-    // TODO: この再レンダリングを防ぐにはwithIdのリファクタリングが必要そう
-    // expect(subscribers.get(2)!).not.toHaveBeenCalled()
   })
 })

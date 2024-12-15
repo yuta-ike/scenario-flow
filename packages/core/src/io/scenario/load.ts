@@ -1,52 +1,51 @@
 import { parseToEntities } from "./parseToEntities"
+import { getRelativePath } from "./getRelativePath"
 
+import type { ResourceContext } from "./parseToEntities"
 import type { EnginePluginDeserializer } from "@/plugins/type"
 import type { Json } from "@/utils/json"
-import type { FileEntry } from "@/injector"
+import type { DirHandle, FileHandle } from "@/injector/parts/io"
+import type { InjectedContent } from "@/injector/injector"
 
-import { getInjectedContent, type ProjectEntry } from "@/injector"
 import { parseYaml } from "@/ui/lib/yaml/yamlToJson"
 import { nonNull } from "@/utils/assert"
 
 export const load = async (
-  projectEntry: ProjectEntry,
+  dirHandle: DirHandle,
   deserializer: EnginePluginDeserializer,
+  injected: InjectedContent,
+  context: ResourceContext,
 ) => {
-  const {
-    io: { readFile },
-  } = getInjectedContent()
-
-  const files = await loadRec(projectEntry, readFile)
+  const files = await loadRec(dirHandle, injected.io.readFile)
 
   const decomposed = deserializer(files.map(({ file }) => file))
   const entities = parseToEntities(
-    decomposed.map((d, i) => ({ ...d, page: files[i]!.path })),
+    decomposed.map((d, i) => ({
+      ...d,
+      page: getRelativePath(files[i]!.path, dirHandle.path),
+    })),
+    context,
   )
   return entities
 }
 
 const loadRec = async (
-  projectEntry: ProjectEntry,
-  readFile: (entry: FileEntry) => Promise<string>,
+  dirHandle: DirHandle,
+  readFile: (entry: FileHandle) => Promise<string>,
 ): Promise<{ path: string; file: Json }[]> => {
-  const fileEntries = projectEntry.files
-
-  const files = await Promise.all(
-    fileEntries.map(async (fileEntry) => {
-      const rawStr = await readFile(fileEntry)
-
-      const result = parseYaml(rawStr)
-      if (result.result === "error") {
-        return null
-      }
-
-      return { path: projectEntry.path, file: result.value }
-    }),
-  )
-
-  const childFiles = await Promise.all(
-    projectEntry.children.map((child) => loadRec(child, readFile)),
-  )
+  const [files, childFiles] = await Promise.all([
+    Promise.all(
+      dirHandle.files.map(async (fileEntry) => {
+        const rawStr = await readFile(fileEntry)
+        const result = parseYaml(rawStr)
+        if (result.result === "error") {
+          return null
+        }
+        return { path: dirHandle.path, file: result.value }
+      }),
+    ),
+    Promise.all(dirHandle.children.map((child) => loadRec(child, readFile))),
+  ])
 
   return [...files.filter(nonNull), ...childFiles.flat()]
 }

@@ -37,7 +37,7 @@ import { atomSet } from "@/lib/jotai/atomSet"
 //   const deletedValues = prevResourceIds.difference(newResourceIds)
 //   addedValues.forEach((resourceId) => {
 //     const resource = get(resourceAtom(resourceId))
-//     const actions = retrieveAllActionFromopen_apiResource(resource)
+//     const actions = retrieveAllActionFromopenapiResource(resource)
 //     actions.forEach((action) => {
 //       get(resourceIdActionIdCache).set(
 //         resourceActionToActionId(action.id, action.resourceId),

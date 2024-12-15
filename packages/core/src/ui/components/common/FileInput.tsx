@@ -2,7 +2,7 @@ import { TbFile, TbFileImport } from "react-icons/tb"
 
 import type { FileContent } from "@/utils/file"
 
-import { useInjectedContent } from "@/injector/injector"
+import { useInjected } from "@/ui/adapter/container"
 
 type FileImportProps = {
   value: FileContent | null
@@ -12,7 +12,7 @@ type FileImportProps = {
 export const FileInput = ({ value, onChange }: FileImportProps) => {
   const {
     io: { openFile, readFile },
-  } = useInjectedContent()
+  } = useInjected()
 
   const handleUpload = async () => {
     const file = await openFile()

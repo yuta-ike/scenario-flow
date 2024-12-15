@@ -11,7 +11,7 @@ import {
 import { generateExampleFromOperationObject } from "./example"
 
 import type { RestCallActionParameterSchema } from "../entity/action/action"
-import type { RestCallActionParameterForopen_api } from "../entity/action/actionParameter"
+import type { RestCallActionParameterForOpenApi } from "../entity/action/actionParameter"
 import type { OpenAPIObject } from "openapi3-ts/oas31"
 import type { Resource } from "../entity/resource/resource"
 import type { Expression } from "../entity/value/expression"
@@ -22,19 +22,19 @@ import { toLowerCase } from "@/utils/string"
 const lowerHttpMethods = HTTP_METHODS.map(toLowerCase)
 
 /**
- * open_apiのpathをExpressionに変換する
+ * openapiのpathをExpressionに変換する
  */
 export const parsePathToExpression = (path: string): Expression => {
   return path as Expression
 }
 
 // Open Api
-export const resolveopen_apiResource = (
+export const resolveOpenApiResource = (
   resource: Resource,
   identifier: OpenApiResourceLocalIdentifier,
 ): {
   meta: { name: string; description: string }
-  parameter: RestCallActionParameterForopen_api
+  parameter: RestCallActionParameterForOpenApi
 } | null => {
   const pathsObject = resource.content as unknown as OpenAPIObject
 
@@ -91,8 +91,16 @@ export const retrieveAllActionFromOpenApiResource = (
       if (operationObject == null) {
         continue
       }
-      const baseUrl =
-        resource.content.servers?.[0]?.url ?? "https://example.com"
+
+      const baseUrl = resource.content.servers?.[0]?.url ?? ""
+
+      const example = generateExampleFromOperationObject(
+        toUpperCase(method),
+        path,
+        baseUrl,
+        operationObject,
+      )
+
       actions.push({
         identifier:
           operationObject.operationId != null
@@ -108,14 +116,7 @@ export const retrieveAllActionFromOpenApiResource = (
           path: parsePathToExpression(path),
           baseUrl,
         },
-        examples: [
-          generateExampleFromOperationObject(
-            toUpperCase(method),
-            path,
-            baseUrl,
-            operationObject,
-          ),
-        ],
+        examples: [example],
         jsonSchema: operationObject,
       })
     }

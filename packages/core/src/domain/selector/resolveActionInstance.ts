@@ -3,11 +3,13 @@ import { toLocalVariableId } from "../entity/variable/variable.util"
 import { resolvedActionAtom } from "../datasource/actions"
 import {
   resolveBinderActionInstance,
+  resolveIncludeActionInstance,
   resolveRestCallActionInstance,
   resolveValidatorActionInstance,
   type ActionInstance,
   type ResolvedActionInstance,
 } from "../entity/node/actionInstance"
+import { primitiveRoutesAtom } from "../datasource/route"
 
 import type { ResolvedAction } from "../entity/action/action"
 import type { Getter } from "jotai"
@@ -33,8 +35,13 @@ export const resolveActionInstance = (
     const variabaleMap = associateBy(variables, "id")
 
     return resolveBinderActionInstance(actionInstance, variabaleMap)
+  }
+  if (actionInstance.type === "include") {
+    const routes = new Map(
+      get(primitiveRoutesAtom).map((route) => [route.id, route]),
+    )
+    return resolveIncludeActionInstance(actionInstance, routes)
   } else {
-    // actionInstance.type === "unknown"
     return actionInstance
   }
 }

@@ -10,6 +10,7 @@ import type { LocalVariable } from "../variable/variable"
 export type DecomposedStep = {
   id: string | number
   title: string
+  description: string
   actions: (
     | {
         type: "rest_call"
@@ -21,6 +22,9 @@ export type DecomposedStep = {
         queryParams?: KVItem[]
         contentType?: ContentType
         body?: Json
+        meta?: {
+          "x-action-id": string
+        }
       }
     | {
         type: "validator"
@@ -31,6 +35,12 @@ export type DecomposedStep = {
         type: "binder"
         description?: string
         assignments: { variable: LocalVariable; value: string }[]
+      }
+    | {
+        type: "include"
+        description?: string
+        ref: string
+        parameters: { variable: LocalVariable; value: string }[]
       }
   )[]
   skip?: boolean
@@ -49,7 +59,7 @@ export type Decomposed = {
   globalVariables: (GlobalVariable & {
     value: TypedValue
   })[]
-  endpoint: string // TODO: 暫定
+  endpoint: string
   steps: DecomposedStep[]
   page: string
 }

@@ -1,53 +1,48 @@
 import "@xyflow/react/dist/style.css"
 import "./flow.css"
 
+import { useCallback, useMemo, useState } from "react"
+import { atom, useAtomValue } from "jotai"
+import { useAtomCallback } from "jotai/utils"
 import {
-  ReactFlow,
   Background,
   BackgroundVariant,
   Controls,
   MiniMap,
+  ReactFlow,
   SelectionMode,
+  type Connection,
+  type EdgeTypes,
+  type NodeTypes,
+  type ReactFlowInstance,
 } from "@xyflow/react"
-import { useMemo, useState } from "react"
-import { atom, useAtomValue } from "jotai"
 
 import { BasicEdge } from "./edges/BasicEdge"
 import { StartNode } from "./nodes/StartNode"
 import { ApiCallNode } from "./nodes/ApiCallNode"
 import { RoutePanel } from "./components/RoutePanel"
-import { DetailPanel } from "./components/DetailPanel"
-import { FlowProvider } from "./FlowProvider"
-import { RunButton } from "./components/RunButton"
 import { PagePanel } from "./components/PagePanel"
+import { getEdges } from "./utils/getEdges"
+import { DetailPanel } from "./components/DetailPanel"
+import { RunButton } from "./components/RunButton"
+import { FlowProvider } from "./FlowProvider"
+import { ListView } from "./ListView"
+import { NodePanel } from "./components/NodePanel/NodePanel"
 
-import type { EdgeTypes, NodeTypes, ReactFlowInstance } from "@xyflow/react"
 import type { NodeId } from "@/domain/entity/node/node"
 
-import { useEdges } from "@/ui/adapter/query"
 import { toNodeId } from "@/domain/entity/node/node.util"
 import { getLayout } from "@/lib/incremental-auto-layout/getLayout"
 import { ErrorBoundary } from "@/ui/components/ErrorBoundary"
 import { ErrorDisplay } from "@/ui/components/ErrorDisplay"
-import { nonNull } from "@/utils/assert"
 import { useReleaseHighlight } from "@/ui/state/highlightedNodeId"
 import { connectNodes } from "@/ui/adapter/command"
 import { useMapState } from "@/ui/utils/useMapState"
 import { useSwitchFocusedRouteId } from "@/ui/state/focusedRouteId"
 import { currentPageAtom } from "@/ui/state/page"
 import { primitiveRoutesAtom } from "@/domain/datasource/route"
-
-const currentPageNodeIds = atom((get) => {
-  const page = get(currentPageAtom)
-  const routes = get(primitiveRoutesAtom)
-  return new Set(
-    routes
-      .filter((route) => route.page === page)
-      .flatMap((route) => route.path),
-  )
-    .values()
-    .toArray()
-})
+import { uniq } from "@/utils/array"
+import { nonNull } from "@/utils/assert"
 
 const nodeTypes: NodeTypes = {
   startNode: StartNode,
@@ -73,7 +68,7 @@ export const Flow = () => {
   }>()
 
   const routes = useAtomValue(currentPageRoutes)
-  const edges = useEdges(routes, initialNodeId)
+  const edges = useMemo(() => getEdges(routes, initialNodeId), [routes])
 
   const layout = useMemo(() => {
     try {
@@ -89,7 +84,7 @@ export const Flow = () => {
   }, [edges, nodeSize])
 
   const nodeIds = useMemo(
-    () => new Set(routes.flatMap((route) => route.path)).values().toArray(),
+    () => uniq(routes.flatMap((route) => route.path)),
     [routes],
   )
 
@@ -97,8 +92,32 @@ export const Flow = () => {
 
   useReleaseHighlight()
 
+  const handleConnect = useAtomCallback(
+    useCallback((get, _, connection: Connection) => {
+      connectNodes(
+        connection.source as NodeId,
+        connection.target as NodeId,
+        get(currentPageAtom),
+      )
+    }, []),
+  )
+
   return (
     <div className="flex h-full w-full">
+      <div className="z-10 flex w-[240px] shrink-0 flex-col gap-4 border-r border-r-slate-200 bg-white">
+        <ErrorBoundary fallback={<ErrorDisplay />}>
+          <PagePanel />
+        </ErrorBoundary>
+        <ErrorBoundary fallback={<ErrorDisplay />}>
+          <RoutePanel />
+        </ErrorBoundary>
+        <ErrorBoundary fallback={<ErrorDisplay />}>
+          <NodePanel />
+        </ErrorBoundary>
+      </div>
+      <div className="grow border-r border-r-slate-200 empty:hidden">
+        <ListView />
+      </div>
       <FlowProvider reactFlow={reactFlow} updateNodeSize={updateItem}>
         <ReactFlow
           className="grow"
@@ -141,12 +160,12 @@ export const Flow = () => {
               })),
             [edges, layout?.edge],
           )}
-          onConnect={(connection) =>
-            connectNodes(
-              connection.source as NodeId,
-              connection.target as NodeId,
-            )
-          }
+          defaultViewport={{
+            zoom: 1,
+            x: window.innerWidth / 2 - 120,
+            y: 100,
+          }}
+          onConnect={handleConnect}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           snapToGrid
@@ -183,14 +202,6 @@ export const Flow = () => {
             </div>
           </ErrorBoundary>
         </ReactFlow>
-        <div className="absolute left-2 top-2 flex w-[240px] flex-col gap-4">
-          <ErrorBoundary fallback={<ErrorDisplay />}>
-            <PagePanel />
-          </ErrorBoundary>
-          <ErrorBoundary fallback={<ErrorDisplay />}>
-            <RoutePanel />
-          </ErrorBoundary>
-        </div>
         <ErrorBoundary fallback={<ErrorDisplay />}>
           <div className="z-10 max-w-[600px] shrink-0 overflow-hidden overflow-y-auto border-0 border-l border-l-slate-200">
             <DetailPanel />

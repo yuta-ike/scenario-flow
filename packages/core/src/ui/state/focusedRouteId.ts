@@ -1,4 +1,4 @@
-import { atom, useAtom, useAtomValue } from "jotai"
+import { atom, useAtom, useAtomValue, useSetAtom } from "jotai"
 import { atomFamily, useAtomCallback } from "jotai/utils"
 import { useCallback, useMemo } from "react"
 
@@ -8,7 +8,7 @@ import type { SetStateAction } from "jotai"
 import type { RouteId } from "@/domain/entity/route/route"
 import type { NodeId } from "@/domain/entity/node/node"
 
-import { primitiveRouteAtom } from "@/domain/datasource/route"
+import { primitiveRouteAtom, routeAtom } from "@/domain/datasource/route"
 
 const focusedRouteIdAtom = atom<RouteId | null>(null)
 export const useFocusedRouteId = () => useAtomValue(focusedRouteIdAtom)
@@ -34,6 +34,14 @@ export const useIsFocusedRouteId = (routeId: RouteId) => {
   return useMemo(
     () => ({ isFocused, toggle, setTrue, setFalse }),
     [isFocused, setFalse, setTrue, toggle],
+  )
+}
+
+export const useSetFocuseRoute = () => {
+  const focusRouteId = useSetAtom(focusedRouteIdAtom)
+  return useCallback(
+    (routeId: RouteId) => focusRouteId(routeId),
+    [focusRouteId],
   )
 }
 
@@ -90,3 +98,14 @@ export const useSwitchFocusedRouteId = () => {
     }, []),
   )
 }
+
+const focusedRouteAtom = atom((get) => {
+  const routeId = get(focusedRouteIdAtom)
+  if (routeId == null) {
+    return null
+  }
+  return get(routeAtom(routeId))
+})
+focusedRouteAtom.debugLabel = "focusedRouteAtom"
+
+export const useFocusedRoute = () => useAtomValue(focusedRouteAtom)

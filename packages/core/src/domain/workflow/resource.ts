@@ -15,7 +15,6 @@ export const addResource = (
 ) => {
   const { genId, addResource } = context
   const id = toResourceId(genId())
-  // TODO: validationなど
   addResource({ id, ...resource } as Resource)
 }
 

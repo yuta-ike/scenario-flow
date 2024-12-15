@@ -2,13 +2,18 @@ import { forwardRef } from "react"
 
 import type { ComponentPropsWithoutRef } from "react"
 
-export type TextareaAutosizeProps = ComponentPropsWithoutRef<"textarea">
+export type TextareaAutosizeProps = Omit<
+  ComponentPropsWithoutRef<"textarea">,
+  "value"
+> & {
+  value: string
+}
 
 export const TextareaAutosize = forwardRef<
   HTMLTextAreaElement,
   TextareaAutosizeProps
 >(({ className, style, ...props }, ref) => {
-  const value = props.value as string
+  const value = props.value
   return (
     <div className="relative">
       <div

@@ -10,7 +10,7 @@ export const genResource = (
   },
 ): Resource =>
   buildResource(id, {
-    type: "open_api",
+    type: "openapi",
     name: `Resource ${id}`,
     description: "",
     content: {

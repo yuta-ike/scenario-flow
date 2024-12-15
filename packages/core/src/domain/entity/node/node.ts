@@ -4,18 +4,12 @@ import { mergeActionParameter } from "../action/actionParameter"
 import { CannotChangeActionTypeError } from "./node.error"
 import {
   buildInitialActionInstance,
-  buildUnknownActionInstance,
-  resolveBinderActionInstance,
-  resolveRestCallActionInstance,
-  resolveValidatorActionInstance,
   type ActionInstance,
   type ActionInstanceId,
-  type RawResolvedActionInstance,
   type ResolvedActionInstance,
 } from "./actionInstance"
 
 import type { Time } from "../value/time"
-import type { LocalVariable, LocalVariableId } from "../variable/variable"
 import type { Receiver, StripeSymbol, Transition } from "../type"
 import type { ActionType, ResolvedAction } from "../action/action"
 import type { Expression } from "../value/expression"
@@ -39,14 +33,14 @@ export type PrimitiveNode = {
   [_node]: never
   id: NodeId
   name: string
+  description: string
   actionInstances: ActionInstance[]
   config: NodeConfig
 }
-export type RawPrimitiveNode = StripeSymbol<PrimitiveNode>
 
 export const buildPrimitiveNode = (
   id: string,
-  params: OmitId<RawPrimitiveNode>,
+  params: OmitId<StripeSymbol<PrimitiveNode>>,
 ) => {
   return {
     id,
@@ -60,9 +54,9 @@ export type Node = Replace<
   ResolvedActionInstance[]
 >
 export type RawNode = Replace<
-  RawPrimitiveNode,
+  StripeSymbol<PrimitiveNode>,
   "actionInstances",
-  RawResolvedActionInstance[]
+  StripeSymbol<ResolvedActionInstance>[]
 >
 export const buildNode = (id: string, params: OmitId<RawNode>) => {
   return {
@@ -71,49 +65,25 @@ export const buildNode = (id: string, params: OmitId<RawNode>) => {
   } as Node
 }
 
-export const resolvePrimitveNode = (
-  primitiveNode: PrimitiveNode,
+export const applyInitialValue: Transition<PrimitiveNode> = (
+  node: PrimitiveNode,
   actionMap: Map<string, ResolvedAction>,
-  variableMap: Map<LocalVariableId, LocalVariable>,
-): Node => {
-  return buildNode(primitiveNode.id, {
-    ...primitiveNode,
-    actionInstances: primitiveNode.actionInstances.map((ai) => {
-      if (ai.type === "rest_call") {
-        const action = actionMap.get(display(ai.actionIdentifier))
-        if (action == null) {
-          throw new Error("action not found")
-        }
-        return resolveRestCallActionInstance(
-          ai,
-          action as ResolvedAction<"rest_call">,
-        )
-      } else if (ai.type === "validator") {
-        return resolveValidatorActionInstance(ai)
-      } else if (ai.type === "binder") {
-        return resolveBinderActionInstance(ai, variableMap)
-      } else {
-        return buildUnknownActionInstance(ai.id, ai)
-      }
-    }),
-  })
-}
-
-export const applyInitialValue: Transition<Node> = (node: Node) => {
+) => {
   return {
     ...node,
     actionInstances: node.actionInstances.map((ai) => {
-      if (ai.type === "rest_call" && ai.action.type === "rest_call") {
-        const example = ai.action.schema.examples[0]
+      if (ai.type === "rest_call") {
+        const action = actionMap.get(display(ai.actionIdentifier))
+        if (action == null || action.type !== "rest_call") {
+          return ai
+        }
+
+        const example = action.schema.examples[0]
         return {
           ...ai,
           instanceParameter:
             example != null
-              ? mergeActionParameter(
-                  "rest_call",
-                  ai.action.schema.base,
-                  example,
-                )
+              ? mergeActionParameter("rest_call", action.schema.base, example)
               : ai.instanceParameter,
         }
       } else {
@@ -135,13 +105,16 @@ export const updateNodeConfig: Transition<PrimitiveNode> = (
 }
 
 // NodeConfigが初期状態か判定する
-export const isNodeConfigConditionSet: Receiver<PrimitiveNode, boolean> = (
-  node,
-) => {
+export const isNodeConfigConditionSet: Receiver<
+  PrimitiveNode | Node,
+  boolean
+> = (node) => {
   return node.config.condition != null && node.config.condition !== ""
 }
 
-export const isNodeConfigLoopSet: Receiver<PrimitiveNode, boolean> = (node) => {
+export const isNodeConfigLoopSet: Receiver<PrimitiveNode | Node, boolean> = (
+  node,
+) => {
   return (
     (node.config.loop?.interval != null &&
       0 < node.config.loop.interval.value) ||

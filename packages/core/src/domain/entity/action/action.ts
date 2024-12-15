@@ -27,7 +27,7 @@ export type Action = {
   type: ActionType
   name: string
   description: string
-} & ActionSourceIdentifier // TODO:
+} & ActionSourceIdentifier
 export const buildAction: Builder<Action> = (id, params) => {
   return { id, ...params } as Action
 }

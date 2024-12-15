@@ -1,6 +1,5 @@
-import React, { useState } from "react"
+import { useState } from "react"
 
-import { BlockMenu } from "./BlockMenu"
 import { Settings } from "./Settings"
 import { Sidebar } from "./Sidebar"
 
@@ -21,18 +20,11 @@ export const Main = () => {
         </ErrorBoundary>
       </div>
       {content === "flow" ? (
-        <>
-          <div className="h-dvh w-[240px] shrink-0 border-r border-slate-200">
-            <ErrorBoundary fallback={<ErrorDisplay />}>
-              <BlockMenu />
-            </ErrorBoundary>
-          </div>
-          <div className="relative grow">
-            <ErrorBoundary fallback={<ErrorDisplay />}>
-              <Flow />
-            </ErrorBoundary>
-          </div>
-        </>
+        <div className="relative grow">
+          <ErrorBoundary fallback={<ErrorDisplay />}>
+            <Flow />
+          </ErrorBoundary>
+        </div>
       ) : content === "code" ? (
         <div className="relative grow">
           <Code />

@@ -9,11 +9,10 @@ import type { KVItem } from "@/ui/lib/kv"
 
 import { genId } from "@/utils/uuid"
 
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
 export const getExample = <Return = unknown>(
   example?: unknown,
   examples?: Record<string, ExampleObject | ReferenceObject>,
-): Return => {
+): Return | undefined => {
   if (example !== undefined) {
     return example as unknown as Return
   } else {

@@ -50,6 +50,9 @@ const revertRunnHttpStepToDecomposedAction = (
 
   const res = parsePath(path)
 
+  const xActionId = operation.meta?.["x-action-id"]
+  const meta = xActionId != null ? { "x-action-id": xActionId } : undefined
+
   return {
     type: "rest_call" as const,
     description: "",
@@ -72,6 +75,7 @@ const revertRunnHttpStepToDecomposedAction = (
     })),
     contentType,
     body: bodyValue as Json,
+    meta,
   }
 }
 
@@ -82,7 +86,8 @@ const revertRunnStepToDecomposedStep = (
 ): DecomposedStep => {
   return {
     id: stepIdStepKeyCache.getOrCreate(key),
-    title: step.desc,
+    title: key,
+    description: step.desc ?? "",
     actions: [
       // rest_call
       step.req == null ? null : revertRunnHttpStepToDecomposedAction(step.req),
@@ -110,6 +115,25 @@ const revertRunnStepToDecomposedStep = (
               }),
               value,
             })),
+          },
+      step.include == null
+        ? null
+        : {
+            type: "include" as const,
+            description: "",
+            ref: step.include.path,
+            parameters: Object.entries(step.include.vars).map(
+              ([key, value]) => ({
+                variable: buildLocalVariable(genId(), {
+                  namespace: "vars",
+                  boundIn: "local",
+                  name: key,
+                  description: "",
+                  schema: "any",
+                }),
+                value,
+              }),
+            ),
           },
     ].filter(nonNull),
     condition: step.if,
@@ -161,11 +185,7 @@ export const revertRunnToDecomposed: EnginePluginDeserializer = (
         }),
       ),
       steps: stepEntries.map(([key, step]) =>
-        revertRunnStepToDecomposedStep(
-          typeof key === "string" ? key : step.desc,
-          step,
-          stepIdStepKeyCache,
-        ),
+        revertRunnStepToDecomposedStep(`${key}`, step, stepIdStepKeyCache),
       ),
     }
   })

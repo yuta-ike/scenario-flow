@@ -129,24 +129,24 @@ export const getBezierPath = ({
       ? `
     M${sourceX},${sourceY}
 
-    v${(targetY - sourceY) * factor - 12}
+    v20
     a12,12 0 0 0 12,12
 
     h${targetX - sourceX - 24}
     a12,12, 0 0 1 12,12
 
-    v${(targetY - sourceY) * (1 - factor) - 12}
+    v${targetY - sourceY - 20 - 24}
     `
       : `
     M${sourceX},${sourceY}
 
-    v${(targetY - sourceY) * factor - 12}
+    v20
     a12,12 0 0 1 -12,12
 
     h${targetX - sourceX + 24}
     a12,12, 0 0 0 -12,12
 
-    v${(targetY - sourceY) * (1 - factor) - 12}
+    v${targetY - sourceY - 20 - 24}
     `,
     labelX,
     labelY,

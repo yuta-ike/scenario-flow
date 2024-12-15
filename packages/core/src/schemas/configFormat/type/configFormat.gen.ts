@@ -44,17 +44,23 @@ export interface RecordStringString {
 }
 
 export interface RecordStringStringProperties {
+    openapi: Openapi;
+}
+
+export interface Openapi {
+    type:                 string;
+    properties:           OpenapiProperties;
+    additionalProperties: boolean;
+    title:                string;
+}
+
+export interface OpenapiProperties {
     local_files: LocalFiles;
 }
 
 export interface LocalFiles {
-    type:  string;
-    items: Items;
+    $ref:  string;
     title: string;
-}
-
-export interface Items {
-    $ref: string;
 }
 
 // Converts JSON strings to/from your types
@@ -253,14 +259,19 @@ const typeMap: any = {
         { json: "title", js: "title", typ: "" },
     ], false),
     "RecordStringStringProperties": o([
+        { json: "openapi", js: "openapi", typ: r("Openapi") },
+    ], false),
+    "Openapi": o([
+        { json: "type", js: "type", typ: "" },
+        { json: "properties", js: "properties", typ: r("OpenapiProperties") },
+        { json: "additionalProperties", js: "additionalProperties", typ: true },
+        { json: "title", js: "title", typ: "" },
+    ], false),
+    "OpenapiProperties": o([
         { json: "local_files", js: "local_files", typ: r("LocalFiles") },
     ], false),
     "LocalFiles": o([
-        { json: "type", js: "type", typ: "" },
-        { json: "items", js: "items", typ: r("Items") },
-        { json: "title", js: "title", typ: "" },
-    ], false),
-    "Items": o([
         { json: "$ref", js: "$ref", typ: "" },
+        { json: "title", js: "title", typ: "" },
     ], false),
 };

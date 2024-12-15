@@ -206,15 +206,31 @@
                                         "type": "string",
                                         "title": "test"
                                     },
+                                    "include": {
+                                        "type": "object",
+                                        "properties": {
+                                            "path": {
+                                                "type": "string",
+                                                "title": "path"
+                                            },
+                                            "vars": {
+                                                "$ref": "#/definitions/Record<string,string>",
+                                                "title": "vars"
+                                            }
+                                        },
+                                        "additionalProperties": false,
+                                        "required": [
+                                            "path",
+                                            "vars"
+                                        ],
+                                        "title": "include"
+                                    },
                                     "bind": {
                                         "$ref": "#/definitions/Record<string,string>",
                                         "title": "bind"
                                     }
                                 },
-                                "additionalProperties": false,
-                                "required": [
-                                    "desc"
-                                ]
+                                "additionalProperties": false
                             }
                         }
                     ],
@@ -345,6 +361,24 @@
         "RunBookStepMediaTypeObject": {
             "$ref": "#/definitions/Json"
         },
+        "RunBookStepIncludeObject": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "title": "path"
+                },
+                "vars": {
+                    "$ref": "#/definitions/Record<string,string>",
+                    "title": "vars"
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "path",
+                "vars"
+            ]
+        },
         "RunBookStep": {
             "type": "object",
             "properties": {
@@ -415,15 +449,31 @@
                     "type": "string",
                     "title": "test"
                 },
+                "include": {
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "title": "path"
+                        },
+                        "vars": {
+                            "$ref": "#/definitions/Record<string,string>",
+                            "title": "vars"
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                        "path",
+                        "vars"
+                    ],
+                    "title": "include"
+                },
                 "bind": {
                     "$ref": "#/definitions/Record<string,string>",
                     "title": "bind"
                 }
             },
-            "additionalProperties": false,
-            "required": [
-                "desc"
-            ]
+            "additionalProperties": false
         },
         "Record<string,RunBookStep>": {
             "title": "Record<string,RunBookStep>",

@@ -9,15 +9,15 @@ import { useDecomposedForLib } from "@/ui/adapter/query"
 import { jsonToYaml } from "@/utils/yaml"
 
 export const Code = () => {
-  const runnFormats = useDecomposedForLib()
+  const libFormats = useDecomposedForLib()
 
   const yamls = useMemo(
     () =>
-      runnFormats.map(({ meta, contents }) => ({
+      libFormats.map(({ meta, contents }) => ({
         meta,
         yaml: jsonToYaml(contents as Json),
       })),
-    [runnFormats],
+    [libFormats],
   )
 
   const [selectedId, setSelectedId] = useState<string | null>(

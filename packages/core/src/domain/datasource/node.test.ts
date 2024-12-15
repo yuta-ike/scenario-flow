@@ -134,7 +134,7 @@ describe("node > node", () => {
     resourceAtom(
       toResourceId("r1"),
       buildResource("r1", {
-        type: "open_api" as const,
+        type: "openapi" as const,
         name: `Resource 1`,
         description: "",
         content: {

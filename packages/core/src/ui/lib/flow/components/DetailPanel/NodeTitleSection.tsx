@@ -1,6 +1,9 @@
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 import { FiTrash, FiChevronsRight } from "react-icons/fi"
-import { TbArrowFork, TbArrowLoopRight } from "react-icons/tb"
+import { TbArrowFork, TbArrowLoopRight, TbMinus } from "react-icons/tb"
+import { atom, useAtom } from "jotai"
+import clsx from "clsx"
+import { flushSync } from "react-dom"
 
 import { MagicVariableButton } from "./MagicVariableButton"
 
@@ -21,6 +24,8 @@ import { ToolButton } from "@/ui/components/common/ToolButton"
 import { parseNumber } from "@/utils/number"
 import { Collapsible } from "@/ui/components/common/Collapsible"
 
+const descriptionAreaExpandedAtom = atom(false)
+
 type NodeTitleSectionProps = {
   nodeId: NodeId
 }
@@ -35,7 +40,16 @@ export const NodeTitleSection = ({ nodeId }: NodeTitleSectionProps) => {
     updateNode(nodeId, { name: e.target.value })
   }
 
+  const updateNodeDescription = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    updateNode(nodeId, { description: e.target.value })
+  }
+
   const reset = useResetFocusNodeId()
+
+  const [descriptionAreaExpanded, setDescriptionAreaExpanded] = useAtom(
+    descriptionAreaExpandedAtom,
+  )
+  const descriptionRef = useRef<HTMLTextAreaElement>(null)
 
   return (
     <div>
@@ -46,7 +60,7 @@ export const NodeTitleSection = ({ nodeId }: NodeTitleSectionProps) => {
               className="w-[calc(100%+16px)] -translate-x-2 resize-none rounded border border-transparent bg-transparent px-[7px] py-1 text-sm font-bold transition placeholder:font-normal hover:border-slate-200 focus:border-slate-200 focus:outline-none"
               value={node.name}
               onChange={updateNodeName}
-              placeholder="説明を追加"
+              placeholder="タイトルを追加"
             />
           </div>
         </div>
@@ -75,6 +89,54 @@ export const NodeTitleSection = ({ nodeId }: NodeTitleSectionProps) => {
           <IconButton icon={FiChevronsRight} label="とじる" onClick={reset} />
         </div>
       </div>
+
+      <section className="relative border-b border-b-slate-200 px-4 py-2">
+        <div>
+          <div className="flex items-center gap-2">
+            <h3 className="shrink-0 text-xs font-bold text-slate-600">説明</h3>
+            <button
+              type="button"
+              className={clsx(
+                "block grow text-start text-xs",
+                descriptionAreaExpanded && "hidden",
+              )}
+              onClick={() => {
+                flushSync(() => setDescriptionAreaExpanded(true))
+                descriptionRef.current?.focus()
+              }}
+            >
+              {0 < node.description.length ? (
+                node.description
+              ) : (
+                <span className="text-slate-400">クリックして入力</span>
+              )}
+            </button>
+            <div
+              className={clsx(
+                "ml-auto shrink-0",
+                !descriptionAreaExpanded && "hidden",
+              )}
+            >
+              <IconButton
+                size="sm"
+                variant="segmented"
+                icon={TbMinus}
+                label="小さく表示する"
+                onClick={() => setDescriptionAreaExpanded(false)}
+              />
+            </div>
+          </div>
+          <Collapsible show={descriptionAreaExpanded}>
+            <TextareaAutosize
+              className="resize-none rounded border border-transparent px-[7px] py-1 text-[13px] transition hover:border-slate-200 focus:border-slate-200 focus:outline-none"
+              value={node.description}
+              onChange={updateNodeDescription}
+              placeholder="説明を追加"
+              ref={descriptionRef}
+            />
+          </Collapsible>
+        </div>
+      </section>
       <Collapsible show={showLoopOrConditionConfig}>
         <ExpandedSection node={node} />
       </Collapsible>

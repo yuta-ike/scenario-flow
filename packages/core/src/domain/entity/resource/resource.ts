@@ -29,11 +29,11 @@ export type ResourceLocationBlock =
   | GitLocation
 
 // resource type
-export type ResourceType = "open_api"
+export type ResourceType = "openapi"
 
-// open_apiResourceType
-export type open_apiResourceBlock = {
-  type: "open_api"
+// OpenApiResourceType
+export type OpenApiResourceBlock = {
+  type: "openapi"
 }
 
 // Resource
@@ -45,7 +45,7 @@ export type OpenApiResource = {
   name: string
   description: string
   content: OpenAPIObject
-  type: "open_api"
+  type: "openapi"
   location: ResourceLocationBlock
 }
 
@@ -58,7 +58,7 @@ export const buildResource = (
   return { id, ...params } as Resource
 }
 
-export const updateopen_apiContent: Transition<Resource> = (
+export const updateOpenApiContent: Transition<Resource> = (
   resource,
   content: OpenAPIObject,
 ) => {

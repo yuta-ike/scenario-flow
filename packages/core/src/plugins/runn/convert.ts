@@ -1,7 +1,10 @@
 import { toLowerCase } from "effect/String"
 
 import type { EnginePluginSerializer } from "../type"
-import type { DecomposedStep } from "@/domain/entity/decompose/decomposed"
+import type {
+  Decomposed,
+  DecomposedStep,
+} from "@/domain/entity/decompose/decomposed"
 import type {
   RunBookStepLoopConfig,
   RunBook,
@@ -20,6 +23,7 @@ import { formatTime } from "@/domain/entity/value/time"
 
 const convertDecomposedAction = (
   action: DecomposedStep["actions"][number],
+  routeIdPathMap: Map<string, string>,
 ): Partial<RunBookStep> => {
   if (action.type === "rest_call") {
     const pathWithSearchParams = buildPath(
@@ -27,6 +31,8 @@ const convertDecomposedAction = (
       kvToRecordNullable(action.queryParams) ?? undefined,
     )
 
+    const xActionId = action.meta?.["x-action-id"]
+    const meta = xActionId != null ? { "x-action-id": xActionId } : undefined
     return {
       desc: action.description ?? "",
       req: {
@@ -40,6 +46,7 @@ const convertDecomposedAction = (
                     [action.contentType]: action.body,
                   } as Record<ContentType, Json>)
                 : undefined,
+            meta,
           } satisfies RunBookStepOperationObject,
         } satisfies RunBookStepPathItemObject,
       } satisfies RunBookStepPathsObject,
@@ -51,7 +58,7 @@ const convertDecomposedAction = (
     return {
       test: action.contents,
     }
-  } else {
+  } else if (action.type === "binder") {
     if (action.assignments.length === 0) {
       return {}
     }
@@ -62,6 +69,18 @@ const convertDecomposedAction = (
           assignment.value,
         ]),
       ),
+    }
+  } else {
+    return {
+      include: {
+        path: routeIdPathMap.get(action.ref) ?? "",
+        vars: Object.fromEntries(
+          action.parameters.map((parameter) => [
+            parameter.variable.name,
+            parameter.value,
+          ]),
+        ),
+      },
     }
   }
 }
@@ -89,27 +108,31 @@ const convertDecomposedLoopConfig = (
   }
 }
 
-const convertDecomposedStep = (step: DecomposedStep): RunBookStep => {
+const convertDecomposedStep = (
+  step: DecomposedStep,
+  routeIdPathMap: Map<string, string>,
+): RunBookStep => {
   const actionObjs = step.actions.map((action) =>
-    convertDecomposedAction(action),
+    convertDecomposedAction(action, routeIdPathMap),
   )
   const result = actionObjs.reduce((acc, action) => {
     return {
       ...acc,
       ...action,
     } satisfies Partial<RunBookStep>
-  })
+  }, {})
 
   return {
     ...result,
-    desc: step.title,
+    desc: step.description,
     loop: convertDecomposedLoopConfig(step.loop),
     if: step.condition,
   } satisfies RunBookStep
 }
 
-export const convertDecomposedToRunn: EnginePluginSerializer<RunBook> = (
-  decomposed,
+const convertDecomposedToRunn = (
+  decomposed: Decomposed,
+  routeIdPathMap: Map<string, string>,
 ) => {
   const libFormat = {
     meta: {
@@ -136,12 +159,25 @@ export const convertDecomposedToRunn: EnginePluginSerializer<RunBook> = (
       steps: Object.fromEntries(
         decomposed.steps.map((step) => [
           step.title,
-          convertDecomposedStep(step),
+          convertDecomposedStep(step, routeIdPathMap),
         ]),
       ),
-      "x-id": decomposed.id,
-      "x-color": decomposed.color,
     },
   }
   return libFormat
+}
+
+export const convertDecomposedListToRunn: EnginePluginSerializer<RunBook> = (
+  decomposedList,
+) => {
+  const routeIdPathMap = new Map(
+    decomposedList.map((decomposed) => [
+      decomposed.id,
+      `${decomposed.page}/${decomposed.title}.yml`,
+    ]),
+  )
+
+  return decomposedList.map((decomposed) =>
+    convertDecomposedToRunn(decomposed, routeIdPathMap),
+  )
 }

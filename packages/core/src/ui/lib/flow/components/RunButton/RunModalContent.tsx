@@ -18,7 +18,7 @@ import {
   currentEnginePluginIdAtom,
   enginePluginAtom,
 } from "@/domain/datasource/plugin"
-import { useInjectedContent } from "@/injector"
+import { useInjected } from "@/ui/adapter/container"
 
 type Props = {
   initialSelected?: RouteId[]
@@ -34,7 +34,7 @@ export const RunModalContent = ({ initialSelected }: Props) => {
 
   const enginePlugin = useAtomValue(enginePluginAtom)
   const enginePluginId = useAtomValue(currentEnginePluginIdAtom)
-  const injectedStore = useInjectedContent()
+  const injected = useInjected()
 
   const handleSubmit = async () => {
     onClose()
@@ -43,7 +43,7 @@ export const RunModalContent = ({ initialSelected }: Props) => {
       window.alert("実行可能なライブラリが見つかりません")
       return
     }
-    const exec = injectedStore.exec.libs?.[enginePluginId]?.run
+    const exec = injected.exec.libs?.[enginePluginId]?.run
     if (exec == null) {
       window.alert("実行可能なライブラリが見つかりません")
       return

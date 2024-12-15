@@ -13,3 +13,5 @@ export const dedupeArrayByKey = <T>(arr: T[], key: keyof T): T[] => {
   }
   return Array.from(map.values())
 }
+
+export const uniq = <T>(arr: T[]): T[] => new Set(arr).values().toArray()

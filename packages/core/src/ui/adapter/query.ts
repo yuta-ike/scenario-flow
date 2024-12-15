@@ -7,10 +7,14 @@ import { currentPageAtom } from "../state/page"
 import type { ResolvedAction } from "@/domain/entity/action/action"
 import type { NodeId } from "@/domain/entity/node/node"
 import type { ResourceId } from "@/domain/entity/resource/resource"
-import type { PrimitiveRoute, RouteId } from "@/domain/entity/route/route"
+import type { RouteId } from "@/domain/entity/route/route"
 import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
 
-import { nodeAtom, nodeIdsAtom } from "@/domain/datasource/node"
+import {
+  nodeAtom,
+  nodeIdsAtom,
+  primitiveNodeAtom,
+} from "@/domain/datasource/node"
 import {
   resourceAtom,
   resourceIdsAtom,
@@ -46,11 +50,13 @@ import {
   latestResolvedNodeRunResultAtom,
   nodeStatesAtom,
 } from "@/domain/datasource/nodeStates"
-import { dedupeArrayByKey } from "@/utils/array"
 
 const nullAtom = atom(null)
 
 export const useNodeIds = () => useAtomValue(nodeIdsAtom).values().toArray()
+
+export const usePrimitveNode = (id: NodeId) =>
+  useAtomValue(primitiveNodeAtom(id))
 
 export const useNode = (id: NodeId) => useAtomValue(nodeAtom(id))
 
@@ -123,40 +129,6 @@ export const useRouteIdsBetween = (source: NodeId, target: NodeId) => {
       [source, target],
     ),
   )
-}
-
-export const useEdges = (routes: PrimitiveRoute[], initialNodeId: NodeId) => {
-  return useMemo(() => {
-    const rootNodeIds = new Set(
-      routes.map((route) => route.path[0]).filter((nodeId) => nodeId != null),
-    )
-      .values()
-      .toArray()
-
-    const edgePairs = routes.flatMap((route) => {
-      const edges: [NodeId, NodeId][] = []
-      let prevNodeId: NodeId | null = null
-      for (const nodeId of route.path) {
-        if (prevNodeId != null) {
-          edges.push([prevNodeId, nodeId])
-        }
-        prevNodeId = nodeId
-      }
-      return edges
-    })
-
-    rootNodeIds.forEach((rootNodeId) => {
-      edgePairs.push([initialNodeId, rootNodeId])
-    })
-
-    const edges = edgePairs.map(([source, target]) => ({
-      id: `${source}-${target}`,
-      source,
-      target,
-      type: "basicEdge",
-    }))
-    return dedupeArrayByKey(edges, "id")
-  }, [initialNodeId, routes])
 }
 
 // environment

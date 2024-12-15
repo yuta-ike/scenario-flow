@@ -5,12 +5,16 @@ import {
   replaceAction as replaceActionEntity,
   updateNodeConfig as updateNodeConfigEntity,
   appendActionInstance as appendActionInstanceEntity,
-  resolvePrimitveNode,
   buildPrimitiveNode,
   applyInitialValue,
 } from "../entity/node/node"
 import { toNodeId } from "../entity/node/node.util"
-import { appendNodesToRoute, removeNodeFromRoute } from "../entity/route/route"
+import {
+  appendNodesToRoute,
+  insertNodeToRoute,
+  removeNodeFromRoute,
+  sliceRoute,
+} from "../entity/route/route"
 import { toRouteId } from "../entity/route/route.util"
 import {
   display,
@@ -24,27 +28,19 @@ import {
 import { toActionInstanceId } from "../entity/node/actionInstance.util"
 
 import { _genId } from "./common"
+import { deleteRoute } from "./route"
 
 import type { ActionType } from "../entity/action/action"
-import type { StripeSymbol } from "../entity/type"
+import type { StripeSymbol, StripeSymbol as StripSymbol } from "../entity/type"
 import type { GenId } from "./common"
 import type { LocalVariableId } from "../entity/variable/variable"
 import type {
   ActionInstance,
   ActionInstanceId,
+  IncludeActionInstance,
 } from "../entity/node/actionInstance"
-import type {
-  NodeId,
-  PrimitiveNode,
-  NodeConfig,
-  RawPrimitiveNode,
-  Node,
-} from "../entity/node/node"
-import type {
-  RouteId,
-  PrimitiveRoute,
-  RawPrimitiveRoute,
-} from "../entity/route/route"
+import type { NodeId, PrimitiveNode, NodeConfig } from "../entity/node/node"
+import type { RouteId, PrimitiveRoute } from "../entity/route/route"
 import type { OmitId } from "@/utils/idType"
 import type { PartialDict } from "@/utils/typeUtil"
 import type { ContextOf } from "@/lib/effect/contextOf"
@@ -52,27 +48,33 @@ import type { ContextOf } from "@/lib/effect/contextOf"
 import { dedupeArrays, sliceFormer, sliceLatter } from "@/lib/array/utils"
 import { associateWithList } from "@/utils/set"
 import { matrixArr, matrixEff } from "@/utils/matrix"
+import { uniq } from "@/utils/array"
+import { nonNull } from "@/utils/assert"
 
 export type GetUniqName = (name: string) => string
 export const GetUniqName = Context.GenericTag<GetUniqName>("GetUniqName")
 const _getUniqName = (name: string) =>
   GetUniqName.pipe(Effect.map((getUniqName) => getUniqName(name)))
 
-export type GetChildrenByNodeId = (id: NodeId) => NodeId[]
+export type GetChildrenByNodeId = (id: NodeId, page?: string) => NodeId[]
 export const GetChildrenByNodeId = Context.GenericTag<GetChildrenByNodeId>(
   "GetChildrenByNodeId",
 )
-const _getChildrenByNodeId = (nodeId: NodeId) =>
+const _getChildrenByNodeId = (nodeId: NodeId, page?: string) =>
   GetChildrenByNodeId.pipe(
-    Effect.map((getChildrenByNodeId) => getChildrenByNodeId(nodeId)),
+    Effect.map((getChildrenByNodeId) => getChildrenByNodeId(nodeId, page)),
   )
 
-export type GetRoutesByNodeId = (id: NodeId) => PrimitiveRoute[]
+export type GetRoutesByNodeId = (id: NodeId, page?: string) => PrimitiveRoute[]
 export const GetRoutesByNodeId =
   Context.GenericTag<GetRoutesByNodeId>("GetRoutesByNodeId")
-const _getRoutesByNodeId = (nodeId: NodeId) =>
+export const _getRoutesByNodeId = (nodeId: NodeId, page?: string) =>
   GetRoutesByNodeId.pipe(
-    Effect.map((getRoutesByNodeId) => getRoutesByNodeId(nodeId)),
+    Effect.map((getRoutesByNodeId) =>
+      getRoutesByNodeId(nodeId).filter(
+        (route) => page == null || route.page === page,
+      ),
+    ),
   )
 
 export type GetRoutes = (routeIds: RouteId[]) => PrimitiveRoute[]
@@ -80,20 +82,26 @@ export const GetRoutes = Context.GenericTag<GetRoutes>("GetRoutes")
 export const _getRoutes = (routeIds: RouteId[]) =>
   GetRoutes.pipe(Effect.map((_) => _(routeIds)))
 
+export type GetAllRoutes = () => PrimitiveRoute[]
+export const GetAllRoutes = Context.GenericTag<GetAllRoutes>("GetAllRoutes")
+export const _getAllRoutes = () =>
+  GetAllRoutes.pipe(Effect.map((getAllRoutes) => getAllRoutes()))
+
 export type UpdateRoute = (
   id: RouteId,
   routeParam: OmitId<PrimitiveRoute>,
 ) => void
 export const UpdateRoute = Context.GenericTag<UpdateRoute>("UpdateRoute")
-const _updateRoute = (id: RouteId, route: OmitId<PrimitiveRoute>) =>
+export const _updateRoute = (id: RouteId, route: OmitId<PrimitiveRoute>) =>
   UpdateRoute.pipe(Effect.map((updateRoute) => updateRoute(id, route)))
 
 export type AddRoute = (
-  routeParam: PartialDict<RawPrimitiveRoute, "name" | "color">,
+  routeParam: PartialDict<StripSymbol<PrimitiveRoute>, "name" | "color">,
 ) => void
 export const AddRoute = Context.GenericTag<AddRoute>("AddRoute")
-const _addRoute = (route: PartialDict<RawPrimitiveRoute, "name" | "color">) =>
-  AddRoute.pipe(Effect.map((addRoute) => addRoute(route)))
+export const _addRoute = (
+  route: PartialDict<StripSymbol<PrimitiveRoute>, "name" | "color">,
+) => AddRoute.pipe(Effect.map((addRoute) => addRoute(route)))
 
 export type AddNode = (node: PrimitiveNode) => void
 export const AddNode = Context.GenericTag<AddNode>("AddNode")
@@ -136,12 +144,12 @@ const _getParentNodesById = (nodeId: NodeId) =>
 
 export type RemoveRoute = (routeId: RouteId) => void
 export const RemoveRoute = Context.GenericTag<RemoveRoute>("RemoveRoute")
-const _removeRoute = (routeId: RouteId) =>
+export const _removeRoute = (routeId: RouteId) =>
   RemoveRoute.pipe(Effect.map((removeRoute) => removeRoute(routeId)))
 
 export type DeleteNode = (nodeId: NodeId) => void
 export const DeleteNode = Context.GenericTag<DeleteNode>("DeleteNode")
-const _deleteNode = (nodeId: NodeId) =>
+export const _deleteNode = (nodeId: NodeId) =>
   DeleteNode.pipe(Effect.map((deleteNode) => deleteNode(nodeId)))
 
 export type UpsertVariable = (
@@ -167,7 +175,7 @@ const _getResolvedAction = (actionIdentifier: ActionSourceIdentifier) =>
   )
 
 const _resolveActionInstances = (
-  actionInstances: StripeSymbol<ActionInstance[]>,
+  actionInstances: StripSymbol<ActionInstance[]>,
 ): Effect.Effect<Map<string, ResolvedAction>, never, GetResolvedAction> =>
   pipe(
     Effect.succeed(actionInstances),
@@ -188,11 +196,11 @@ const _resolveActionInstances = (
 
 const _buildNode = (
   id: NodeId,
-  nodeParam: StripeSymbol<OmitId<PrimitiveNode, "name">>,
+  nodeParam: StripSymbol<OmitId<PrimitiveNode, "name">>,
 ): Effect.Effect<
-  Node,
+  PrimitiveNode,
   never,
-  GetUniqName | GetDefaultNodeName | GetResolvedAction
+  GetUniqName | GetRoutes | GetDefaultNodeName | GetResolvedAction
 > =>
   Effect.Do.pipe(
     Effect.bind("actionMap", () =>
@@ -207,24 +215,30 @@ const _buildNode = (
       ),
     ),
     Effect.bind("name", ({ nameCandidate }) => _getUniqName(nameCandidate)),
-    Effect.map(({ name, actionMap }) =>
-      resolvePrimitveNode(
-        buildPrimitiveNode(id, { name, ...nodeParam }),
-        actionMap,
-        new Map(),
+    Effect.bind("routesMap", () =>
+      pipe(
+        Effect.succeed(
+          nodeParam.actionInstances
+            .filter((ai): ai is IncludeActionInstance => ai.type === "include")
+            .map((ai) => ai.instanceParameter.ref),
+        ),
+        Effect.map((routeIds) => uniq(routeIds)),
+        Effect.flatMap(Effect.forEach((routeId) => _getRoutes([routeId]))),
+        Effect.map((routes) => routes.map((r) => r[0]).filter(nonNull)),
+        Effect.map((routes) => new Map(routes.map((r) => [r.id, r]))),
       ),
     ),
-    Effect.map((_) => applyInitialValue(_)),
+    Effect.map(({ name, actionMap }) =>
+      pipe(buildPrimitiveNode(id, { name, ...nodeParam }), (primitiveNode) =>
+        applyInitialValue(primitiveNode, actionMap),
+      ),
+    ),
   )
 
 // 新しいノードを追加
 export const _createAndAddNode = (
-  nodeParam: OmitId<RawPrimitiveNode, "name">,
-): Effect.Effect<
-  PrimitiveNode,
-  never,
-  GenId | AddNode | GetResolvedAction | GetUniqName
-> =>
+  nodeParam: StripSymbol<OmitId<PrimitiveNode, "name">>,
+) =>
   pipe(
     _genId(),
     Effect.map((_) => toNodeId(_)),
@@ -295,7 +309,7 @@ const _appendNodeToRoutePath = (
 
 // ノードを追加する
 export const appendNode = (
-  nodeParam: OmitId<RawPrimitiveNode, "name">,
+  nodeParam: StripSymbol<OmitId<PrimitiveNode, "name">>,
   parentNodeId: NodeId,
   page: string,
 ): Effect.Effect<
@@ -313,8 +327,9 @@ export const appendNode = (
 
 // 途中にノードを追加する
 export const insertNode = (
-  nodeParam: OmitId<PrimitiveNode>,
+  nodeParam: OmitId<StripSymbol<PrimitiveNode>, "name">,
   parentNodeId: NodeId,
+  page: string,
 ): Effect.Effect<
   NodeId,
   never,
@@ -329,13 +344,12 @@ export const insertNode = (
     // ルートにノードを追加する
     Effect.tap((nodeId) =>
       pipe(
-        _getRoutesByNodeId(parentNodeId),
+        _getRoutesByNodeId(parentNodeId, page),
         Effect.flatMap(
           Effect.forEach((route) =>
             pipe(
-              Effect.succeed(route),
-              Effect.map((_) => appendNodesToRoute(_, nodeId)),
-              Effect.map((_) => _updateRoute(_.id, _)),
+              Effect.succeed(insertNodeToRoute(route, nodeId, parentNodeId)),
+              Effect.flatMap((_) => _updateRoute(_.id, _)),
             ),
           ),
         ),
@@ -343,16 +357,42 @@ export const insertNode = (
     ),
   )
 
+export const unshiftNode = (
+  nodeParam: OmitId<StripSymbol<PrimitiveNode>, "name">,
+  routeId: RouteId,
+): Effect.Effect<
+  NodeId,
+  never,
+  ContextOf<
+    typeof _createAndAddNode | typeof _getRoutesByNodeId | typeof _updateRoute
+  >
+> =>
+  pipe(
+    // ノードの作成と追加
+    _createAndAddNode(nodeParam),
+    Effect.map((_) => _.id),
+    // ルートにノードを追加する
+    Effect.tap((nodeId) =>
+      pipe(
+        _getRoutes([routeId]),
+        Effect.map((routes) => routes[0]!),
+        Effect.map((route) => insertNodeToRoute(route, nodeId, null)),
+        Effect.flatMap((_) => _updateRoute(_.id, _)),
+      ),
+    ),
+  )
+
 // ノードを更新する
 export const updateNode = (
   nodeId: NodeId,
-  param: Pick<PrimitiveNode, "name">,
+  param: Partial<Pick<PrimitiveNode, "name" | "description">>,
 ) =>
   pipe(
     _getNode(nodeId),
     Effect.map((_) => ({
       ..._,
-      name: param.name,
+      name: param.name ?? _.name,
+      description: param.description ?? _.description,
     })),
     Effect.tap((node) => _setNode(nodeId, node)),
   )
@@ -435,24 +475,36 @@ const _removeNodeFromAllRoutes = (
     _getRoutesByNodeId(nodeId),
     Effect.flatMap((routes) =>
       Effect.forEach(routes, (route) =>
-        pipe(
-          _forEachSibilingNodeIds(nodeId, (_, sibilingNodeIds) =>
-            Effect.if(
-              route.path.at(-1) === nodeId && 1 < sibilingNodeIds.length,
-              {
-                // NOTE: リーフノードであり、かつ親ノードが複数の子を持つ
-                onTrue: () => _removeRoute(route.id),
-                onFalse: () =>
-                  pipe(
-                    Effect.succeed(route),
-                    Effect.map((_) => removeNodeFromRoute(_, nodeId)),
-                    Effect.flatMap((_) => _updateRoute(_.id, _)),
-                    Effect.asVoid,
-                  ),
-              },
+        Effect.if(route.path[0] === nodeId, {
+          // NOTE: ルートノードの場合
+          onTrue: () =>
+            Effect.if(route.path.length === 1, {
+              onTrue: () => _removeRoute(route.id),
+              onFalse: () =>
+                pipe(
+                  Effect.succeed(route),
+                  Effect.map((_) => removeNodeFromRoute(_, nodeId)),
+                  Effect.flatMap((_) => _updateRoute(route.id, _)),
+                ),
+            }),
+          onFalse: () =>
+            _forEachSibilingNodeIds(nodeId, (_, sibilingNodeIds) =>
+              Effect.if(
+                route.path.at(-1) === nodeId && 1 < sibilingNodeIds.length,
+                {
+                  // NOTE: リーフノードであり、かつ親ノードが複数の子を持つ
+                  onTrue: () => _removeRoute(route.id),
+                  onFalse: () =>
+                    pipe(
+                      Effect.succeed(route),
+                      Effect.map((_) => removeNodeFromRoute(_, nodeId)),
+                      Effect.flatMap((_) => _updateRoute(_.id, _)),
+                      Effect.asVoid,
+                    ),
+                },
+              ),
             ),
-          ),
-        ),
+        }),
       ),
     ),
     Effect.asVoid,
@@ -466,10 +518,49 @@ export const deleteNode = (
   never,
   ContextOf<typeof _removeNodeFromAllRoutes | typeof _deleteNode>
 > =>
-  pipe(
-    Effect.succeed(nodeId),
-    Effect.tap((_) => _removeNodeFromAllRoutes(_)),
-    Effect.tap((_) => _deleteNode(_)),
+  Effect.Do.pipe(
+    Effect.flatMap(() => _removeNodeFromAllRoutes(nodeId)),
+    Effect.flatMap(() => _deleteNode(nodeId)),
+    Effect.as(nodeId),
+  )
+
+// ノードの接続を削除する
+export const disconnectNodes = ({
+  fromNodeId,
+  toNodeId,
+}: {
+  fromNodeId: NodeId
+  toNodeId: NodeId
+}) =>
+  Effect.Do.pipe(
+    Effect.bind("fromRoutes", () => _getRoutesByNodeId(fromNodeId)),
+    Effect.bind("toRouteIds", () =>
+      _getRoutesByNodeId(toNodeId).pipe(
+        Effect.map((routes) => routes.map((route) => route.id)),
+      ),
+    ),
+    Effect.flatMap(({ fromRoutes, toRouteIds }) =>
+      Effect.if(fromRoutes.length === 1, {
+        onTrue: () =>
+          pipe(
+            Effect.succeed(fromRoutes[0]),
+            Effect.map((_) => sliceRoute(_!, toNodeId)),
+            Effect.flatMap((_) => _updateRoute(_.id, _)),
+          ),
+        onFalse: () =>
+          pipe(
+            Effect.succeed(
+              new Set(fromRoutes.map((route) => route.id)).intersection(
+                new Set(toRouteIds),
+              ),
+            ),
+            Effect.flatMap((routeIds) =>
+              Effect.forEach(routeIds, (routeId) => deleteRoute(routeId)),
+            ),
+          ),
+      }),
+    ),
+    Effect.asVoid,
   )
 
 // ノードを移動する
@@ -489,7 +580,11 @@ export const moveNode = (
   )
 
 // ノード間を接続する
-export const connectNodes = (fromNodeId: NodeId, toNodeId: NodeId) =>
+export const connectNodes = (
+  fromNodeId: NodeId,
+  toNodeId: NodeId,
+  page: string,
+) =>
   pipe(
     _isLeafNode(fromNodeId, {
       onTrue: () =>
@@ -561,7 +656,7 @@ export const connectNodes = (fromNodeId: NodeId, toNodeId: NodeId) =>
                     id: _,
                     name: "",
                     path: routePath,
-                    page: "0",
+                    page,
                   }),
                 ),
               ),
@@ -573,7 +668,10 @@ export const connectNodes = (fromNodeId: NodeId, toNodeId: NodeId) =>
 
 // 新しいルートを作成する
 const _createAndAddRoute = (
-  routeParam: PartialDict<OmitId<RawPrimitiveRoute>, "name" | "color">,
+  routeParam: PartialDict<
+    StripSymbol<OmitId<PrimitiveRoute>>,
+    "name" | "color"
+  >,
 ): Effect.Effect<RouteId, never, ContextOf<typeof _genId | typeof _addRoute>> =>
   pipe(
     _genId(),
@@ -582,14 +680,17 @@ const _createAndAddRoute = (
   )
 
 // ルートノードを作成する
-export const createRootNode = (node: OmitId<RawPrimitiveNode, "name">) =>
+export const createRestCallRootNode = (
+  node: OmitId<StripeSymbol<PrimitiveNode>, "name">,
+  page: string,
+) =>
   pipe(
     _createAndAddNode(node),
     Effect.map((_) => _.id),
     Effect.flatMap((_) =>
       _createAndAddRoute({
         path: [_],
-        page: "0",
+        page,
       }),
     ),
   )

@@ -24,6 +24,7 @@ export interface Definitions {
     RunBookStepPathItemObject:    RecordStringRunBookStep;
     RunBookStepOperationObject:   RunBookStepOperationObject;
     RunBookStepMediaTypeObject:   RunBookStepMediaTypeObject;
+    RunBookStepIncludeObject:     RunBookStepIncludeObject;
     RunBookStep:                  RunBookStep;
     "Record<string,RunBookStep>": RecordStringRunBookStep;
     "Record<string,string>":      RecordStringRunBookStep;
@@ -172,16 +173,29 @@ export interface RunBookStep {
     type:                 string;
     properties:           RunBookStepProperties;
     additionalProperties: boolean;
-    required:             string[];
 }
 
 export interface RunBookStepProperties {
-    desc: Debug;
-    if:   Debug;
-    loop: RunBookStepLoopConfig;
-    req:  ApplicationFormData;
-    test: Debug;
-    bind: ApplicationFormData;
+    desc:    Debug;
+    if:      Debug;
+    loop:    RunBookStepLoopConfig;
+    req:     ApplicationFormData;
+    test:    Debug;
+    include: RunBookStepIncludeObject;
+    bind:    ApplicationFormData;
+}
+
+export interface RunBookStepIncludeObject {
+    type:                 string;
+    properties:           RunBookStepIncludeObjectProperties;
+    additionalProperties: boolean;
+    required:             string[];
+    title?:               string;
+}
+
+export interface RunBookStepIncludeObjectProperties {
+    path: Debug;
+    vars: ApplicationFormData;
 }
 
 export interface RunBookStepLoopConfig {
@@ -399,6 +413,7 @@ const typeMap: any = {
         { json: "RunBookStepPathItemObject", js: "RunBookStepPathItemObject", typ: r("RecordStringRunBookStep") },
         { json: "RunBookStepOperationObject", js: "RunBookStepOperationObject", typ: r("RunBookStepOperationObject") },
         { json: "RunBookStepMediaTypeObject", js: "RunBookStepMediaTypeObject", typ: r("RunBookStepMediaTypeObject") },
+        { json: "RunBookStepIncludeObject", js: "RunBookStepIncludeObject", typ: r("RunBookStepIncludeObject") },
         { json: "RunBookStep", js: "RunBookStep", typ: r("RunBookStep") },
         { json: "Record<string,RunBookStep>", js: "Record<string,RunBookStep>", typ: r("RecordStringRunBookStep") },
         { json: "Record<string,string>", js: "Record<string,string>", typ: r("RecordStringRunBookStep") },
@@ -517,7 +532,6 @@ const typeMap: any = {
         { json: "type", js: "type", typ: "" },
         { json: "properties", js: "properties", typ: r("RunBookStepProperties") },
         { json: "additionalProperties", js: "additionalProperties", typ: true },
-        { json: "required", js: "required", typ: a("") },
     ], false),
     "RunBookStepProperties": o([
         { json: "desc", js: "desc", typ: r("Debug") },
@@ -525,7 +539,19 @@ const typeMap: any = {
         { json: "loop", js: "loop", typ: r("RunBookStepLoopConfig") },
         { json: "req", js: "req", typ: r("ApplicationFormData") },
         { json: "test", js: "test", typ: r("Debug") },
+        { json: "include", js: "include", typ: r("RunBookStepIncludeObject") },
         { json: "bind", js: "bind", typ: r("ApplicationFormData") },
+    ], false),
+    "RunBookStepIncludeObject": o([
+        { json: "type", js: "type", typ: "" },
+        { json: "properties", js: "properties", typ: r("RunBookStepIncludeObjectProperties") },
+        { json: "additionalProperties", js: "additionalProperties", typ: true },
+        { json: "required", js: "required", typ: a("") },
+        { json: "title", js: "title", typ: u(undefined, "") },
+    ], false),
+    "RunBookStepIncludeObjectProperties": o([
+        { json: "path", js: "path", typ: r("Debug") },
+        { json: "vars", js: "vars", typ: r("ApplicationFormData") },
     ], false),
     "RunBookStepLoopConfig": o([
         { json: "anyOf", js: "anyOf", typ: a(r("RunBookStepLoopConfigAnyOf")) },

@@ -22,8 +22,8 @@ export type RunResult = {
 }[]
 
 export type EnginePluginSerializer<LibFormat = any> = (
-  decomposed: Decomposed,
-) => LibMetaFormat<LibFormat>
+  decomposed: Decomposed[],
+) => LibMetaFormat<LibFormat>[]
 export type EnginePluginDeserializer = (raw: Json[]) => Decomposed[]
 export type EnginePluginRunner<CommandInput = any> = (args: {
   command: (arg: CommandInput) => Promise<Result<string>>

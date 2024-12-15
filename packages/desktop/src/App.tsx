@@ -3,6 +3,49 @@ import "./globals.css"
 import Core from "@scenario-flow/core"
 import { FiMinus, FiX } from "react-icons/fi"
 
+import {
+  runRunn,
+  createFile,
+  openFile,
+  getOrCreateFile,
+  openDir,
+  watchDir,
+  readFile,
+  writeFile,
+  watchFile,
+  createDir,
+  deleteFile,
+  deleteDir,
+} from "./inject"
+
+import type { InjectedContent } from "@/injector/injector"
+
+const injected: InjectedContent = {
+  io: {
+    createFile,
+    openFile,
+    readFile,
+    writeFile,
+    getOrCreateFile,
+    watchFile,
+    openDir,
+    watchDir,
+    createDir,
+    deleteFile,
+    deleteDir,
+  },
+  exec: {
+    libs: {
+      runn: {
+        run: runRunn,
+      },
+    },
+  },
+  fetch: {
+    fetch,
+  },
+}
+
 function App() {
   return (
     <div>
@@ -32,7 +75,7 @@ function App() {
           </button>
         </nav>
       </header>
-      <Core />
+      <Core injected={injected} />
     </div>
   )
 }

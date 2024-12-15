@@ -3,14 +3,18 @@ import { HiChevronDown } from "react-icons/hi2"
 
 type AccordionRootProps = {
   children: React.ReactNode
-  /** @default "multiple" */
-  type?: "multiple" | "single"
+  onValueChange?: (value: string[]) => void
 }
 export const AccordionRoot = ({
   children,
-  type = "multiple",
+  onValueChange,
 }: AccordionRootProps) => (
-  <RadixAccordion.Root type={type} defaultChecked className="w-full">
+  <RadixAccordion.Root
+    type="multiple"
+    onValueChange={onValueChange}
+    defaultChecked
+    className="w-full"
+  >
     {children}
   </RadixAccordion.Root>
 )
@@ -21,7 +25,7 @@ type AccordionItemProps = {
   children: React.ReactNode
   gap?: number
   /** @default "handle" */
-  type?: "handle" | "button"
+  type?: "handle" | "button" | "custom"
 }
 
 export const AccordionItem = ({
@@ -44,12 +48,14 @@ export const AccordionItem = ({
             />
           </RadixAccordion.Trigger>
         </RadixAccordion.Header>
-      ) : (
+      ) : type === "button" ? (
         <RadixAccordion.Header className="w-full">
-          <RadixAccordion.Trigger className="group w-full shrink-0 rounded p-1 text-slate-600 transition hover:bg-slate-50 hover:text-slate-600">
+          <RadixAccordion.Trigger className="group w-full shrink-0 rounded p-1 text-slate-600 transition hover:bg-slate-100 hover:text-slate-600">
             <div className="grow">{title}</div>
           </RadixAccordion.Trigger>
         </RadixAccordion.Header>
+      ) : (
+        title
       )}
       <RadixAccordion.Content
         className="w-full"

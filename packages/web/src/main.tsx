@@ -4,6 +4,8 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import Core from "@scenario-flow/core"
 
+import { injectedContent } from "./inject"
+
 const root = document.getElementById("root")
 
 if (root == null) {
@@ -12,6 +14,6 @@ if (root == null) {
 
 createRoot(root).render(
   <StrictMode>
-    <Core />
+    <Core injected={injectedContent} />
   </StrictMode>,
 )

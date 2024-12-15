@@ -7,13 +7,17 @@ import {
 } from "../action/actionParameter"
 import { toExpression } from "../value/expression.util"
 
+import type { PrimitiveRoute, RouteId } from "../route/route"
 import type { ActionSourceIdentifier } from "../action/identifier"
 import type { Builder, BuilderReturn } from "../type"
 import type { LocalVariable, LocalVariableId } from "../variable/variable"
-import type { RawResolvedAction, ResolvedAction } from "../action/action"
+import type { ResolvedAction } from "../action/action"
 import type { Id } from "@/utils/idType"
 import type { Expression } from "../value/expression"
 import type { Replace } from "@/utils/typeUtil"
+import type { Result } from "@/utils/result"
+
+import { success, error } from "@/utils/result"
 
 declare const _actionInstance: unique symbol
 export type ActionInstanceId = Id & { [_actionInstance]: never }
@@ -51,6 +55,21 @@ export type BinderActionInstance = {
   instanceParameter: BinderActionParameter
 }
 
+// include
+export type IncludeActionInstance = {
+  [_actionInstance]: never
+  id: ActionInstanceId
+  actionIdentifier?: undefined
+  type: "include"
+  instanceParameter: {
+    ref: RouteId
+    parameters: {
+      variable: LocalVariable
+      value: Expression
+    }[]
+  }
+}
+
 // unknown
 export type UnknownActionInstance = {
   [_actionInstance]: never
@@ -65,12 +84,14 @@ export type ActionInstance =
   | RestCallActionInstance
   | ValidatorActionInstance
   | BinderActionInstance
+  | IncludeActionInstance
   | UnknownActionInstance
 
 export type RawActionInstance =
   | Omit<RestCallActionInstance, typeof _actionInstance>
   | Omit<ValidatorActionInstance, typeof _actionInstance>
   | Omit<BinderActionInstance, typeof _actionInstance>
+  | Omit<IncludeActionInstance, typeof _actionInstance>
   | Omit<UnknownActionInstance, typeof _actionInstance>
 
 export type ResolvedRestCallActionInstance = RestCallActionInstance & {
@@ -91,19 +112,29 @@ export type ResolvedBinderActionInstance = Replace<
 
 export type ResolvedValidatorActionInstance = ValidatorActionInstance
 
+class IncludeRefResolutionFailed extends Error {
+  readonly _tag = "IncludeRefResolutionFailed"
+  readonly _category = "entity"
+}
+
+export type ResolvedIncludeActionInstance = Replace<
+  IncludeActionInstance,
+  "instanceParameter",
+  {
+    ref: Result<PrimitiveRoute, IncludeRefResolutionFailed>
+    parameters: {
+      variable: LocalVariable
+      value: Expression
+    }[]
+  }
+>
+
 export type ResolvedActionInstance =
   | ResolvedRestCallActionInstance
   | ResolvedBinderActionInstance
   | ResolvedValidatorActionInstance
+  | ResolvedIncludeActionInstance
   | UnknownActionInstance
-
-export type RawResolvedActionInstance =
-  | (Omit<ResolvedRestCallActionInstance, "_actionInstance" | "action"> & {
-      action: RawResolvedAction
-    })
-  | Omit<ResolvedBinderActionInstance, "_actionInstance">
-  | Omit<ResolvedValidatorActionInstance, "_actionInstance" | "action">
-  | Omit<UnknownActionInstance, "_actionInstance" | "action">
 
 export const buildRestCallActionInstance: Builder<RestCallActionInstance> = (
   id,
@@ -135,6 +166,16 @@ export const buildBinderActionInstance: Builder<BinderActionInstance> = (
   } satisfies BuilderReturn<BinderActionInstance> as BinderActionInstance
 }
 
+export const buildIncludeActionInstance: Builder<IncludeActionInstance> = (
+  id,
+  params,
+) => {
+  return {
+    id,
+    ...params,
+  } satisfies BuilderReturn<IncludeActionInstance> as IncludeActionInstance
+}
+
 export const buildUnknownActionInstance: Builder<UnknownActionInstance> = (
   id,
   params,
@@ -157,6 +198,8 @@ export const buildActionInstnace = (
       return buildValidatorActionInstance(id, params as ValidatorActionInstance)
     case "binder":
       return buildBinderActionInstance(id, params as BinderActionInstance)
+    case "include":
+      return buildIncludeActionInstance(id, params as IncludeActionInstance)
     default:
       return buildUnknownActionInstance(id, params as UnknownActionInstance)
   }
@@ -194,6 +237,14 @@ export const buildInitialActionInstance = (
         type: "binder",
         instanceParameter: {
           assignments: [],
+        },
+      })
+    case "include":
+      return buildIncludeActionInstance(id, {
+        type: "include",
+        instanceParameter: {
+          ref: "",
+          parameters: [],
         },
       })
     default:
@@ -257,4 +308,27 @@ export const resolveValidatorActionInstance = (
   actionInstance: ValidatorActionInstance,
 ): ResolvedValidatorActionInstance => {
   return actionInstance
+}
+
+export const resolveIncludeActionInstance = (
+  actionInstance: IncludeActionInstance,
+  routeMap: Map<string, PrimitiveRoute>,
+): ResolvedIncludeActionInstance => {
+  const route = routeMap.get(actionInstance.instanceParameter.ref)
+  return {
+    ...actionInstance,
+    instanceParameter: {
+      ref:
+        route != null
+          ? success(route)
+          : error(new IncludeRefResolutionFailed()),
+      parameters: actionInstance.instanceParameter.parameters.map((param) => {
+        const variable = param.variable
+        return {
+          ...param,
+          variable,
+        }
+      }),
+    },
+  }
 }

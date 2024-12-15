@@ -5,6 +5,7 @@ import { BinderTabPanel } from "./BinderDetailPanel"
 import { RestCallTabPanel } from "./RestCallTabPanel"
 import { ValidatorTabPanel } from "./ValidatorTabPanel"
 import { NodeTitleSection } from "./NodeTitleSection"
+import { IncludeDetailPanel } from "./IncludeDetailPanel"
 
 import type { NodeId } from "@/domain/entity/node/node"
 import type { ActionInstanceId } from "@/domain/entity/node/actionInstance"
@@ -72,7 +73,9 @@ const DetailPanelInner = ({ nodeId }: DetailPanelInnerProps) => {
               ? "API呼び出し"
               : ai.type === "validator"
                 ? "テスト"
-                : "変数"}
+                : ai.type === "include"
+                  ? "インポート"
+                  : "変数"}
           </button>
         ))}
         <hr className="mx-2 my-2 h-auto w-px self-stretch border-r border-r-slate-200 last:hidden" />
@@ -111,6 +114,8 @@ const DetailPanelInner = ({ nodeId }: DetailPanelInnerProps) => {
           <ValidatorTabPanel nodeId={nodeId} ai={targetActionInstance} />
         ) : targetActionInstance.type === "binder" ? (
           <BinderTabPanel nodeId={nodeId} ai={targetActionInstance} />
+        ) : targetActionInstance.type === "include" ? (
+          <IncludeDetailPanel nodeId={nodeId} ai={targetActionInstance} />
         ) : (
           <div>No</div>
         ))}

@@ -1,10 +1,7 @@
 import { readFile as readFileObject } from "../file"
 
-import type {
-  InjectedContent,
-  ProjectEntry,
-  FileEntry,
-} from "@scenario-flow/core"
+import type { InjectedContent } from "@/injector/injector"
+import type { DirHandle, FileHandle } from "@/injector/parts/io"
 
 type WebFileEntryAdditional = {
   handle: FileSystemFileHandle
@@ -17,19 +14,46 @@ type WebInjectedContent = InjectedContent<
   WebFileEntryAdditional,
   WebDirEntryAdditional
 >
-type WebProjectEntry = ProjectEntry<
-  WebFileEntryAdditional,
-  WebDirEntryAdditional
->
+type WebProjectEntry = DirHandle<WebFileEntryAdditional, WebDirEntryAdditional>
 
-type WebFileEntry = FileEntry<WebFileEntryAdditional>
+type WebFileEntry = FileHandle<WebFileEntryAdditional>
 
 export const createFile: WebInjectedContent["io"]["createFile"] = async (
-  entry,
+  handle,
   name,
 ) => {
-  const fileHandle = await entry.handle.getFileHandle(name, { create: true })
-  return { name, path: `${entry.path}/${name}`, handle: fileHandle }
+  const fileHandle = await handle.handle.getFileHandle(name, { create: true })
+  return { name, path: `${handle.path}/${name}`, handle: fileHandle }
+}
+
+export const deleteFile: WebInjectedContent["io"]["deleteFile"] = async (
+  handle,
+  name,
+) => {
+  await handle.handle.removeEntry(name)
+}
+
+export const createDir: WebInjectedContent["io"]["createDir"] = async (
+  handle,
+  name,
+) => {
+  const dirHandle = await handle.handle.getDirectoryHandle(name, {
+    create: true,
+  })
+  return {
+    name,
+    path: `${handle.path}/${name}`,
+    handle: dirHandle,
+    children: [],
+    files: [],
+  }
+}
+
+export const deleteDir: WebInjectedContent["io"]["deleteDir"] = async (
+  handle,
+  name,
+) => {
+  await handle.handle.removeEntry(name)
 }
 
 export const openDir: WebInjectedContent["io"]["openDir"] =

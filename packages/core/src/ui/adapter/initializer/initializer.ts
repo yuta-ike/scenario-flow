@@ -1,71 +1,69 @@
-import "jotai-devtools/styles.css"
+import { useEffect, useState } from "react"
 
-import { Provider as JotaiProvider } from "jotai"
-import { DevTools } from "jotai-devtools"
-import { useEffect, useRef } from "react"
+import { useProjectContext } from "../ProjectContext"
+import { useInjected } from "../container"
+import { store } from "../store"
 
-import { projectContextAtom, type ProjectContext } from "../context/context"
+import type { DirHandle } from "@/injector/parts/io"
 
-import { buildContext } from "./context"
-import { store } from "./store"
-
-import type { ProjectEntry } from "@/injector"
-
+import { exportPlugins } from "@/plugins"
+import { toEnginePluginId } from "@/domain/entity/plugin/toEnginePlugin"
+import {
+  currentEnginePluginIdAtom,
+  supportedEnginePluginsAtom,
+} from "@/domain/datasource/plugin"
 import { load } from "@/io/scenario/load"
-import { primitiveNodeAtom } from "@/domain/datasource/node"
-import { primitiveRouteAtom } from "@/domain/datasource/route"
+import { userDefinedActionAtom } from "@/domain/datasource/userDefinedAction"
 import {
   DEFAULT_PATTERN_ID,
   globalVariableAtom,
   globalVariableIdsAtom,
   globalVariableValueAtom,
 } from "@/domain/datasource/globalVariable"
-import { genId } from "@/utils/uuid"
 import { toGlobalVariableValueId } from "@/domain/entity/globalVariable/globalVariable.util"
+import { genId } from "@/utils/uuid"
 import { buildGlobalVariableBind } from "@/domain/entity/globalVariable/globalVariable"
-import { userDefinedActionAtom } from "@/domain/datasource/userDefinedAction"
-import {
-  currentEnginePluginIdAtom,
-  supportedEnginePluginsAtom,
-} from "@/domain/datasource/plugin"
-import { exportPlugins } from "@/plugins"
-import { toEnginePluginId } from "@/domain/entity/plugin/toEnginePlugin"
+import { primitiveNodeAtom } from "@/domain/datasource/node"
+import { primitiveRouteAtom } from "@/domain/datasource/route"
+import { resourceActionAtom, resourcesAtom } from "@/domain/datasource/resource"
 
-export type ProviderProps = {
-  children: React.ReactNode
-  context: ProjectContext
-}
-
-export const Provider = ({
-  children,
-  context: { entry, config },
-}: ProviderProps) => {
-  const initialized = useRef<Map<ProjectEntry, true>>(new Map())
+const useInitializer = () => {
+  const [initialized, setInitialized] = useState<Map<DirHandle, true>>(
+    new Map(),
+  )
+  const context = useProjectContext()
+  const injected = useInjected()
 
   useEffect(() => {
+    const { entry, config } = context
+
     const init = async () => {
-      if (initialized.current.get(entry)) {
+      if (initialized.get(entry)) {
         return
       }
-      initialized.current.set(entry, true)
+      initialized.set(entry, true)
+      setInitialized(new Map(initialized))
 
       const enginePlugin = exportPlugins[toEnginePluginId(config.engine)]
       if (enginePlugin == null) {
         throw new Error("Unknown plugin name")
       }
 
-      // context
-      store.set(projectContextAtom, { entry, config })
-
       // plugin
       store.set(currentEnginePluginIdAtom, toEnginePluginId(config.engine))
-      // TODO: プラグインの設定
       store.set(
         supportedEnginePluginsAtom,
         new Map([[toEnginePluginId(config.engine), enginePlugin]]),
       )
 
-      const entities = await load(entry, enginePlugin.deserialize)
+      const resourceNameMap = new Map(
+        store.get(resourcesAtom).map((resource) => [resource.name, resource]),
+      )
+
+      const entities = await load(entry, enginePlugin.deserialize, injected, {
+        resourceNameMap,
+        getResourceAction: (id) => store.get(resourceActionAtom(id)),
+      })
 
       // User defined action
       entities.userDefinedActions.map((action) => {
@@ -102,15 +100,15 @@ export const Provider = ({
     }
 
     void init()
-  }, [config, config.engine, entry])
+  }, [context, initialized, injected])
 
-  return (
-    <JotaiProvider store={store.store}>
-      {children}
-      <DevTools />
-    </JotaiProvider>
-  )
+  return initialized.get(context.entry) != null
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
-export const context = buildContext(store)
+export const Initializer = ({ children }: { children: React.ReactNode }) => {
+  const initialized = useInitializer()
+  if (!initialized) {
+    return null
+  }
+  return children
+}
