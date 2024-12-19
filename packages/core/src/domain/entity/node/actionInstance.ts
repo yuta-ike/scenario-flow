@@ -6,18 +6,17 @@ import {
   type ValidatorActionParameter,
 } from "../action/actionParameter"
 import { toExpression } from "../value/expression.util"
+import { success, error } from "../../../utils/result"
 
 import type { PrimitiveRoute, RouteId } from "../route/route"
 import type { ActionSourceIdentifier } from "../action/identifier"
 import type { Builder, BuilderReturn } from "../type"
 import type { LocalVariable, LocalVariableId } from "../variable/variable"
 import type { ResolvedAction } from "../action/action"
-import type { Id } from "@/utils/idType"
+import type { Id } from "../../../utils/idType"
 import type { Expression } from "../value/expression"
-import type { Replace } from "@/utils/typeUtil"
-import type { Result } from "@/utils/result"
-
-import { success, error } from "@/utils/result"
+import type { Replace } from "../../../utils/typeUtil"
+import type { Result } from "../../../utils/result"
 
 declare const _actionInstance: unique symbol
 export type ActionInstanceId = Id & { [_actionInstance]: never }
