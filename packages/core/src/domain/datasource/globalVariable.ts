@@ -100,7 +100,7 @@ export const globalVariablesByPatternIdAtom = atomFamily((id: PatternId) => {
 })
 
 export const globalVariableMatrixAtom = atom<
-  (Pattern & { variables: GlobalVariable[] })[]
+  (Pattern & { variables: (GlobalVariable & { value: TypedValue })[] })[]
 >((get) => {
   const globalVariableValues = get(globalVariableValueIdsAtom)
     .values()
