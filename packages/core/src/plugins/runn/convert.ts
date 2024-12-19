@@ -34,7 +34,7 @@ const convertDecomposedAction = (
     const xActionId = action.meta?.["x-action-id"]
     const meta = xActionId != null ? { "x-action-id": xActionId } : undefined
     return {
-      desc: action.description ?? "",
+      desc: action.description?.length === 0 ? undefined : action.description,
       req: {
         [pathWithSearchParams]: {
           [toLowerCase(action.method)]: {
@@ -70,7 +70,7 @@ const convertDecomposedAction = (
         ]),
       ),
     }
-  } else {
+  } else if (action.type === "include") {
     return {
       include: {
         path: routeIdPathMap.get(action.ref) ?? "",
@@ -80,6 +80,12 @@ const convertDecomposedAction = (
             parameter.value,
           ]),
         ),
+      },
+    }
+  } else {
+    return {
+      db: {
+        query: action.query,
       },
     }
   }
@@ -124,7 +130,7 @@ const convertDecomposedStep = (
 
   return {
     ...result,
-    desc: step.description,
+    desc: step.description.length === 0 ? undefined : step.description,
     loop: convertDecomposedLoopConfig(step.loop),
     if: step.condition,
   } satisfies RunBookStep

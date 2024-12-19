@@ -1,12 +1,16 @@
-import { Effect, pipe } from "effect"
+import { Context, Effect, pipe } from "effect"
 
-import { updateRoute as updateRouteEntity } from "../entity/route/route"
+import {
+  swapRoutePath as swapRoutePathEntity,
+  updateRoute as updateRouteEntity,
+} from "../entity/route/route"
 import { toRouteId } from "../entity/route/route.util"
 
 import {
   _addRoute,
   _deleteNode,
   _getAllRoutes,
+  _getRoute,
   _getRoutes,
   _getRoutesByNodeId,
   _removeRoute,
@@ -14,15 +18,17 @@ import {
 } from "./node"
 import { _genId } from "./common"
 
+import type { NodeId } from "../entity/node/node"
 import type { StripeSymbol } from "../entity/type"
 import type { RouteId, PrimitiveRoute } from "../entity/route/route"
 import type { OmitId } from "@/utils/idType"
 import type { PartialDict } from "@/utils/typeUtil"
 
-type UpdateRouteContext = {
-  getRoute: (routeId: RouteId) => PrimitiveRoute
-  updateRoute: (routeId: RouteId, route: OmitId<PrimitiveRoute>) => void
-}
+export type GetUsedRouteNames = () => string[]
+export const GetUsedRouteNames =
+  Context.GenericTag<GetUsedRouteNames>("GetUsedRouteNames")
+export const _getUsedRouteNames = () =>
+  GetUsedRouteNames.pipe(Effect.map((getRouteNames) => getRouteNames()))
 
 export const addRoute = (
   route: PartialDict<StripeSymbol<OmitId<PrimitiveRoute>>, "name" | "color">,
@@ -37,10 +43,10 @@ export const updateRoute = (
   routeId: RouteId,
   update: Partial<Pick<PrimitiveRoute, "name" | "color" | "page">>,
 ) =>
-  pipe(
-    _getRoutes([routeId]),
-    Effect.map((routes) => routes[0]!),
-    Effect.map((route) => updateRouteEntity(route, update)),
+  Effect.Do.pipe(
+    Effect.bind("route", () => _getRoute(routeId)),
+    Effect.bind("names", () => _getUsedRouteNames()),
+    Effect.map(({ route, names }) => updateRouteEntity(route, update, names)),
     Effect.flatMap((newRoute) => _updateRoute(routeId, newRoute)),
   )
 
@@ -58,6 +64,18 @@ export const updatePageName = ({
     Effect.flatMap(
       Effect.forEach((routeId) => updateRoute(routeId, { page: newPage })),
     ),
+  )
+
+export const swapRoutePath = (
+  routeId: RouteId,
+  nodeIdA: NodeId,
+  nodeIdB: NodeId,
+) =>
+  pipe(
+    _getRoutes([routeId]),
+    Effect.map((routes) => routes[0]!),
+    Effect.map((route) => swapRoutePathEntity(route, nodeIdA, nodeIdB)),
+    Effect.flatMap((newRoute) => _updateRoute(routeId, newRoute)),
   )
 
 export const deleteRoute = (routeId: RouteId) =>

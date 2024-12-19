@@ -16,7 +16,7 @@ import type { CreateOrUpdate } from "@/lib/jotai/util"
 
 import { atomWithId } from "@/lib/jotai/atomWithId"
 import { atomSet } from "@/lib/jotai/atomSet"
-import { updateSetOp } from "@/utils/set"
+import { addSetOp, updateSetOp } from "@/utils/set"
 import { wrapAtomFamily } from "@/lib/jotai/wrapAtomFamily"
 
 // cache
@@ -42,7 +42,7 @@ nodeIdsAtom.debugLabel = "nodeIdsAtom"
 export const primitiveNodeAtom = wrapAtomFamily(_primitiveNodeAtom, {
   write: (
     nodeId,
-    _,
+    get,
     set,
     param: CreateOrUpdate<
       StripeSymbol<PrimitiveNode>,
@@ -51,14 +51,37 @@ export const primitiveNodeAtom = wrapAtomFamily(_primitiveNodeAtom, {
   ) => {
     if (param.create != null) {
       // 作成
-      _primitiveNodeAtom(nodeId, buildPrimitiveNode(nodeId, param.create))
+      _primitiveNodeAtom(
+        nodeId,
+        buildPrimitiveNode(
+          nodeId,
+          param.create,
+          get(nodeNameUniqCache).values().toArray(),
+        ),
+      )
       set(
         nodeIdsAtom,
         updateSetOp((prev) => [...prev, nodeId]),
       )
+
+      // cache
+      set(nodeNameUniqCache, addSetOp(param.create.name))
     } else {
       // 更新
       set(_primitiveNodeAtom(nodeId), (prev) => {
+        // cache
+        if (prev.name !== param.update.name) {
+          set(
+            nodeNameUniqCache,
+            updateSetOp((prevSet) => {
+              const newSet = new Set(prevSet)
+              newSet.delete(prev.name)
+              newSet.add(param.update.name)
+              return newSet
+            }),
+          )
+        }
+
         return {
           ...prev,
           ...param.update,

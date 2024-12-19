@@ -17,6 +17,8 @@ export type Environment = Bind[]
 export type ResolvedBind = Replace<Bind, "variable", ResolvedVariable>
 export type ResolvedEnvironment = ResolvedBind[]
 
+export const emptyEnvironment: ResolvedEnvironment = []
+
 // operation
 export const intersect = (environements: Environment[]): Environment => {
   if (environements.length <= 1) {

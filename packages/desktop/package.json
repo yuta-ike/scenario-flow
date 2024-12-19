@@ -18,6 +18,7 @@
     "@tauri-apps/plugin-fs": "catalog:",
     "@tauri-apps/plugin-http": "catalog:",
     "@tauri-apps/plugin-shell": "catalog:",
+    "@tauri-apps/plugin-store": "^2.2.0",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-icons": "catalog:"

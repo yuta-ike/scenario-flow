@@ -1,15 +1,38 @@
-import React, { useCallback } from "react"
+import { useCallback } from "react"
+import { FiEdit } from "react-icons/fi"
+import { Controller, useForm } from "react-hook-form"
 
-import { RestCallActionBadge } from "../RestCallActionBadge"
 import { Section } from "../Section"
+
+import { DefinitionPanel } from "./DefinitionPanel"
 
 import type { ResolvedRestCallActionInstance } from "@/domain/entity/node/actionInstance"
 import type { NodeId } from "@/domain/entity/node/node"
+import type { RestCallActionParameter } from "@/domain/entity/action/actionParameter"
 
+import { HTTP_METHODS, type HttpMethod } from "@/utils/http"
 import { TextareaAutosize } from "@/ui/components/common/TextareaAutosize"
 import { MethodChip } from "@/ui/components/common/MethodChip"
-import { updateActionInstance } from "@/ui/adapter/command"
+import {
+  updateActionInstance,
+  updateUserDefinedAction,
+} from "@/ui/adapter/command"
 import { applyUpdate } from "@/ui/utils/applyUpdate"
+import { isResourceAction } from "@/domain/entity/action/identifier"
+import { Button } from "@/ui/components/common/Button"
+import {
+  FormModal,
+  FormModalContent,
+  useFormRef,
+} from "@/ui/lib/common/FormModal"
+import { FormItem } from "@/ui/components/FormItem"
+import { TextInput } from "@/ui/components/common/TextInput"
+import { Select } from "@/ui/components/common/Select"
+
+type FormData = {
+  method: HttpMethod
+  path: string
+}
 
 type Props = {
   nodeId: NodeId
@@ -17,6 +40,15 @@ type Props = {
 }
 
 export const HeaderSection = ({ nodeId, ai }: Props) => {
+  const actionBaseParams = ai.action.schema.base as RestCallActionParameter
+
+  const { handleSubmit, register, control } = useForm<FormData>({
+    defaultValues: {
+      method: actionBaseParams.method,
+      path: actionBaseParams.path,
+    },
+  })
+
   // description
   const handleUpdateDescription = useCallback(
     (update: string) => {
@@ -31,9 +63,18 @@ export const HeaderSection = ({ nodeId, ai }: Props) => {
     [ai, nodeId],
   )
 
+  const ref = useFormRef()
+
+  const onSubmit = handleSubmit((data) => {
+    if (ai.actionIdentifier.resourceType === "user_defined") {
+      updateUserDefinedAction(ai.actionIdentifier, data)
+      ref.current?.close()
+    }
+  })
+
   return (
     <Section>
-      <div className="flex flex-col gap-2 px-2">
+      <div className="flex flex-col gap-2">
         <div className="flex items-center">
           <div className="flex grow items-center gap-3">
             <MethodChip size="lg">{ai.instanceParameter.method!}</MethodChip>{" "}
@@ -41,17 +82,42 @@ export const HeaderSection = ({ nodeId, ai }: Props) => {
               {ai.instanceParameter.path!}
             </div>
           </div>
-          {ai.action.type === "rest_call" && (
-            <div className="shrink-0">
-              <RestCallActionBadge action={ai.action} />
-            </div>
-          )}
-        </div>
-        <div>
-          {ai.action.resourceType === "resource" && (
-            <div className="flex items-center gap-1 rounded bg-slate-100 px-1.5 py-2 text-sm leading-none text-slate-800">
-              <span className="opacity-50">OpID:</span>
-              {ai.action.resourceIdentifier.identifier.operationId}
+          {ai.actionIdentifier.resourceType === "user_defined" && (
+            <div>
+              <FormModal
+                title="呼び出し情報を編集する"
+                description="API呼び出しの情報を編集します"
+                ref={ref}
+                modal={
+                  <FormModalContent onSubmit={onSubmit} okLabel="更新する">
+                    <div className="flex flex-col gap-4">
+                      <FormItem id="method" label="メソッド">
+                        <Controller
+                          name="method"
+                          control={control}
+                          render={({ field: { value, onChange } }) => (
+                            <Select
+                              items={HTTP_METHODS.map((method) => ({
+                                id: method,
+                                label: method,
+                              }))}
+                              value={value}
+                              onChange={(value) => onChange(value)}
+                            />
+                          )}
+                        />
+                      </FormItem>
+                      <FormItem id="description" label="パス">
+                        <TextInput {...register("path")} />
+                      </FormItem>
+                    </div>
+                  </FormModalContent>
+                }
+              >
+                <Button prefix={FiEdit} size="sm" theme="secondary">
+                  編集する
+                </Button>
+              </FormModal>
             </div>
           )}
         </div>
@@ -65,6 +131,7 @@ export const HeaderSection = ({ nodeId, ai }: Props) => {
             placeholder="説明を追加"
           />
         </div>
+        {isResourceAction(ai.action) && <DefinitionPanel action={ai.action} />}
       </div>
     </Section>
   )

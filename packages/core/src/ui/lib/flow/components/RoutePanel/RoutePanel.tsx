@@ -17,7 +17,7 @@ export const RoutePanel = () => {
   const routeIds = useAtomValue(currentPageRouteIds)
 
   return (
-    <div className="h-[200px] min-h-max border-t border-t-slate-200">
+    <div className="h-full min-h-[200px] border-t border-t-slate-200">
       <div className="w-full p-2">
         <div className="text-xs text-slate-600">
           {currentPage.length === 0 ? "ルート" : currentPage}

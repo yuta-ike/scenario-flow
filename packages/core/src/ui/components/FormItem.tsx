@@ -2,6 +2,7 @@ type FormItemProps = {
   id: string
   label: string
   children: React.ReactNode
+  required?: boolean
   asFieldset?: boolean
 }
 
@@ -9,6 +10,7 @@ export const FormItem = ({
   id,
   label,
   children,
+  required = false,
   asFieldset = false,
 }: FormItemProps) => {
   const Component = asFieldset ? "fieldset" : "div"
@@ -18,6 +20,12 @@ export const FormItem = ({
       <div>
         <Label htmlFor={id} className="text-sm">
           {label}
+          {required && (
+            <span className="text-red-500" aria-label="必須">
+              {" "}
+              *
+            </span>
+          )}
         </Label>
       </div>
       <div>{children}</div>

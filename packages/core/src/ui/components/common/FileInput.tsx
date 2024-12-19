@@ -3,6 +3,7 @@ import { TbFile, TbFileImport } from "react-icons/tb"
 import type { FileContent } from "@/utils/file"
 
 import { useInjected } from "@/ui/adapter/container"
+import { useProjectContext } from "@/ui/context/context"
 
 type FileImportProps = {
   value: FileContent | null
@@ -11,11 +12,13 @@ type FileImportProps = {
 
 export const FileInput = ({ value, onChange }: FileImportProps) => {
   const {
-    io: { openFile, readFile },
+    io: { selectFile, readFile },
   } = useInjected()
 
+  const { project } = useProjectContext()
+
   const handleUpload = async () => {
-    const file = await openFile()
+    const file = await selectFile(undefined, { cacheKey: project.id })
     const content = await readFile(file)
     onChange({ ...file, content })
   }
@@ -24,7 +27,7 @@ export const FileInput = ({ value, onChange }: FileImportProps) => {
     <button
       type="button"
       onClick={handleUpload}
-      className="relative flex h-[96px] w-full flex-col items-center justify-center gap-4 rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 text-slate-600 hover:bg-slate-100"
+      className="relative z-10 flex h-[96px] w-full flex-col items-center justify-center gap-4 rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 text-slate-600 hover:cursor-pointer hover:bg-slate-100"
     >
       {value != null ? (
         <div className="flex flex-col items-center">

@@ -3,7 +3,7 @@ import {
   TbChevronRight,
   TbEdit,
   TbFlag2,
-  TbPlayerPlay,
+  TbLayoutSidebarRightCollapse,
   TbTrash,
   TbViewfinder,
 } from "react-icons/tb"
@@ -11,23 +11,22 @@ import clsx from "clsx"
 import { flushSync } from "react-dom"
 import * as RadixAccordion from "@radix-ui/react-accordion"
 
-import { RunModalContent } from "../RunButton/RunModalContent"
+import { useSetShowListView } from "../../ListView"
 
 import type { FormEvent } from "react"
 import type { RouteId } from "@/domain/entity/route/route"
-import type { ResolvedRestCallActionInstance } from "@/domain/entity/node/actionInstance"
 
 import { useRoute } from "@/ui/adapter/query"
 import { MethodChip } from "@/ui/components/common/MethodChip"
 import { AccordionItem } from "@/ui/components/common/Accordion"
 import { deleteRoute, updteRoute } from "@/ui/adapter/command"
-import { CustomModal } from "@/ui/components/common/CustomModal"
 import { useFocusNode } from "@/ui/state/focusedNodeId"
 import { IconButton } from "@/ui/components/common/IconButton"
 import {
   useIsFocusedRouteId,
   useSetFocuseRoute,
 } from "@/ui/state/focusedRouteId"
+import { unwrapNull } from "@/utils/result"
 
 type Props = {
   routeId: RouteId
@@ -50,10 +49,12 @@ export const RouteTile = ({ routeId }: Props) => {
 
   const handleUpdate = (name: string) => {
     updteRoute(routeId, { name })
+    setEditMode(false)
   }
 
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const showListView = useSetShowListView()
   const focus = useSetFocuseRoute()
 
   return (
@@ -64,11 +65,21 @@ export const RouteTile = ({ routeId }: Props) => {
       title={
         <RadixAccordion.Header className="w-full">
           <div className="group relative flex w-full shrink-0 items-center gap-px rounded text-slate-600 transition">
-            <button
-              type="button"
-              className="absolute inset-0"
-              onClick={() => focus(routeId)}
-            />
+            {isFocused ? (
+              <RadixAccordion.Trigger className="group/handle z-10 shrink-0">
+                <button
+                  type="button"
+                  className="absolute inset-0"
+                  onClick={() => focus(routeId)}
+                />
+              </RadixAccordion.Trigger>
+            ) : (
+              <button
+                type="button"
+                className="absolute inset-0"
+                onClick={() => focus(routeId)}
+              />
+            )}
             <RadixAccordion.Trigger className="group/handle z-10 shrink-0">
               <div className="grid h-5 w-5 place-items-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-800">
                 <TbChevronRight
@@ -78,7 +89,7 @@ export const RouteTile = ({ routeId }: Props) => {
               </div>
             </RadixAccordion.Trigger>
             <div
-              className="flex items-center gap-1 rounded p-1 data-[selected=true]:bg-slate-100"
+              className="flex grow items-center gap-1 rounded px-1 py-0.5 data-[selected=true]:bg-slate-100"
               data-selected={isFocused}
             >
               <div
@@ -91,7 +102,7 @@ export const RouteTile = ({ routeId }: Props) => {
               </div>
               <div
                 className={clsx(
-                  "transition-all",
+                  "grow transition-all",
                   editMode ? "peer grow" : "pointer-events-none",
                 )}
               >
@@ -103,31 +114,13 @@ export const RouteTile = ({ routeId }: Props) => {
                     type="text"
                     className="w-full rounded border border-transparent bg-transparent px-0 py-1 text-sm transition-[padding] hover:border-slate-200 hover:px-1 focus:bg-white focus:px-1 focus:outline-none focus-visible:border-slate-400"
                     placeholder="シナリオ名"
-                    onBlur={(e) => {
-                      handleUpdate(e.target.value)
-                      setEditMode(false)
-                    }}
+                    onBlur={(e) => handleUpdate(e.target.value)}
                     ref={inputRef}
                   />
                 </form>
               </div>
               {!editMode && (
                 <div className="z-10 flex w-0 shrink-0 items-center gap-1 overflow-x-hidden opacity-0 transition group-hover:w-max group-hover:opacity-100 peer-focus-within:hidden peer-hover:hidden">
-                  <CustomModal
-                    modal={<RunModalContent initialSelected={[route.id]} />}
-                  >
-                    <button
-                      type="button"
-                      title="テストを実行する"
-                      className="rounded border border-transparent p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-800 focus:border-slate-300 focus:bg-slate-100 focus:outline-none"
-                    >
-                      <TbPlayerPlay
-                        size={14}
-                        stroke="currentColor"
-                        strokeWidth={2.5}
-                      />
-                    </button>
-                  </CustomModal>
                   <button
                     type="button"
                     title="シナリオを削除"
@@ -152,6 +145,17 @@ export const RouteTile = ({ routeId }: Props) => {
                   >
                     <TbEdit size={14} stroke="currentColor" strokeWidth={2.5} />
                   </button>
+                  <button
+                    type="button"
+                    title="リストパネルを開く"
+                    onClick={() => {
+                      focus(route.id)
+                      showListView(true)
+                    }}
+                    className="rounded border border-transparent p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-800 focus:border-slate-300 focus:bg-slate-100 focus:outline-none"
+                  >
+                    <TbLayoutSidebarRightCollapse />
+                  </button>
                 </div>
               )}
             </div>
@@ -161,34 +165,25 @@ export const RouteTile = ({ routeId }: Props) => {
       gap={4}
     >
       {/* ノード一覧 */}
-      <ol className="flex flex-col pl-2">
+      <ol className="flex flex-col pl-5">
         {route.path.map((node) => (
           <li
             key={node.id}
             className="group rounded px-2 py-1 transition hover:bg-slate-50"
           >
-            {node.actionInstances
-              .filter(
-                (instance): instance is ResolvedRestCallActionInstance =>
-                  instance.type === "rest_call",
-              )
-              .map((instance) => {
-                const action = instance.action
-                if (action.type !== "rest_call") {
-                  return
-                }
-
+            {node.actionInstances.map((ai) => {
+              if ("action" in ai && ai.action.type === "rest_call") {
                 return (
                   <div
-                    key={instance.id}
+                    key={ai.id}
                     className="flex w-full justify-between gap-2 text-sm"
                   >
                     <div className="flex grow items-center gap-2">
                       <MethodChip truncate={3}>
-                        {instance.instanceParameter.method!}
+                        {ai.instanceParameter.method!}
                       </MethodChip>
                       <div className="grow truncate">
-                        {instance.instanceParameter.path!}
+                        {ai.instanceParameter.path!}
                       </div>
                     </div>
                     <div className="shrink-0 opacity-0 group-hover:opacity-100">
@@ -202,7 +197,58 @@ export const RouteTile = ({ routeId }: Props) => {
                     </div>
                   </div>
                 )
-              })}
+              } else if (ai.type === "include") {
+                return (
+                  <div
+                    key={ai.id}
+                    className="flex w-full justify-between gap-2 text-sm"
+                  >
+                    <div className="flex grow items-center gap-2">
+                      <div className="text-xs font-bold text-blue-400">
+                        Include
+                      </div>
+                      <div className="line-clamp-1 grow">
+                        {unwrapNull(ai.instanceParameter.ref)?.name}
+                      </div>
+                    </div>
+                    <div className="shrink-0 opacity-0 group-hover:opacity-100">
+                      <IconButton
+                        onClick={() => focusNode(node.id)}
+                        icon={TbViewfinder}
+                        size="sm"
+                        label="フォーカス"
+                        variant="segmented"
+                      />
+                    </div>
+                  </div>
+                )
+              } else if (ai.type === "db") {
+                return (
+                  <div
+                    key={ai.id}
+                    className="flex w-full justify-between gap-2 text-sm"
+                  >
+                    <div className="flex grow items-center gap-2">
+                      <div className="text-xs font-bold text-blue-400">SQL</div>
+                      <div className="line-clamp-1 grow">
+                        {ai.instanceParameter.query}
+                      </div>
+                    </div>
+                    <div className="shrink-0 opacity-0 group-hover:opacity-100">
+                      <IconButton
+                        onClick={() => focusNode(node.id)}
+                        icon={TbViewfinder}
+                        size="sm"
+                        label="フォーカス"
+                        variant="segmented"
+                      />
+                    </div>
+                  </div>
+                )
+              } else {
+                return null
+              }
+            })}
           </li>
         ))}
       </ol>

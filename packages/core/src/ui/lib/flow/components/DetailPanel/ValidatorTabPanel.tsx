@@ -39,13 +39,6 @@ export const ValidatorTabPanel = ({ nodeId, ai }: ValidatorTabPanelProps) => {
     <div className="flex h-full w-full flex-col bg-white">
       {/* タイトル */}
       <Section title="バリデーション">
-        {/* <TextareaAutosize
-          className="resize-none rounded border border-slate-200 p-2 font-mono text-sm focus:outline-none"
-          rows={10}
-          placeholder={`steps[1].response.body.user_id === "John Doe"`}
-          value={ai.instanceParameter.contents}
-          onChange={(e) => handleUpdateValidator(e.target.value)}
-        /> */}
         <div className="relative -mx-3 w-[calc(100%+24px)] overflow-hidden rounded border border-slate-200 text-sm">
           <Editor2
             lang="plaintext"

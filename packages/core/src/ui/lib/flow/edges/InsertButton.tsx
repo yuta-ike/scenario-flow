@@ -11,8 +11,10 @@ import type { RouteId } from "@/domain/entity/route/route"
 import {
   insertIncludeNode,
   insertNode,
+  insertUserDefinedRestCallNode,
   unshiftIncludeNode,
   unshiftNode,
+  unshiftUserDefinedRestCallNode,
 } from "@/ui/adapter/command"
 import { currentPageAtom } from "@/ui/state/page"
 
@@ -23,17 +25,22 @@ type Props = {
   toNodeId: NodeId
 }
 
-export const InsertButton = ({ routeIds, expanded, fromNodeId }: Props) => {
+export const InsertButton = ({
+  routeIds,
+  expanded,
+  fromNodeId,
+  toNodeId,
+}: Props) => {
   const handleInsertApiCallNode = useAtomCallback(
     useCallback(
       (get, _, actionId: ActionSourceIdentifier) => {
         if (fromNodeId === "$root") {
           unshiftNode(routeIds[0]!, actionId)
         } else {
-          insertNode(fromNodeId, actionId, get(currentPageAtom))
+          insertNode(fromNodeId, toNodeId, actionId, get(currentPageAtom))
         }
       },
-      [fromNodeId, routeIds],
+      [fromNodeId, routeIds, toNodeId],
     ),
   )
 
@@ -43,10 +50,32 @@ export const InsertButton = ({ routeIds, expanded, fromNodeId }: Props) => {
         if (fromNodeId === "$root") {
           return unshiftIncludeNode(routeId)
         } else {
-          return insertIncludeNode(fromNodeId, routeId, get(currentPageAtom))
+          return insertIncludeNode(
+            fromNodeId,
+            toNodeId,
+            routeId,
+            get(currentPageAtom),
+          )
         }
       },
-      [fromNodeId],
+      [fromNodeId, toNodeId],
+    ),
+  )
+
+  const handleInsertUserDefinedApiCallNode = useAtomCallback(
+    useCallback(
+      (get, _) => {
+        if (fromNodeId === "$root") {
+          unshiftUserDefinedRestCallNode(routeIds[0]!)
+        } else {
+          insertUserDefinedRestCallNode(
+            fromNodeId,
+            toNodeId,
+            get(currentPageAtom),
+          )
+        }
+      },
+      [fromNodeId, routeIds, toNodeId],
     ),
   )
 
@@ -55,6 +84,7 @@ export const InsertButton = ({ routeIds, expanded, fromNodeId }: Props) => {
       mode="insert"
       onCreateApiCall={handleInsertApiCallNode}
       onCreateIclude={handleInsertIncludeNode}
+      onCreateUserDefinedApiCall={handleInsertUserDefinedApiCallNode}
     >
       <button
         data-expanded={expanded}

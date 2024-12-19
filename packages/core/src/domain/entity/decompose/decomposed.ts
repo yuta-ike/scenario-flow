@@ -42,6 +42,11 @@ export type DecomposedStep = {
         ref: string
         parameters: { variable: LocalVariable; value: string }[]
       }
+    | {
+        type: "db"
+        description?: string
+        query: string
+      }
   )[]
   skip?: boolean
   condition?: string

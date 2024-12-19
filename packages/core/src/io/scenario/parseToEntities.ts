@@ -1,4 +1,3 @@
-import { resolvePath } from "./resolvePath"
 import { extractPathParams } from "./extractPathParams"
 
 import type {
@@ -9,11 +8,12 @@ import type { ActionInstance } from "@/domain/entity/node/actionInstance"
 import type { Expression } from "@/domain/entity/value/expression"
 import type { Resource } from "@/domain/entity/resource/resource"
 import type { KVItem } from "@/ui/lib/kv"
-import type { ResourceActionIdentifier } from "@/domain/entity/action/identifier"
+import type { ResourceActionIdentifierParam } from "@/domain/entity/action/identifier"
 import type { ResolvedAction } from "@/domain/entity/action/action"
 
 import {
   buildBinderActionInstance,
+  buildDbActionInstance,
   buildIncludeActionInstance,
   buildRestCallActionInstance,
   buildValidatorActionInstance,
@@ -31,7 +31,7 @@ import { buildOpenApiResourceIdentifierWithOperationId } from "@/domain/entity/r
 
 export type ResourceContext = {
   resourceNameMap: Map<string, Resource>
-  getResourceAction: (id: ResourceActionIdentifier) => ResolvedAction
+  getResourceAction: (id: ResourceActionIdentifierParam) => ResolvedAction
 }
 
 const parseXActionId = (
@@ -135,8 +135,12 @@ const parseDecomposedActionToActionInstance = (
         contents: action.contents,
       },
     })
-  } else {
-    console.log(resolvePath(page, action.ref))
+  } else if (action.type === "include") {
+    console.log(
+      pathRouteIdMap,
+      action.ref.startsWith("/") ? action.ref : `/${action.ref}`,
+      action,
+    )
     return buildIncludeActionInstance(genId(), {
       type: "include",
       instanceParameter: {
@@ -149,6 +153,13 @@ const parseDecomposedActionToActionInstance = (
         })),
       },
     })
+  } else {
+    return buildDbActionInstance(genId(), {
+      type: "db",
+      instanceParameter: {
+        query: action.query,
+      },
+    })
   }
 }
 
@@ -159,7 +170,9 @@ export const parseToEntities = (
   // path routeId Map
   const pathRouteIdMap = new Map(
     decomposedList.map(({ id, title, page }) => {
-      const path = `${page}/${title}.yml`
+      const path = page.startsWith("/")
+        ? `${page}/${title}.yml`
+        : `/${page}/${title}.yml`
       return [path, id]
     }),
   )
@@ -202,22 +215,26 @@ export const parseToEntities = (
   // node
   const nodes = decomposedList.flatMap((decomposed) =>
     decomposed.steps.map((step) =>
-      buildPrimitiveNode(`${step.id}`, {
-        name: step.title,
-        description: step.description,
-        actionInstances: step.actions.map((ai) =>
-          parseDecomposedActionToActionInstance(
-            ai,
-            decomposed.page,
-            pathRouteIdMap,
-            context,
+      buildPrimitiveNode(
+        `${step.id}`,
+        {
+          name: step.title,
+          description: step.description,
+          actionInstances: step.actions.map((ai) =>
+            parseDecomposedActionToActionInstance(
+              ai,
+              decomposed.page,
+              pathRouteIdMap,
+              context,
+            ),
           ),
-        ),
-        config: {
-          condition: step.condition,
-          loop: step.loop,
+          config: {
+            condition: step.condition,
+            loop: step.loop,
+          },
         },
-      }),
+        [],
+      ),
     ),
   )
 

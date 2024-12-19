@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-template-expression */
 import { IdCache } from "./helper/idCache"
 
 import type { EnginePluginDeserializer } from "../type"
@@ -87,7 +88,7 @@ const revertRunnStepToDecomposedStep = (
   return {
     id: stepIdStepKeyCache.getOrCreate(key),
     title: key,
-    description: step.desc ?? "",
+    description: `${step.desc ?? ""}`,
     actions: [
       // rest_call
       step.req == null ? null : revertRunnHttpStepToDecomposedAction(step.req),
@@ -122,7 +123,7 @@ const revertRunnStepToDecomposedStep = (
             type: "include" as const,
             description: "",
             ref: step.include.path,
-            parameters: Object.entries(step.include.vars).map(
+            parameters: Object.entries(step.include.vars ?? {}).map(
               ([key, value]) => ({
                 variable: buildLocalVariable(genId(), {
                   namespace: "vars",
@@ -134,6 +135,13 @@ const revertRunnStepToDecomposedStep = (
                 value,
               }),
             ),
+          },
+      step.db == null
+        ? null
+        : {
+            type: "db" as const,
+            description: "",
+            query: step.db.query,
           },
     ].filter(nonNull),
     condition: step.if,

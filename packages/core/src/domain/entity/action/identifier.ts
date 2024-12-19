@@ -6,27 +6,31 @@ import type { ResourceActionLocalIdentifier } from "../resource/identifier"
 import { throwUnreachable } from "@/utils/unreachable"
 
 // Action Identifier
-export type ResourceActionIdentifier = {
+export type ResourceActionIdentifierParam = {
   resourceId: ResourceId
   identifier: ResourceActionLocalIdentifier
 }
 
-export type UserDefinedActionIdentifier = {
+export type UserDefinedActionIdentifierParam = {
   userDefinedActionId: UserDefinedActionId
 }
 
 declare const _actionSourceIdentifier: unique symbol
+export type ResourceActionIdentifier = {
+  [_actionSourceIdentifier]: never
+  resourceType: "resource"
+  resourceIdentifier: ResourceActionIdentifierParam
+}
+
+export type UserDefinedActionIdentifier = {
+  [_actionSourceIdentifier]: never
+  resourceType: "user_defined"
+  resourceIdentifier: UserDefinedActionIdentifierParam
+}
+
 export type ActionSourceIdentifier =
-  | {
-      [_actionSourceIdentifier]: never
-      resourceType: "resource"
-      resourceIdentifier: ResourceActionIdentifier
-    }
-  | {
-      [_actionSourceIdentifier]: never
-      resourceType: "user_defined"
-      resourceIdentifier: UserDefinedActionIdentifier
-    }
+  | ResourceActionIdentifier
+  | UserDefinedActionIdentifier
 
 export const buildActionSourceIdentifier = (
   params: StripeSymbol<ActionSourceIdentifier>,
@@ -57,6 +61,18 @@ export const eq: Equal<ActionSourceIdentifier> = (a, b) => {
   } else {
     return throwUnreachable()
   }
+}
+
+export const isResourceAction = (
+  identifier: ActionSourceIdentifier,
+): identifier is ResourceActionIdentifier => {
+  return identifier.resourceType === "resource"
+}
+
+export const isUserDefinedAction = (
+  identifier: ActionSourceIdentifier,
+): identifier is UserDefinedActionIdentifier => {
+  return identifier.resourceType === "user_defined"
 }
 
 export const display: Receiver<ActionSourceIdentifier, string> = (

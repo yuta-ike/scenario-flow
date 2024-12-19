@@ -1,10 +1,11 @@
 import type { RouteId } from "@/domain/entity/route/route"
-import type { InjectedContentExecRunner, DirHandle } from "@/injector"
 import type { Id } from "@/utils/idType"
 import type { Result } from "@/utils/result"
 import type { RunResultWithNodeId } from "@/domain/workflow/nodeStates"
 import type { EnginePlugin } from "@/plugins/type"
 import type { NodeId } from "@/domain/entity/node/node"
+import type { InjectedContentExecRunner } from "@/injector/parts/exec"
+import type { DirHandle } from "@/injector/parts/io"
 
 import { decomposedForLibAtom } from "@/domain/selector/decomposedForPlugin"
 import { store } from "@/ui/adapter/store"
@@ -13,7 +14,7 @@ import { decomposedAtom } from "@/domain/selector/decomposed"
 
 export const runScenario = async (
   runId: Id,
-  projectEntry: DirHandle,
+  dirHandle: DirHandle,
   routeIds: RouteId[],
   enginePlugin: EnginePlugin,
   exec: InjectedContentExecRunner,
@@ -33,7 +34,7 @@ export const runScenario = async (
     .filter((scenario) => (routeIds as string[]).includes(scenario.meta.id))
     .map((scenario) => ({
       ...scenario,
-      path: `${projectEntry.path}/${scenario.meta.title}.yaml`,
+      path: `${dirHandle.path}/${scenario.meta.title}.yaml`,
     }))
 
   const result = await runner({

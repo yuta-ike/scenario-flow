@@ -63,6 +63,8 @@ export const userDefinedTypeActionIdsAtom = atom((get) =>
 
 export const userDefinedActionsAtom = atom((get) => {
   const ids = get(userDefinedActionIdsAtom).values()
-  return ids.map((id) => get(userDefinedActionAtom(toUserDefinedActionId(id))))
+  return ids
+    .map((id) => get(userDefinedActionAtom(toUserDefinedActionId(id))))
+    .toArray()
 })
 userDefinedActionsAtom.debugLabel = "userDefinedActionsAtom"

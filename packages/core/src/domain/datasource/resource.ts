@@ -7,7 +7,7 @@ import {
 } from "../openapi/resolveResources"
 import {
   buildActionSourceIdentifier,
-  type ResourceActionIdentifier,
+  type ResourceActionIdentifierParam,
 } from "../entity/action/identifier"
 import { display, eq } from "../entity/resource/identifier"
 import { identifierToActionId } from "../entity/action/action.util"
@@ -77,9 +77,9 @@ export const resourcesAtom = atom((get) => {
 resourcesAtom.debugLabel = "resourcesAtom"
 
 export const resourceActionAtom = atomFamily<
-  ResourceActionIdentifier,
+  ResourceActionIdentifierParam,
   Atom<ResolvedAction>
->((actionIdentifier: ResourceActionIdentifier) => {
+>((actionIdentifier: ResourceActionIdentifierParam) => {
   const newAtom = atom((get) => {
     const resource = get(resourceAtom(actionIdentifier.resourceId))
     const actions = retrieveAllActionFromOpenApiResource(resource)

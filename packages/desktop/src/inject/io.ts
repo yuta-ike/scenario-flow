@@ -51,17 +51,20 @@ export const createDir: InjectedContent["io"]["createDir"] = async (
   }
 }
 
-export const openDir: InjectedContent["io"]["openDir"] =
-  async (): Promise<DirHandle> => {
-    const path = await open({
+export const selectDir: InjectedContent["io"]["selectDir"] = async (
+  _path,
+): Promise<DirHandle> => {
+  const path =
+    _path ??
+    (await open({
       directory: true,
       recursive: true,
-    })
-    if (path == null) {
-      throw new Error("No path selected")
-    }
-    return await _getAllFilesRecursively("", path)
+    }))
+  if (path == null) {
+    throw new Error("No path selected")
   }
+  return await _getAllFilesRecursively("", path)
+}
 
 const _getAllFilesRecursively = async (
   name: string,
@@ -101,11 +104,15 @@ const _getAllFilesRecursively = async (
   }
 }
 
-export const openFile: InjectedContent["io"]["openFile"] = async () => {
-  const path = await open({
-    directory: false,
-    recursive: true,
-  })
+export const selectFile: InjectedContent["io"]["selectFile"] = async (
+  _path,
+) => {
+  const path =
+    _path ??
+    (await open({
+      directory: false,
+      recursive: true,
+    }))
   if (path == null) {
     throw new Error("No path selected")
   }

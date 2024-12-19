@@ -23,6 +23,7 @@
   "dependencies": {
     "@scenario-flow/core": "workspace:*",
     "@stepci/runner": "catalog:",
+    "dexie": "^4.0.10",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

@@ -4,13 +4,16 @@ import {
   deleteDir,
   deleteFile,
   getOrCreateFile,
-  openDir,
-  openFile,
+  selectDir,
+  selectFile,
   readFile,
   writeFile,
 } from "./io"
+import { loadStore, saveStore, subscribeStore } from "./store"
 
-export const injectedContent = {
+import type { InjectedContent } from "@/injector/injector"
+
+export const injectedContent: InjectedContent = {
   io: {
     createFile,
     deleteFile,
@@ -19,13 +22,18 @@ export const injectedContent = {
     readFile,
     writeFile,
     getOrCreateFile,
-    openDir,
-    openFile,
+    selectDir,
+    selectFile,
   },
   exec: {
     libs: {},
   },
   fetch: {
     fetch: window.fetch,
+  },
+  store: {
+    loadStore,
+    saveStore,
+    subscribeStore,
   },
 }

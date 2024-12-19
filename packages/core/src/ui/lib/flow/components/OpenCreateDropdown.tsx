@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { RxCaretLeft, RxCaretRight, RxPlus } from "react-icons/rx"
 import { TbApi, TbArrowRightCircle, TbFlag2 } from "react-icons/tb"
 import { Handle, Position } from "@xyflow/react"
+import { FiPlus } from "react-icons/fi"
 
 import { Transition } from "../../common/Transition"
 
@@ -19,10 +20,12 @@ import { useActions } from "@/ui/adapter/query"
 import { ApiCallTile } from "@/ui/page/index/BlockMenu/ApiCallTile"
 import { searchFuzzy } from "@/utils/searchFuzzy"
 import { getIdentifier } from "@/domain/entity/action/action"
+import { Button } from "@/ui/components/common/Button"
 
 type OpenCreateDropdownProps = {
   children: React.ReactNode
   onCreateApiCall: (actionId: ActionSourceIdentifier) => void
+  onCreateUserDefinedApiCall: () => void
   onCreateIclude: (routeId: RouteId) => void
   mode: "append" | "insert"
 }
@@ -30,6 +33,7 @@ type OpenCreateDropdownProps = {
 export const OpenCreateDropdown = ({
   children,
   onCreateApiCall,
+  onCreateUserDefinedApiCall,
   onCreateIclude,
   mode,
 }: OpenCreateDropdownProps) => {
@@ -74,6 +78,11 @@ export const OpenCreateDropdown = ({
     setIsOpen(false)
   }
 
+  const handleCreatNewNode = () => {
+    onCreateUserDefinedApiCall()
+    setIsOpen(false)
+  }
+
   const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
@@ -91,7 +100,7 @@ export const OpenCreateDropdown = ({
       <Popover.Portal>
         <Popover.Content
           className={clsx(
-            "relative flex overflow-hidden rounded-lg bg-white p-0.5 shadow-object transition-[width] delay-100 duration-200",
+            "relative z-10 flex overflow-hidden rounded-lg bg-white p-0.5 shadow-object transition-[width] delay-100 duration-200",
             page === 1 ? "w-[240px]" : "w-[320px]",
             isDragging && "opacity-0",
           )}
@@ -152,7 +161,7 @@ export const OpenCreateDropdown = ({
 
           {page === 2 && (
             <div className="flex w-full animate-slideIn flex-col gap-2 p-2">
-              <div>
+              <div className="flex items-center justify-between">
                 <button
                   type="button"
                   className="rounded p-1 transition hover:bg-slate-100"
@@ -160,6 +169,14 @@ export const OpenCreateDropdown = ({
                 >
                   <RxCaretLeft size={18} />
                 </button>
+                <Button
+                  theme="secondary"
+                  size="sm"
+                  onClick={handleCreatNewNode}
+                  prefix={FiPlus}
+                >
+                  新規作成
+                </Button>
               </div>
               <input
                 placeholder="検索"
@@ -168,7 +185,6 @@ export const OpenCreateDropdown = ({
                 onChange={(e) => setSeachText(e.target.value)}
                 className="w-full rounded border border-transparent bg-slate-100 px-3 py-2 text-sm leading-none transition focus:border-slate-200 focus:outline-none"
               />
-
               <div className="flex gap-1 overflow-x-scroll">
                 {HTTP_METHODS.map((method) => (
                   <button

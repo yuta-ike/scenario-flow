@@ -22,16 +22,26 @@ import {
 } from "../entity/action/identifier"
 import {
   getIdentifier,
+  updateRestCallActionParameter,
   type ActionId,
   type ResolvedAction,
 } from "../entity/action/action"
 import { toActionInstanceId } from "../entity/node/actionInstance.util"
+import { buildUserDefinedAction } from "../entity/userDefinedAction/userDefinedAction"
+import { toExpression } from "../entity/value/expression.util"
 
 import { _genId } from "./common"
 import { deleteRoute } from "./route"
 
+import type { RestCallActionParameter } from "../entity/action/actionParameter"
+import type { UserDefinedActionIdentifier } from "../entity/action/identifier"
+import type { UserDefinedAction } from "../entity/userDefinedAction/userDefinedAction"
 import type { ActionType } from "../entity/action/action"
-import type { StripeSymbol, StripeSymbol as StripSymbol } from "../entity/type"
+import type {
+  BuilderParams,
+  StripeSymbol,
+  StripeSymbol as StripSymbol,
+} from "../entity/type"
 import type { GenId } from "./common"
 import type { LocalVariableId } from "../entity/variable/variable"
 import type {
@@ -42,7 +52,7 @@ import type {
 import type { NodeId, PrimitiveNode, NodeConfig } from "../entity/node/node"
 import type { RouteId, PrimitiveRoute } from "../entity/route/route"
 import type { OmitId } from "@/utils/idType"
-import type { PartialDict } from "@/utils/typeUtil"
+import type { DistributiveOmit, PartialDict } from "@/utils/typeUtil"
 import type { ContextOf } from "@/lib/effect/contextOf"
 
 import { dedupeArrays, sliceFormer, sliceLatter } from "@/lib/array/utils"
@@ -50,11 +60,18 @@ import { associateWithList } from "@/utils/set"
 import { matrixArr, matrixEff } from "@/utils/matrix"
 import { uniq } from "@/utils/array"
 import { nonNull } from "@/utils/assert"
+import { genId } from "@/utils/uuid"
 
-export type GetUniqName = (name: string) => string
-export const GetUniqName = Context.GenericTag<GetUniqName>("GetUniqName")
-const _getUniqName = (name: string) =>
-  GetUniqName.pipe(Effect.map((getUniqName) => getUniqName(name)))
+// export type GetUniqName = (name: string) => string
+// export const GetUniqName = Context.GenericTag<GetUniqName>("GetUniqName")
+// const _getUniqName = (name: string) =>
+//   GetUniqName.pipe(Effect.map((getUniqName) => getUniqName(name)))
+
+export type GetUsedNodeNames = () => string[]
+export const GetUsedNodeNames =
+  Context.GenericTag<GetUsedNodeNames>("GetUsedNodeNames")
+export const _getUsedNodeNames = () =>
+  GetUsedNodeNames.pipe(Effect.map((getUsedNodeNames) => getUsedNodeNames()))
 
 export type GetChildrenByNodeId = (id: NodeId, page?: string) => NodeId[]
 export const GetChildrenByNodeId = Context.GenericTag<GetChildrenByNodeId>(
@@ -81,6 +98,12 @@ export type GetRoutes = (routeIds: RouteId[]) => PrimitiveRoute[]
 export const GetRoutes = Context.GenericTag<GetRoutes>("GetRoutes")
 export const _getRoutes = (routeIds: RouteId[]) =>
   GetRoutes.pipe(Effect.map((_) => _(routeIds)))
+
+export const _getRoute = (routeId: RouteId) =>
+  pipe(
+    _getRoutes([routeId]),
+    Effect.map((routes) => routes[0]!),
+  )
 
 export type GetAllRoutes = () => PrimitiveRoute[]
 export const GetAllRoutes = Context.GenericTag<GetAllRoutes>("GetAllRoutes")
@@ -152,6 +175,11 @@ export const DeleteNode = Context.GenericTag<DeleteNode>("DeleteNode")
 export const _deleteNode = (nodeId: NodeId) =>
   DeleteNode.pipe(Effect.map((deleteNode) => deleteNode(nodeId)))
 
+export type AddAction = (action: StripSymbol<UserDefinedAction>) => void
+export const AddAction = Context.GenericTag<AddAction>("AddAction")
+export const _addAction = (params: StripSymbol<UserDefinedAction>) =>
+  AddAction.pipe(Effect.map((addAction) => addAction(params)))
+
 export type UpsertVariable = (
   id: LocalVariableId,
   name: string,
@@ -162,6 +190,23 @@ export const UpsertVariable =
 const _upsertVariable = (id: LocalVariableId, name: string, boundIn: NodeId) =>
   UpsertVariable.pipe(
     Effect.map((upsertVariable) => upsertVariable(id, name, boundIn)),
+  )
+
+export type UpdateActionParameter = (
+  actionIdentifier: UserDefinedActionIdentifier,
+  action: ResolvedAction,
+) => void
+export const UpdateActionParameter = Context.GenericTag<UpdateActionParameter>(
+  "UpdateActionParameter",
+)
+const _updateActionParameter = (
+  actionIdentifier: UserDefinedActionIdentifier,
+  action: ResolvedAction,
+) =>
+  UpdateActionParameter.pipe(
+    Effect.map((updateActionParameter) =>
+      updateActionParameter(actionIdentifier, action),
+    ),
   )
 
 export type GetResolvedAction = (
@@ -200,7 +245,7 @@ const _buildNode = (
 ): Effect.Effect<
   PrimitiveNode,
   never,
-  GetUniqName | GetRoutes | GetDefaultNodeName | GetResolvedAction
+  GetUsedNodeNames | GetRoutes | GetDefaultNodeName | GetResolvedAction
 > =>
   Effect.Do.pipe(
     Effect.bind("actionMap", () =>
@@ -214,7 +259,8 @@ const _buildNode = (
         (_) => Option.getOrElse(_, () => _getDefaultNodeName()),
       ),
     ),
-    Effect.bind("name", ({ nameCandidate }) => _getUniqName(nameCandidate)),
+    // Effect.bind("name", ({ nameCandidate }) => _getUniqName(nameCandidate)),
+    Effect.bind("usedNames", () => _getUsedNodeNames()),
     Effect.bind("routesMap", () =>
       pipe(
         Effect.succeed(
@@ -228,21 +274,25 @@ const _buildNode = (
         Effect.map((routes) => new Map(routes.map((r) => [r.id, r]))),
       ),
     ),
-    Effect.map(({ name, actionMap }) =>
-      pipe(buildPrimitiveNode(id, { name, ...nodeParam }), (primitiveNode) =>
-        applyInitialValue(primitiveNode, actionMap),
+    Effect.map(({ usedNames, actionMap, nameCandidate }) =>
+      pipe(
+        buildPrimitiveNode(
+          id,
+          { name: nameCandidate, ...nodeParam },
+          usedNames,
+        ),
+        (primitiveNode) => applyInitialValue(primitiveNode, actionMap),
       ),
     ),
   )
 
 // 新しいノードを追加
 export const _createAndAddNode = (
-  nodeParam: StripSymbol<OmitId<PrimitiveNode, "name">>,
+  nodeParam: BuilderParams<DistributiveOmit<PrimitiveNode, "name">>,
 ) =>
   pipe(
     _genId(),
-    Effect.map((_) => toNodeId(_)),
-    Effect.flatMap((_) => _buildNode(_, nodeParam)),
+    Effect.flatMap((id) => _buildNode(toNodeId(id), nodeParam)),
     Effect.tap((_) => _addNode(_)),
   )
 
@@ -328,7 +378,8 @@ export const appendNode = (
 // 途中にノードを追加する
 export const insertNode = (
   nodeParam: OmitId<StripSymbol<PrimitiveNode>, "name">,
-  parentNodeId: NodeId,
+  fromNodeId: NodeId,
+  toNodeId: NodeId,
   page: string,
 ): Effect.Effect<
   NodeId,
@@ -343,12 +394,19 @@ export const insertNode = (
     Effect.map((_) => _.id),
     // ルートにノードを追加する
     Effect.tap((nodeId) =>
-      pipe(
-        _getRoutesByNodeId(parentNodeId, page),
-        Effect.flatMap(
-          Effect.forEach((route) =>
+      Effect.Do.pipe(
+        Effect.bind("fromRoutes", () => _getRoutesByNodeId(fromNodeId, page)),
+        Effect.bind("toRoutes", () => _getRoutesByNodeId(toNodeId, page)),
+        Effect.let("routes", ({ fromRoutes, toRoutes }) => {
+          const targetIds = new Set(toRoutes.map((_) => _.id)).intersection(
+            new Set(fromRoutes.map((_) => _.id)),
+          )
+          return fromRoutes.filter((route) => targetIds.has(route.id))
+        }),
+        Effect.flatMap(({ routes }) =>
+          Effect.forEach(routes, (route) =>
             pipe(
-              Effect.succeed(insertNodeToRoute(route, nodeId, parentNodeId)),
+              Effect.succeed(insertNodeToRoute(route, nodeId, fromNodeId)),
               Effect.flatMap((_) => _updateRoute(_.id, _)),
             ),
           ),
@@ -382,11 +440,271 @@ export const unshiftNode = (
     ),
   )
 
+export const createUserDefinedRestCallRootNode = (page: string) =>
+  Effect.Do.pipe(
+    Effect.bind("id", () => _genId()),
+    Effect.bind("action", ({ id }) =>
+      pipe(
+        Effect.succeed(id),
+        Effect.map((id) =>
+          buildUserDefinedAction(id, {
+            name: "",
+            description: "",
+            type: "rest_call",
+            schema: {
+              base: {
+                method: "GET",
+                path: "/example",
+              },
+              examples: [],
+            },
+          }),
+        ),
+        Effect.tap((action) => _addAction(action)),
+      ),
+    ),
+    Effect.flatMap(({ action }) =>
+      _createAndAddNode({
+        description: "",
+        actionInstances: [
+          {
+            id: toActionInstanceId(genId()),
+            type: "rest_call",
+            description: "",
+            instanceParameter: {},
+            config: {
+              followRedirect: false,
+              useCookie: false,
+            },
+            actionIdentifier: {
+              resourceType: "user_defined",
+              resourceIdentifier: {
+                userDefinedActionId: action.id,
+              },
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "validator",
+            instanceParameter: {
+              contents: toExpression(""),
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "binder",
+            instanceParameter: {
+              assignments: [],
+            },
+          },
+        ],
+        config: {},
+      }),
+    ),
+    Effect.map((_) => _.id),
+    Effect.flatMap((_) =>
+      _createAndAddRoute({
+        path: [_],
+        page,
+      }),
+    ),
+  )
+
+export const appendUserDefinedRestCallNode = (nodeId: NodeId, page: string) =>
+  pipe(
+    _genId(),
+    Effect.map((id) =>
+      buildUserDefinedAction(id, {
+        name: "",
+        description: "",
+        type: "rest_call",
+        schema: {
+          base: {
+            method: "GET",
+            path: "/example",
+          },
+          examples: [],
+        },
+      }),
+    ),
+    Effect.tap((action) => _addAction(action)),
+    Effect.flatMap((action) =>
+      appendNode(
+        {
+          description: "",
+          actionInstances: [
+            {
+              id: toActionInstanceId(genId()),
+              type: "rest_call",
+              description: "",
+              instanceParameter: {},
+              config: {
+                followRedirect: false,
+                useCookie: false,
+              },
+              actionIdentifier: {
+                resourceType: "user_defined",
+                resourceIdentifier: {
+                  userDefinedActionId: action.id,
+                },
+              },
+            },
+            {
+              id: toActionInstanceId(genId()),
+              type: "validator",
+              instanceParameter: {
+                contents: toExpression(""),
+              },
+            },
+            {
+              id: toActionInstanceId(genId()),
+              type: "binder",
+              instanceParameter: {
+                assignments: [],
+              },
+            },
+          ],
+          config: {},
+        },
+        nodeId,
+        page,
+      ),
+    ),
+  )
+
+export const insertUserDefinedRestCallNode = (
+  fromNodeId: NodeId,
+  toNodeId: NodeId,
+  page: string,
+) =>
+  pipe(
+    _genId(),
+    Effect.map((id) =>
+      buildUserDefinedAction(id, {
+        name: "",
+        description: "",
+        type: "rest_call",
+        schema: {
+          base: {
+            method: "GET",
+            path: "/example",
+          },
+          examples: [],
+        },
+      }),
+    ),
+    Effect.tap((action) => _addAction(action)),
+    Effect.flatMap((action) =>
+      insertNode(
+        {
+          description: "",
+          actionInstances: [
+            {
+              id: toActionInstanceId(genId()),
+              type: "rest_call",
+              description: "",
+              instanceParameter: {},
+              config: {
+                followRedirect: false,
+                useCookie: false,
+              },
+              actionIdentifier: {
+                resourceType: "user_defined",
+                resourceIdentifier: {
+                  userDefinedActionId: action.id,
+                },
+              },
+            },
+            {
+              id: toActionInstanceId(genId()),
+              type: "validator",
+              instanceParameter: {
+                contents: toExpression(""),
+              },
+            },
+            {
+              id: toActionInstanceId(genId()),
+              type: "binder",
+              instanceParameter: {
+                assignments: [],
+              },
+            },
+          ],
+          config: {},
+        },
+        fromNodeId,
+        toNodeId,
+        page,
+      ),
+    ),
+  )
+
+export const unshiftUserDefinedRestCallNode = (routeId: RouteId) =>
+  pipe(
+    _genId(),
+    Effect.map((id) =>
+      buildUserDefinedAction(id, {
+        name: "",
+        description: "",
+        type: "rest_call",
+        schema: {
+          base: {
+            method: "GET",
+            path: "/example",
+          },
+          examples: [],
+        },
+      }),
+    ),
+    Effect.tap((action) => _addAction(action)),
+    Effect.flatMap((action) =>
+      unshiftNode(
+        {
+          description: "",
+          actionInstances: [
+            {
+              id: toActionInstanceId(genId()),
+              type: "rest_call",
+              description: "",
+              instanceParameter: {},
+              config: {
+                followRedirect: false,
+                useCookie: false,
+              },
+              actionIdentifier: {
+                resourceType: "user_defined",
+                resourceIdentifier: {
+                  userDefinedActionId: action.id,
+                },
+              },
+            },
+            {
+              id: toActionInstanceId(genId()),
+              type: "validator",
+              instanceParameter: {
+                contents: toExpression(""),
+              },
+            },
+            {
+              id: toActionInstanceId(genId()),
+              type: "binder",
+              instanceParameter: {
+                assignments: [],
+              },
+            },
+          ],
+          config: {},
+        },
+        routeId,
+      ),
+    ),
+  )
+
 // ノードを更新する
 export const updateNode = (
   nodeId: NodeId,
   param: Partial<Pick<PrimitiveNode, "name" | "description">>,
-) =>
+): Effect.Effect<void, never, SetNode> =>
   pipe(
     _getNode(nodeId),
     Effect.map((_) => ({
@@ -412,6 +730,17 @@ export const updateNodeConfig = (
       (_: PrimitiveNode): PrimitiveNode => updateNodeConfigEntity(_, config),
     ),
     Effect.tap((_) => _setNode(nodeId, _)),
+  )
+
+// Actionを更新する
+export const updateUserDefinedAction = (
+  identifier: UserDefinedActionIdentifier,
+  param: Partial<RestCallActionParameter>,
+) =>
+  pipe(
+    _getResolvedAction(identifier),
+    Effect.map((action) => updateRestCallActionParameter(action, param)),
+    Effect.flatMap((action) => _updateActionParameter(identifier, action)),
   )
 
 /**

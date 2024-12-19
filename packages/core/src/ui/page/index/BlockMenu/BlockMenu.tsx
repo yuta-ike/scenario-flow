@@ -1,16 +1,26 @@
-import { useState } from "react"
+import { Fragment, useState } from "react"
 
 import { ApiCallTile } from "./ApiCallTile"
 import { ResourceTile } from "./ResourceTile"
 
 import type { FileContent } from "@/utils/file"
+import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
+import type { ResourceId } from "@/domain/entity/resource/resource"
 
-import { useActionIds, useResourceIds } from "@/ui/adapter/query"
+import {
+  useActionIds,
+  useResourceIds,
+  useUserDefinedActionIds,
+} from "@/ui/adapter/query"
 import { FormModal, FormModalContent } from "@/ui/lib/common/FormModal"
 import { uploadOpenApiFile } from "@/ui/adapter/command"
 import { parseYaml } from "@/ui/lib/yaml/yamlToJson"
-import { display } from "@/domain/entity/action/identifier"
 import { FileInput } from "@/ui/components/common/FileInput"
+import {
+  buildActionSourceIdentifier,
+  display,
+} from "@/domain/entity/action/identifier"
+import { associateWithList } from "@/utils/set"
 
 type FormItemProps = {
   id: string
@@ -33,6 +43,7 @@ const stripExtension = (name: string) => name.replace(/\.[^.]*$/, "")
 
 export const BlockMenu = () => {
   const resourceIds = useResourceIds()
+  const userDefinedActionIds = useUserDefinedActionIds()
 
   const [isOpenModal, setOpenModal] = useState(false)
 
@@ -81,33 +92,53 @@ export const BlockMenu = () => {
 
   const identifiers = useActionIds()
 
+  const identifierMap = associateWithList(
+    identifiers.filter((identifier) => identifier.resourceType === "resource"),
+    (identifier) => identifier.resourceIdentifier.resourceId,
+  )
+
+  const data: {
+    titleOrResourceId: "ユーザー定義アクション" | ResourceId
+    actionIdentifiers: ActionSourceIdentifier[]
+  }[] = [
+    {
+      titleOrResourceId: "ユーザー定義アクション",
+      actionIdentifiers: userDefinedActionIds.map((id) =>
+        buildActionSourceIdentifier({
+          resourceType: "user_defined",
+          resourceIdentifier: { userDefinedActionId: id },
+        }),
+      ),
+    },
+    ...resourceIds.map((resourceId) => ({
+      titleOrResourceId: resourceId,
+      actionIdentifiers: identifierMap.get(resourceId) ?? [],
+    })),
+  ]
+
   return (
     <>
-      <div className="flex max-h-full w-full flex-col p-2">
-        <div className="flex h-full w-full flex-col gap-2 overflow-hidden">
-          {/* <input
-            placeholder="検索"
-            type="text"
-            className="w-full rounded border border-transparent bg-slate-100 px-2 py-1.5 text-xs leading-none transition focus:border-slate-200 focus:outline-none"
-          /> */}
-          <div className="flex flex-wrap gap-1">
-            {resourceIds.map((resourceId) => (
-              <ResourceTile key={resourceId} resourceId={resourceId} />
-            ))}
-          </div>
-          {0 < identifiers.length ? (
-            <div className="flex flex-col gap-2 overflow-y-scroll">
-              {identifiers.map((identifier) => (
+      <div className="flex max-h-full w-full grow flex-col gap-2 overflow-y-scroll">
+        {data.map(({ titleOrResourceId, actionIdentifiers }) => (
+          <Fragment key={titleOrResourceId}>
+            {titleOrResourceId === "ユーザー定義アクション" ? (
+              <h3 className="sticky top-0 grow bg-white px-2 py-1 text-xs text-slate-600">
+                ユーザー定義アクション
+              </h3>
+            ) : (
+              <ResourceTile resourceId={titleOrResourceId} />
+            )}
+            <div className="flex flex-col gap-1 px-1">
+              {actionIdentifiers.map((identifier) => (
                 <ApiCallTile
                   key={display(identifier)}
                   actionIdentifier={identifier}
                 />
               ))}
             </div>
-          ) : (
-            <FileInput value={file} onChange={handleFileUpload} />
-          )}
-        </div>
+          </Fragment>
+        ))}
+        <div className="shrink-0" style={{ height: "32px" }} />
       </div>
       <FormModal
         title="OpenAPIファイルのインポート"

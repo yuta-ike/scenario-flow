@@ -1,3 +1,5 @@
+import { getUniqName } from "../getUniqName"
+
 import type { Builder, BuilderReturn, Transition } from "../type"
 import type { NodeId, Node } from "../node/node"
 import type { Id } from "@/utils/idType"
@@ -17,8 +19,17 @@ export type Route = {
   color: Color
   page: Page
 }
-export const buildRoute: Builder<Route> = (id, params) => {
-  return { id, ...params } satisfies BuilderReturn<Route> as Route
+export const buildRoute: Builder<Route, [usedNames?: string[]]> = (
+  id,
+  { name, ...params },
+  usedNames = [],
+) => {
+  const uniqName = getUniqName(name, usedNames)
+  return {
+    id,
+    name: uniqName,
+    ...params,
+  } satisfies BuilderReturn<Route> as Route
 }
 
 export type PrimitiveRoute = Replace<Route, "path", NodeId[]>
@@ -66,14 +77,37 @@ export const insertNodeToRoute: Transition<
     }
   }
 }
-
 export const updateRoute: Transition<PrimitiveRoute> = (
   route,
-  newRoute: Partial<Pick<PrimitiveRoute, "name" | "color" | "page">>,
+  params: Partial<Pick<PrimitiveRoute, "name" | "color" | "page">>,
+  usedNames: string[],
 ) => {
+  const name =
+    params.name === route.name
+      ? route.name
+      : params.name != null
+        ? getUniqName(params.name, usedNames)
+        : undefined
+
   return {
     ...route,
-    ...newRoute,
+    ...params,
+    name: name ?? route.name,
+  }
+}
+
+export const swapRoutePath: Transition<
+  PrimitiveRoute,
+  [a: NodeId, b: NodeId]
+> = (route, routeIdA, routeIdB) => {
+  const path = route.path.slice()
+  const indexA = path.indexOf(routeIdA)
+  const indexB = path.indexOf(routeIdB)
+  path[indexA] = routeIdB
+  path[indexB] = routeIdA
+  return {
+    ...route,
+    path,
   }
 }
 

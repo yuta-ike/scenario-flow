@@ -1,6 +1,14 @@
 import * as Dialog from "@radix-ui/react-dialog"
 import { HiX } from "react-icons/hi"
-import { createContext, useContext, useMemo, useState } from "react"
+import {
+  createContext,
+  forwardRef,
+  useContext,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 import { Button } from "@/ui/components/common/Button"
 
@@ -9,6 +17,13 @@ const FormModalContext = createContext<{
   description: string
   onClose: () => void
 } | null>(null)
+
+type Ref = {
+  close: () => void
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const useFormRef = () => useRef<Ref>(null)
 
 type FormModalProps = {
   title: string
@@ -28,42 +43,51 @@ type FormModalProps = {
     }
 )
 
-export const FormModal = ({
-  children,
-  title,
-  description,
-  modal,
-  isOpen,
-  onOpenChange,
-}: FormModalProps) => {
-  const [_isOpen, setOpen] = useState(false)
-
-  const contextValue = useMemo(
-    () => ({
+export const FormModal = forwardRef<Ref, FormModalProps>(
+  (
+    {
+      children,
       title,
       description,
-      onClose: () => (onOpenChange ?? setOpen)(false),
-    }),
-    [title, description, onOpenChange],
-  )
+      modal,
+      isOpen,
+      onOpenChange,
+    }: FormModalProps,
+    ref,
+  ) => {
+    const [_isOpen, setOpen] = useState(false)
 
-  return (
-    <Dialog.Root
-      open={isOpen ?? _isOpen}
-      onOpenChange={onOpenChange ?? setOpen}
-    >
-      <Dialog.Trigger asChild>{children}</Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-10 bg-black/40 data-[state=open]:animate-overlayShow" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-10 flex max-h-[85vh] w-[90vw] max-w-[450px] translate-x-[-50%] translate-y-[-50%] flex-col overflow-hidden rounded-lg border-slate-200 bg-white text-slate-700 focus:outline-none data-[state=open]:animate-contentShow">
-          <FormModalContext.Provider value={contextValue}>
-            {modal}
-          </FormModalContext.Provider>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
-  )
-}
+    const contextValue = useMemo(
+      () => ({
+        title,
+        description,
+        onClose: () => (onOpenChange ?? setOpen)(false),
+      }),
+      [title, description, onOpenChange],
+    )
+
+    useImperativeHandle(ref, () => ({
+      close: () => (onOpenChange ?? setOpen)(false),
+    }))
+
+    return (
+      <Dialog.Root
+        open={isOpen ?? _isOpen}
+        onOpenChange={onOpenChange ?? setOpen}
+      >
+        <Dialog.Trigger asChild>{children}</Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-10 bg-black/40 data-[state=open]:animate-overlayShow" />
+          <Dialog.Content className="fixed left-[50%] top-[50%] z-10 flex max-h-[85vh] w-[90vw] max-w-[450px] translate-x-[-50%] translate-y-[-50%] flex-col overflow-hidden rounded-lg border-slate-200 bg-white text-slate-700 focus:outline-none data-[state=open]:animate-contentShow">
+            <FormModalContext.Provider value={contextValue}>
+              {modal}
+            </FormModalContext.Provider>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+    )
+  },
+)
 
 type FormModalContentProps = {
   children: React.ReactNode

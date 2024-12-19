@@ -70,6 +70,17 @@ export type IncludeActionInstance = {
   }
 }
 
+// db
+export type DbActionInstance = {
+  [_actionInstance]: never
+  id: ActionInstanceId
+  actionIdentifier?: undefined
+  type: "db"
+  instanceParameter: {
+    query: string
+  }
+}
+
 // unknown
 export type UnknownActionInstance = {
   [_actionInstance]: never
@@ -85,14 +96,8 @@ export type ActionInstance =
   | ValidatorActionInstance
   | BinderActionInstance
   | IncludeActionInstance
+  | DbActionInstance
   | UnknownActionInstance
-
-export type RawActionInstance =
-  | Omit<RestCallActionInstance, typeof _actionInstance>
-  | Omit<ValidatorActionInstance, typeof _actionInstance>
-  | Omit<BinderActionInstance, typeof _actionInstance>
-  | Omit<IncludeActionInstance, typeof _actionInstance>
-  | Omit<UnknownActionInstance, typeof _actionInstance>
 
 export type ResolvedRestCallActionInstance = RestCallActionInstance & {
   action: ResolvedAction<"rest_call" | "unknown">
@@ -129,11 +134,14 @@ export type ResolvedIncludeActionInstance = Replace<
   }
 >
 
+export type ResolvedDbActionInstance = DbActionInstance
+
 export type ResolvedActionInstance =
   | ResolvedRestCallActionInstance
   | ResolvedBinderActionInstance
   | ResolvedValidatorActionInstance
   | ResolvedIncludeActionInstance
+  | ResolvedDbActionInstance
   | UnknownActionInstance
 
 export const buildRestCallActionInstance: Builder<RestCallActionInstance> = (
@@ -176,6 +184,16 @@ export const buildIncludeActionInstance: Builder<IncludeActionInstance> = (
   } satisfies BuilderReturn<IncludeActionInstance> as IncludeActionInstance
 }
 
+export const buildDbActionInstance: Builder<DbActionInstance> = (
+  id,
+  params,
+) => {
+  return {
+    id,
+    ...params,
+  } satisfies BuilderReturn<DbActionInstance> as DbActionInstance
+}
+
 export const buildUnknownActionInstance: Builder<UnknownActionInstance> = (
   id,
   params,
@@ -200,6 +218,8 @@ export const buildActionInstnace = (
       return buildBinderActionInstance(id, params as BinderActionInstance)
     case "include":
       return buildIncludeActionInstance(id, params as IncludeActionInstance)
+    case "db":
+      return buildDbActionInstance(id, params as DbActionInstance)
     default:
       return buildUnknownActionInstance(id, params as UnknownActionInstance)
   }
@@ -245,6 +265,13 @@ export const buildInitialActionInstance = (
         instanceParameter: {
           ref: "",
           parameters: [],
+        },
+      })
+    case "db":
+      return buildDbActionInstance(id, {
+        type: "db",
+        instanceParameter: {
+          query: "",
         },
       })
     default:
@@ -331,4 +358,10 @@ export const resolveIncludeActionInstance = (
       }),
     },
   }
+}
+
+export const resolveDbActionInstance = (
+  actionInstance: DbActionInstance,
+): ResolvedDbActionInstance => {
+  return actionInstance
 }

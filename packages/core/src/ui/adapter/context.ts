@@ -3,6 +3,7 @@ import { Context } from "effect"
 import type { Store } from "@/lib/jotai/store"
 
 import {
+  AddAction,
   AddNode,
   AddRoute,
   DeleteNode,
@@ -16,9 +17,10 @@ import {
   GetResolvedAction,
   GetRoutes,
   GetRoutesByNodeId,
-  GetUniqName,
+  GetUsedNodeNames,
   RemoveRoute,
   SetNode,
+  UpdateActionParameter as UpdateActionParameter,
   UpdateRoute,
   UpsertVariable,
 } from "@/domain/workflow/node"
@@ -29,6 +31,7 @@ import {
   primitiveRouteAtom,
   primitiveRoutesAtom,
   routeIdsAtom,
+  routeNamesCache,
 } from "@/domain/datasource/route"
 import {
   nodeDefaultNameCal,
@@ -60,6 +63,9 @@ import { buildGlobalVariableBind } from "@/domain/entity/globalVariable/globalVa
 import { GetNodeStates, SetNodeStates } from "@/domain/workflow/nodeStates"
 import { nodeStatesAtom } from "@/domain/datasource/nodeStates"
 import { toRouteId } from "@/domain/entity/route/route.util"
+import { GetUsedRouteNames } from "@/domain/workflow/route"
+import { userDefinedActionAtom } from "@/domain/datasource/userDefinedAction"
+import { toUserDefinedActionId } from "@/domain/entity/userDefinedAction/userDefinedAction.util"
 
 export type Context =
   ReturnType<typeof buildContext> extends Context.Context<infer T> ? T : never
@@ -80,21 +86,9 @@ export const buildContext = (store: Store) =>
       Context.add(GetNodeIds, () => store.get(nodeIdsAtom).values().toArray()),
       Context.add(GetNodes, () => store.get(nodesAtom).values().toArray()),
       Context.add(GetDefaultNodeName, () => store.get(nodeDefaultNameCal)),
-      Context.add(GetUniqName, (rawName) => {
-        const usedNames = store.get(nodeNameUniqCache)
-        if (!usedNames.has(rawName)) {
-          store.set(nodeNameUniqCache, new Set(usedNames).add(rawName))
-          return rawName
-        }
-        for (let i = 1; i < 100; i++) {
-          const name = `${rawName}_${i}`
-          if (!usedNames.has(name)) {
-            store.set(nodeNameUniqCache, new Set(usedNames).add(name))
-            return name
-          }
-        }
-        return `${rawName}_99`
-      }),
+      Context.add(GetUsedNodeNames, () =>
+        store.get(nodeNameUniqCache).values().toArray(),
+      ),
       Context.add(DeleteNode, (nodeId) => {
         console.log("DELETE node: ", nodeId)
         store.update(
@@ -102,6 +96,21 @@ export const buildContext = (store: Store) =>
           updateSetOp((prev) => prev.filter((id) => id !== nodeId)),
         )
         primitiveNodeAtom.remove(nodeId)
+      }),
+      Context.add(AddAction, (action) => {
+        store.set(userDefinedActionAtom(toUserDefinedActionId(action.id)), {
+          create: action,
+        })
+      }),
+      Context.add(UpdateActionParameter, (identifier, action) => {
+        store.set(
+          userDefinedActionAtom(
+            identifier.resourceIdentifier.userDefinedActionId,
+          ),
+          {
+            update: action,
+          },
+        )
       }),
       Context.add(GetResolvedAction, (actionId) =>
         store.get(resolvedActionAtom(actionId)),
@@ -145,6 +154,9 @@ export const buildContext = (store: Store) =>
         routeIds.map((routeId) => store.get(primitiveRouteAtom(routeId))),
       ),
       Context.add(GetAllRoutes, () => store.get(primitiveRoutesAtom)),
+      Context.add(GetUsedRouteNames, () =>
+        store.get(routeNamesCache).values().toArray(),
+      ),
       Context.add(RemoveRoute, (routeId) => {
         console.log("DELETE Route: ", routeId)
         primitiveRouteAtom.remove(routeId)

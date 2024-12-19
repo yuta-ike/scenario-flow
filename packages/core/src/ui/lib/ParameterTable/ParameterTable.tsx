@@ -26,6 +26,8 @@ import {
 } from "@dnd-kit/modifiers"
 import { HiMenuAlt4 } from "react-icons/hi"
 import clsx from "clsx"
+import { TbAlertCircleFilled, TbAsterisk } from "react-icons/tb"
+import { FiInfo } from "react-icons/fi"
 
 import { MagicVariableButton } from "../flow/components/DetailPanel/MagicVariableButton"
 
@@ -34,15 +36,21 @@ import type { DragEndEvent, UniqueIdentifier } from "@dnd-kit/core"
 import type { ColumnDef, Row } from "@tanstack/react-table"
 import type { ResolvedEnvironment } from "@/domain/entity/environment/environment"
 import type { NodeId } from "@/domain/entity/node/node"
+import type { DataType } from "@/domain/entity/value/dataType"
 
 import { getUpdateOps } from "@/ui/utils/arrayUpdate"
 import { genId } from "@/utils/uuid"
 import { ErrorBoundary } from "@/ui/components/ErrorBoundary"
+import { Tooltip } from "@/ui/components/common/Tooltip"
+import { DataTypeIcon } from "@/ui/components/common/getDataTypeIcon"
 
 export type TableRow = {
   id: string
   key: string
   value: string
+  description?: string
+  required?: boolean
+  defined?: boolean
 }
 
 const RowDragHandleCell = ({
@@ -119,6 +127,7 @@ type ParameterTableProps = {
   placeholderValue?: string
   currentNodeId?: NodeId
   environment?: ResolvedEnvironment
+  lockNewRow?: boolean
 }
 export const ParameterTable = ({
   rows,
@@ -127,6 +136,7 @@ export const ParameterTable = ({
   placeholderValue,
   currentNodeId,
   environment,
+  lockNewRow = false,
 }: ParameterTableProps) => {
   const setRowsRef = useRef(setRows)
   useEffect(() => {
@@ -162,37 +172,81 @@ export const ParameterTable = ({
       },
       {
         accessorKey: "key",
-        cell: ({ getValue, cell }) => (
-          <input
-            type="text"
-            value={getValue<string>()}
-            placeholder={placeholderKey}
-            className="w-full bg-transparent p-2 pr-0 placeholder:text-slate-300 focus:outline-none"
-            onChange={(e) =>
-              updateRowHandler.current(cell.row.id, "key", e.target.value)
-            }
-          />
+        cell: ({ getValue, cell, row }) => (
+          <div className="relative flex w-full items-center gap-2 pr-1">
+            <input
+              type="text"
+              value={getValue<string>()}
+              placeholder={placeholderKey}
+              className="grow bg-transparent p-2 pr-0 placeholder:text-slate-300 focus:outline-none"
+              onChange={(e) =>
+                updateRowHandler.current(cell.row.id, "key", e.target.value)
+              }
+            />
+            <div className="flex shrink-0 items-center gap-0.5">
+              {row.getValue<boolean | undefined>("defined") === false && (
+                <Tooltip label="スキーマで定義されていないプロパティです">
+                  <button
+                    type="button"
+                    className="shrink-0 cursor-pointer rounded p-0.5 hover:bg-slate-200"
+                  >
+                    <TbAlertCircleFilled
+                      size={18}
+                      className="text-orange-400"
+                    />
+                  </button>
+                </Tooltip>
+              )}
+              {row.getValue<boolean | undefined>("required") === true && (
+                <Tooltip label="必須のプロパティです">
+                  <button
+                    type="button"
+                    className="shrink-0 cursor-pointer rounded p-[6.5px] text-red-400 hover:bg-slate-200"
+                  >
+                    <TbAsterisk strokeWidth={3} size={9} />
+                  </button>
+                </Tooltip>
+              )}
+              {row.getValue<string | undefined>("description") != null && (
+                <Tooltip
+                  label={row.getValue<string | undefined>("description")!}
+                >
+                  <button
+                    type="button"
+                    className="shrink-0 cursor-pointer rounded p-0.5 hover:bg-slate-200"
+                  >
+                    <FiInfo size={18} className="fill-slate-600 text-white" />
+                  </button>
+                </Tooltip>
+              )}
+            </div>
+          </div>
         ),
         size: 120,
       },
       {
         accessorKey: "value",
-        cell: ({ getValue, cell }) => {
+        cell: ({ getValue, cell, row }) => {
           const value = getValue<string>()
+
           return (
-            <div className="relative">
+            <div className="relative flex items-center gap-2">
+              <div className="ml-2 grid shrink-0 place-items-center text-slate-600 empty:hidden">
+                <DataTypeIcon
+                  type={row.getValue<DataType | undefined>("dataType")}
+                />
+              </div>
               <input
-                type="text"
                 value={value}
                 placeholder={placeholderValue}
-                className="w-full bg-transparent p-2 pr-0 placeholder:text-slate-300 focus:outline-none"
+                className="grow bg-transparent p-2 pr-0 placeholder:text-slate-300 focus:outline-none"
                 onChange={(e) =>
                   updateRowHandler.current(cell.row.id, "value", e.target.value)
                 }
               />
               {environment != null && (
                 <ErrorBoundary>
-                  <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                  <div className="shrink-0">
                     <MagicVariableButton
                       environment={environment}
                       currentNodeId={currentNodeId}
@@ -215,15 +269,31 @@ export const ParameterTable = ({
         accessorKey: "isTmp",
         enableHiding: true,
       },
+      {
+        accessorKey: "description",
+        enableHiding: true,
+      },
+      {
+        accessorKey: "defined",
+        enableHiding: true,
+      },
+      {
+        accessorKey: "required",
+        enableHiding: true,
+      },
+      {
+        accessorKey: "dataType",
+        enableHiding: true,
+      },
     ]
   }, [currentNodeId, environment, placeholderKey, placeholderValue])
   const data = useMemo(
     () =>
       [
         ...rows.map((row) => ({ ...row, isTmp: false })),
-        genPlaceholderRow(),
-      ].flat(1),
-    [rows],
+        lockNewRow ? [] : genPlaceholderRow(),
+      ].flat(),
+    [lockNewRow, rows],
   )
 
   const table = useReactTable({
@@ -235,6 +305,10 @@ export const ParameterTable = ({
     state: {
       columnVisibility: {
         isTmp: false,
+        description: false,
+        defined: false,
+        required: false,
+        dataType: false,
       },
     },
   })

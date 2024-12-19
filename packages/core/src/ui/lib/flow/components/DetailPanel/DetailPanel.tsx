@@ -6,6 +6,7 @@ import { RestCallTabPanel } from "./RestCallTabPanel"
 import { ValidatorTabPanel } from "./ValidatorTabPanel"
 import { NodeTitleSection } from "./NodeTitleSection"
 import { IncludeDetailPanel } from "./IncludeDetailPanel"
+import { DbDetailPanel } from "./DbDetailPanel"
 
 import type { NodeId } from "@/domain/entity/node/node"
 import type { ActionInstanceId } from "@/domain/entity/node/actionInstance"
@@ -15,7 +16,6 @@ import { useNode } from "@/ui/adapter/query"
 import { ErrorBoundary } from "@/ui/components/ErrorBoundary"
 import { ErrorDisplay } from "@/ui/components/ErrorDisplay"
 import { appendActionInstance } from "@/ui/adapter/command"
-import { Resizable } from "@/ui/components/Resizable"
 
 export const DetailPanel = () => {
   const focusedNodeId = useFocusedNodeId()
@@ -25,21 +25,16 @@ export const DetailPanel = () => {
   }
 
   return (
-    <Resizable initialWidth={600}>
-      <div className="relative w-full bg-white empty:hidden">
-        <Fragment key={focusedNodeId}>
-          <ErrorBoundary fallback={<ErrorDisplay />}>
-            <NodeTitleSection nodeId={focusedNodeId} />
-          </ErrorBoundary>
-          <ErrorBoundary fallback={<ErrorDisplay />}>
-            <DetailPanelInner nodeId={focusedNodeId} />
-          </ErrorBoundary>
-        </Fragment>
-        {/* <ResizeHandle>
-          <div className="absolute left-0 top-1/2 h-[40px] w-[12px] bg-black" />
-        </ResizeHandle> */}
-      </div>
-    </Resizable>
+    <div className="relative w-full bg-white empty:hidden">
+      <Fragment key={focusedNodeId}>
+        <ErrorBoundary fallback={<ErrorDisplay />}>
+          <NodeTitleSection nodeId={focusedNodeId} />
+        </ErrorBoundary>
+        <ErrorBoundary fallback={<ErrorDisplay />}>
+          <DetailPanelInner nodeId={focusedNodeId} />
+        </ErrorBoundary>
+      </Fragment>
+    </div>
   )
 }
 
@@ -75,7 +70,9 @@ const DetailPanelInner = ({ nodeId }: DetailPanelInnerProps) => {
                 ? "テスト"
                 : ai.type === "include"
                   ? "インポート"
-                  : "変数"}
+                  : ai.type === "db"
+                    ? "クエリ"
+                    : "変数"}
           </button>
         ))}
         <hr className="mx-2 my-2 h-auto w-px self-stretch border-r border-r-slate-200 last:hidden" />
@@ -105,7 +102,6 @@ const DetailPanelInner = ({ nodeId }: DetailPanelInnerProps) => {
             <span>変数を追加</span>
           </button>
         )}
-        <div className="ml-auto text-xs text-slate-400">{node.id}</div>
       </div>
       {targetActionInstance != null &&
         (targetActionInstance.type === "rest_call" ? (
@@ -116,9 +112,14 @@ const DetailPanelInner = ({ nodeId }: DetailPanelInnerProps) => {
           <BinderTabPanel nodeId={nodeId} ai={targetActionInstance} />
         ) : targetActionInstance.type === "include" ? (
           <IncludeDetailPanel nodeId={nodeId} ai={targetActionInstance} />
+        ) : targetActionInstance.type === "db" ? (
+          <DbDetailPanel nodeId={nodeId} ai={targetActionInstance} />
         ) : (
           <div>No</div>
         ))}
+      <div className="ml-auto border-t border-t-slate-200 bg-slate-50 px-4 py-1 text-xs text-slate-400">
+        {node.id}
+      </div>
     </div>
   )
 }

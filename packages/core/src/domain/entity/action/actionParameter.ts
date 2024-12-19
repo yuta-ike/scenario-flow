@@ -93,13 +93,30 @@ const mergeRestCallActionParameter = (
     (acc, cur) => _mergeRestActionParameter(acc, cur),
     DEFAULT_REST_CALL_ACTION_PARAMETER,
   )
+
   return {
     method: merged.method,
     path: merged.path,
-    headers: dedupe(merged.headers),
-    cookies: dedupe(merged.cookies),
-    queryParams: dedupe(merged.queryParams),
-    pathParams: dedupe(merged.pathParams),
+    headers: dedupe(
+      merged.headers.toSorted(
+        (a, b) => (a.value.length === 0 ? -1 : b.value.length === 0 ? 1 : 0), // 値が入力されていない場合は優先しない
+      ),
+    ),
+    cookies: dedupe(
+      merged.cookies.toSorted(
+        (a, b) => (a.value.length === 0 ? -1 : b.value.length === 0 ? 1 : 0), // 値が入力されていない場合は優先しない
+      ),
+    ),
+    queryParams: dedupe(
+      merged.queryParams.toSorted(
+        (a, b) => (a.value.length === 0 ? -1 : b.value.length === 0 ? 1 : 0), // 値が入力されていない場合は優先しない
+      ),
+    ),
+    pathParams: dedupe(
+      merged.pathParams.toSorted(
+        (a, b) => (a.value.length === 0 ? -1 : b.value.length === 0 ? 1 : 0), // 値が入力されていない場合は優先しない
+      ),
+    ),
     body:
       merged.body == null
         ? undefined

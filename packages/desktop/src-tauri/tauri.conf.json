@@ -11,19 +11,7 @@
   },
   "app": {
     "macOSPrivateApi": true,
-    "windows": [
-      {
-        "title": "scenario flow",
-        "width": 800,
-        "height": 600,
-        "decorations": false,
-        "fullscreen": false,
-        "center": true,
-        "transparent": true,
-        "resizable": true,
-        "shadow": true
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": null
     }

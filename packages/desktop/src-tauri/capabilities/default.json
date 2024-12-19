@@ -2,19 +2,20 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": [
-    "main"
-  ],
+  "windows": ["main"],
   "permissions": [
     "core:default",
-    "shell:allow-open",
     "core:window:default",
     "core:window:allow-start-dragging",
-    "dialog:default",
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "$HOME" }, { "path": "$HOME/**" }]
+    },
     "fs:default",
     "fs:allow-app-read-recursive",
     "fs:allow-app-write-recursive",
     "http:default",
+    "shell:allow-open",
     "shell:default",
     {
       "identifier": "shell:allow-execute",
@@ -25,6 +26,9 @@
           "args": true
         }
       ]
-    }
+    },
+    "dialog:default",
+    "store:default",
+    "window-state:default"
   ]
 }

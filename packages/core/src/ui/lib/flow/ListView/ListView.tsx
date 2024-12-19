@@ -1,4 +1,4 @@
-import { TbFlag2 } from "react-icons/tb"
+import { TbFlag2, TbPlayerPlay } from "react-icons/tb"
 import {
   closestCenter,
   DndContext,
@@ -14,24 +14,35 @@ import {
 } from "@dnd-kit/modifiers"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { FiChevronsLeft } from "react-icons/fi"
-import { useState, type FormEvent } from "react"
+import { type FormEvent } from "react"
+import { atom, useSetAtom } from "jotai"
 
-import { PathChip } from "./PathChip"
+import { RunModalContent } from "../components/RunButton/RunModalContent"
+
 import { StepItem } from "./StepItem"
 
-import { useFocusedRoute } from "@/ui/state/focusedRouteId"
-import { fill } from "@/utils/placeholder"
-import { updteRoute } from "@/ui/adapter/command"
+import type { DragEndEvent } from "@dnd-kit/core"
+import type { NodeId } from "@/domain/entity/node/node"
+
+import { swapRoutePath, updteRoute } from "@/ui/adapter/command"
 import { IconButton } from "@/ui/components/common/IconButton"
+import { CustomModal } from "@/ui/components/common/CustomModal"
+import { Button } from "@/ui/components/common/Button"
+import { useFocusedRoute } from "@/ui/state/focusedRouteId"
+
+export const showListViewAtom = atom(false)
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const useSetShowListView = () => useSetAtom(showListViewAtom)
 
 export const ListView = () => {
-  const [show, setShow] = useState(false)
+  const setShow = useSetAtom(showListViewAtom)
 
-  if (!show) {
-    return null
-  } else {
-    return <ListViewInner onClose={() => setShow(false)} />
-  }
+  return (
+    <div className="h-full w-full opacity-100">
+      <ListViewInner onClose={() => setShow(false)} />
+    </div>
+  )
 }
 
 const ListViewInner = ({ onClose }: { onClose: () => void }) => {
@@ -58,10 +69,17 @@ const ListViewInner = ({ onClose }: { onClose: () => void }) => {
     updteRoute(route.id, { name })
   }
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (over != null && active.id !== over.id) {
+      swapRoutePath(route.id, active.id as NodeId, over.id as NodeId)
+    }
+  }
+
   return (
-    <div className="flex h-full w-[600px] flex-col gap-1">
+    <div className="flex h-full flex-col">
       <section className="flex flex-col">
-        <div className="flex w-full items-center justify-between">
+        <div className="flex w-full items-center justify-between pr-4">
           <div className="shrink-0 p-1">
             <IconButton
               label="とじる"
@@ -70,39 +88,38 @@ const ListViewInner = ({ onClose }: { onClose: () => void }) => {
             />
           </div>
           <hr className="h-auto w-px self-stretch border-r border-r-slate-200" />
-          <div className="grow -translate-x-1 px-2">
-            <PathChip path={fill(route.page, "/")} />
+          <div className="flex grow items-center gap-2 px-4 py-2">
+            <div className="shrink-0">
+              <TbFlag2
+                size={20}
+                style={{ color: route.color }}
+                className="fill-current stroke-current"
+              />
+            </div>
+            <form className="grow" onSubmit={handleSubmit}>
+              <input
+                key={route.name}
+                name="name"
+                className="w-full rounded border border-transparent bg-transparent px-[7px] py-1 text-slate-600 transition placeholder:font-normal hover:border-slate-200 focus:border-slate-200 focus:outline-none"
+                defaultValue={route.name}
+                placeholder="タイトルを追加"
+                onBlur={(e) => {
+                  handleUpdate(e.target.value)
+                }}
+              />
+            </form>
           </div>
-          <div className="px-2 text-xs text-slate-400">{route.id}</div>
-        </div>
-        <div className="flex items-center gap-4 border-t border-t-slate-200 px-4 py-2">
-          <div className="shrink-0">
-            <TbFlag2
-              size={24}
-              style={{ color: route.color }}
-              className="fill-current stroke-current"
-            />
-          </div>
-          <form className="grow" onSubmit={handleSubmit}>
-            <input
-              key={route.name}
-              name="name"
-              className="w-[calc(100%+16px)] -translate-x-2 resize-none rounded border border-transparent bg-transparent px-[7px] py-1 text-lg text-slate-600 transition placeholder:font-normal hover:border-slate-200 focus:border-slate-200 focus:outline-none"
-              defaultValue={route.name}
-              placeholder="タイトルを追加"
-              onBlur={(e) => {
-                handleUpdate(e.target.value)
-              }}
-            />
-          </form>
+          <CustomModal modal={<RunModalContent initialSelected={[route.id]} />}>
+            <Button size="sm" prefix={TbPlayerPlay}>
+              テストを実行
+            </Button>
+          </CustomModal>
         </div>
       </section>
       <DndContext
         collisionDetection={closestCenter}
         modifiers={[restrictToVerticalAxis, restrictToParentElement]}
-        onDragEnd={() => {
-          // noop
-        }}
+        onDragEnd={handleDragEnd}
         sensors={sensors}
       >
         <SortableContext

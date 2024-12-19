@@ -42,9 +42,15 @@ const decomposeStepItem = (
             pathParams,
           ),
           method: ai.instanceParameter.method!,
-          headers: ai.instanceParameter.headers,
-          cookies: ai.instanceParameter.cookies,
-          queryParams: ai.instanceParameter.queryParams,
+          headers: ai.instanceParameter.headers?.filter(
+            ({ key }) => 0 < key.length,
+          ),
+          cookies: ai.instanceParameter.cookies?.filter(
+            ({ key }) => 0 < key.length,
+          ),
+          queryParams: ai.instanceParameter.queryParams?.filter(
+            ({ key }) => 0 < key.length,
+          ),
           contentType: body?.selected ?? undefined,
           body: body?.selected != null && body.params[body.selected],
           meta,
@@ -57,19 +63,28 @@ const decomposeStepItem = (
       } else if (ai.type === "binder") {
         return {
           type: "binder" as const,
-          assignments: ai.instanceParameter.assignments.map((assignment) => ({
-            variable: assignment.variable,
-            value: assignment.value,
-          })),
+          assignments: ai.instanceParameter.assignments
+            .map((assignment) => ({
+              variable: assignment.variable,
+              value: assignment.value,
+            }))
+            .filter(({ variable }) => 0 < variable.name.length),
         }
       } else if (ai.type === "include") {
         return {
           type: "include" as const,
           ref: unwrapNull(ai.instanceParameter.ref)?.id ?? "",
-          parameters: ai.instanceParameter.parameters.map((parameter) => ({
-            variable: parameter.variable,
-            value: parameter.value,
-          })),
+          parameters: ai.instanceParameter.parameters
+            .map((parameter) => ({
+              variable: parameter.variable,
+              value: parameter.value,
+            }))
+            .filter(({ variable }) => 0 < variable.name.length),
+        }
+      } else if (ai.type === "db") {
+        return {
+          type: "db" as const,
+          query: ai.instanceParameter.query,
         }
       } else {
         return []

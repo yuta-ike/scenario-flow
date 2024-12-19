@@ -1,5 +1,6 @@
 import clsx from "clsx"
 import { forwardRef } from "react"
+import { FiLoader } from "react-icons/fi"
 
 import type { IconType } from "react-icons"
 import type { ComposeComponentProps } from "@/ui/utils/composeComponentProps"
@@ -12,6 +13,7 @@ type ButtonProps = ComposeComponentProps<
     size?: "sm" | "md"
     theme?: "primary" | "secondary"
     prefix?: IconType
+    loading?: boolean
   }
 >
 
@@ -23,6 +25,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       size = "md",
       prefix: Prefix,
       children,
+      loading = false,
+      disabled = loading,
       ...props
     },
     ref,
@@ -33,6 +37,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         // eslint-disable-next-line react/button-has-type
         type={type}
         {...props}
+        disabled={disabled}
         data-size={size}
         className={clsx(
           "flex items-center justify-center gap-2 rounded-md border px-4 py-2.5 text-sm leading-none transition focus:outline-none active:translate-y-px",
@@ -43,7 +48,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           "data-[size=sm]:gap-1 data-[size=sm]:px-3 data-[size=sm]:py-2 data-[size=sm]:text-xs data-[size=sm]:leading-none",
         )}
       >
-        {Prefix != null && <Prefix />}
+        {Prefix != null && !loading && (
+          <div className="shrink-0">
+            <Prefix />
+          </div>
+        )}
+        {loading && <FiLoader className="animate-spin" />}
         {children}
       </button>
     )

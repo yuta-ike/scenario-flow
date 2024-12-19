@@ -3,25 +3,25 @@ import { EMPTY_CONFIG } from "./config/emptyConfig"
 import type { ConfigFormat } from "@/schemas/configFormat/type/configFormat"
 import type { DirHandle } from "@/injector/parts/io"
 import type { InjectedContent } from "@/injector/injector"
+import type { Project } from "@/ui/domain/project"
 
 import { safelyParseJson } from "@/utils/json"
 import { validateConfigFormat } from "@/schemas/configFormat"
 
 export const setUpDirectory = async (
-  projectEntry: DirHandle,
+  dirHandle: DirHandle,
   injected: InjectedContent,
+  project: Project,
 ): Promise<ConfigFormat> => {
+  console.log(project)
   const {
     io: { getOrCreateFile, writeFile, readFile },
   } = injected
-  const configFile = await getOrCreateFile(projectEntry, "flow.config.json")
+  const configFile = await getOrCreateFile(dirHandle, "flow.config.json", {
+    cacheKey: project.id,
+  })
   console.log("[SetUpDirectory] configFile", configFile)
   const rawContent = await readFile(configFile)
-  // const rawContent =
-  //   typeof _rawContent === "string" ? _rawContent : decode(_rawContent)
-  console.log("[SetUpDirectory] configFile rawContent", rawContent)
-  console.log(typeof rawContent)
-  console.log(rawContent.length)
 
   const json =
     rawContent === ""

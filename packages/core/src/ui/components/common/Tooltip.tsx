@@ -12,7 +12,7 @@ export const Tooltip = ({ children, label }: TooltipProps) => {
         <RxTooltip.Trigger asChild>{children}</RxTooltip.Trigger>
         <RxTooltip.Portal>
           <RxTooltip.Content
-            className="rounded bg-slate-800 px-2.5 py-1.5 text-xs text-white shadow-sm"
+            className="z-30 rounded bg-slate-800 px-2.5 py-1.5 text-xs text-white shadow-sm"
             sideOffset={5}
           >
             {label}

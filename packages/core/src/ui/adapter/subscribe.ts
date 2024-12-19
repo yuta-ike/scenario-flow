@@ -20,6 +20,7 @@ const getOrCreateEntryRec = async (
   path: string[],
   parent: DirHandle | null,
   createDir: InjectedIo["createDir"],
+  projectId: string,
 ): Promise<[dirHandle: DirHandle, parent: DirHandle | null]> => {
   if (path.length === 0) {
     return [entry, parent]
@@ -28,13 +29,14 @@ const getOrCreateEntryRec = async (
 
   const dir =
     entry.children.find((child) => child.name === head) ??
-    (console.log(entry, head!), await createDir(entry, head!))
+    (console.log(entry, head!),
+    await createDir(entry, head!, { cacheKey: projectId }))
 
-  return await getOrCreateEntryRec(dir, tail, entry, createDir)
+  return await getOrCreateEntryRec(dir, tail, entry, createDir, projectId)
 }
 
 export const useWriteOutSubscription = () => {
-  const { entry, config } = useProjectContext()
+  const { entry, config, project } = useProjectContext()
   const {
     io: { writeFile, createFile, createDir, deleteFile, deleteDir },
   } = useInjected()
@@ -51,7 +53,6 @@ export const useWriteOutSubscription = () => {
         try {
           console.log("[Write out] Start")
           const decomposedForLib = store.get(decomposedForLibAtom)
-          console.log(decomposedForLib)
 
           const modifiedFiles = new Map<
             string,
@@ -71,13 +72,17 @@ export const useWriteOutSubscription = () => {
                   path,
                   null,
                   createDir,
+                  project.id,
                 )
                 const file =
                   dir.files.find(
                     (file) =>
                       file.name === `${meta.title}.yaml` ||
                       file.name === `${meta.title}.yml`,
-                  ) ?? (await createFile(dir, `${meta.title}.yaml`))
+                  ) ??
+                  (await createFile(dir, `${meta.title}.yaml`, {
+                    cacheKey: project.id,
+                  }))
                 console.log("[Subscribe] Write out file: ", file.path)
                 await writeFile(file, jsonToYaml(contents as Json))
                 modifiedFiles.set(file.path, { file, dir })
@@ -177,7 +182,9 @@ export const useWriteOutSubscription = () => {
         null,
         2,
       )
-      const handle = await createFile(entry, "flow.config.json")
+      const handle = await createFile(entry, "flow.config.json", {
+        cacheKey: project.id,
+      })
       await writeFile(handle, rawJson)
     }
 

@@ -14,8 +14,8 @@ import type { Result } from "@/utils/result"
 import type { JsonParseError } from "@/lib/json-schema/error"
 import type { Resource } from "@/domain/entity/resource/resource"
 import type { StripeSymbol } from "@/domain/entity/type"
-import type { RouteId } from "@/domain/entity/route/route"
 
+import { type RouteId } from "@/domain/entity/route/route"
 import {
   buildResource,
   type ResourceId,
@@ -29,11 +29,12 @@ import {
   deleteRoute as deleteRouteWf,
   updatePageName as updatePageNameWf,
   updateRoute as updateRouteWf,
+  swapRoutePath as swapRoutePathWf,
 } from "@/domain/workflow/route"
 import {
   appendNode as appendNodeWf,
   createRestCallRootNode as createRestCallRootNodeWf,
-  updateActionInstancesParameter,
+  updateActionInstancesParameter as updateActionInstancesParameterWf,
   upsertVariables as upsertVariablesWf,
   replaceAction as replaceActionWf,
   updateNode as updateNodeWf,
@@ -44,6 +45,11 @@ import {
   disconnectNodes as disconnectNodesWf,
   insertNode as insertNodeWf,
   unshiftNode as unshiftNodeWf,
+  appendUserDefinedRestCallNode as appendUserDefinedRestCallNodeWf,
+  insertUserDefinedRestCallNode as insertUserDefinedRestCallNodeWf,
+  unshiftUserDefinedRestCallNode as unshiftUserDefinedRestCallNodeWf,
+  createUserDefinedRestCallRootNode as createUserDefinedRestCallRootNodeWf,
+  updateUserDefinedAction as updateUserDefinedActionWf,
 } from "@/domain/workflow/node"
 import {
   addGlobalVariable as addGlobalVariableWf,
@@ -153,6 +159,10 @@ export const createIncludeRootNode = (routeId: RouteId, page: string) => {
   )
 }
 
+export const createUserDefinedRestCallRootNode = applyRunner(
+  createUserDefinedRestCallRootNodeWf,
+)
+
 export const appendNode = (
   nodeId: NodeId,
   actionIdentifier: ActionSourceIdentifier,
@@ -239,7 +249,8 @@ export const appendIncludeNode = (
 }
 
 export const insertNode = (
-  nodeId: NodeId,
+  fromNodeId: NodeId,
+  toNodeId: NodeId,
   actionIdentifier: ActionSourceIdentifier,
   page: string,
 ) =>
@@ -276,13 +287,15 @@ export const insertNode = (
         ],
         config: {},
       },
-      nodeId,
+      fromNodeId,
+      toNodeId,
       page,
     ),
   )
 
 export const insertIncludeNode = (
-  nodeId: NodeId,
+  fromNodeId: NodeId,
+  toNodeId: NodeId,
   routeId: RouteId,
   page: string,
 ) =>
@@ -316,7 +329,8 @@ export const insertIncludeNode = (
         ],
         config: {},
       },
-      nodeId,
+      fromNodeId,
+      toNodeId,
       page,
     ),
   )
@@ -396,6 +410,19 @@ export const unshiftIncludeNode = (routeId: RouteId) =>
       routeId,
     ),
   )
+
+export const appendUserDefinedRestCallNode = applyRunner(
+  appendUserDefinedRestCallNodeWf,
+)
+
+export const insertUserDefinedRestCallNode = applyRunner(
+  insertUserDefinedRestCallNodeWf,
+)
+
+export const unshiftUserDefinedRestCallNode = applyRunner(
+  unshiftUserDefinedRestCallNodeWf,
+)
+
 // action instanceを追加する
 export const appendActionInstance = (
   nodeId: NodeId,
@@ -471,6 +498,8 @@ export const addRoute = applyRunner(addRouteWf)
 
 export const updteRoute = applyRunner(updateRouteWf)
 
+export const swapRoutePath = applyRunner(swapRoutePathWf)
+
 export const updatePageName = (args: { prevPage: string; newPage: string }) => {
   run(updatePageNameWf(args))
   if (store.get(currentPageAtom) === args.prevPage) {
@@ -490,7 +519,11 @@ export const deleteNode = applyRunner(deleteNodeWf)
 
 export const connectNodes = applyRunner(connectNodesWf)
 
-export const updateActionInstance = applyRunner(updateActionInstancesParameter)
+export const updateActionInstance = applyRunner(
+  updateActionInstancesParameterWf,
+)
+
+export const updateUserDefinedAction = applyRunner(updateUserDefinedActionWf)
 
 export const upsertVariables = applyRunner(upsertVariablesWf)
 

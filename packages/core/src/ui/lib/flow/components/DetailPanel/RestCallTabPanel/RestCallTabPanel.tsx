@@ -14,6 +14,7 @@ import { ParameterTable } from "@/ui/lib/ParameterTable"
 import { updateActionInstance } from "@/ui/adapter/command"
 import { applyUpdate } from "@/ui/utils/applyUpdate"
 import { useParentNodeEnvironment } from "@/ui/adapter/query"
+import { getKeyStatus } from "@/domain/openapi/getKeyStatus"
 
 type RestCallTabPanelProps = {
   nodeId: NodeId
@@ -61,28 +62,66 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
   // environment
   const environment = useParentNodeEnvironment(nodeId)
 
+  const keyStatus = getKeyStatus(ai.action.schema.jsonSchema)
+
+  console.log(ai.instanceParameter.pathParams)
   return (
     <div className="flex h-full w-full flex-col bg-white">
       {/* タイトル */}
       <HeaderSection nodeId={nodeId} ai={ai} />
       {/* リクエストボディ */}
       <RequestBodySection nodeId={nodeId} ai={ai} />
-      <Section title="パスパラメータ">
-        <div className="flex flex-col gap-0.5">
-          <ParameterTable
-            rows={ai.instanceParameter.pathParams ?? []}
-            setRows={handleUpdatePathParamsParameter}
-            placeholderKey="limit"
-            placeholderValue="xyz"
-            environment={environment}
-            currentNodeId={nodeId}
-          />
-        </div>
-      </Section>
+      {ai.instanceParameter.pathParams != null &&
+        0 < ai.instanceParameter.pathParams.length && (
+          <Section title="パスパラメータ">
+            <div className="flex flex-col gap-0.5">
+              <ParameterTable
+                rows={ai.instanceParameter.pathParams.map((kv) => ({
+                  ...kv,
+                  description: keyStatus?.pathParams.get(kv.key)?.description,
+                  defined:
+                    keyStatus == null
+                      ? undefined
+                      : keyStatus.pathParams.get(kv.key) != null,
+                  required:
+                    keyStatus == null
+                      ? undefined
+                      : keyStatus.pathParams.get(kv.key)?.required === true,
+                  dataType:
+                    keyStatus == null
+                      ? undefined
+                      : keyStatus.pathParams.get(kv.key)?.dataType,
+                }))}
+                setRows={handleUpdatePathParamsParameter}
+                placeholderKey="limit"
+                placeholderValue="xyz"
+                environment={environment}
+                currentNodeId={nodeId}
+                lockNewRow
+              />
+            </div>
+          </Section>
+        )}
       <Section title="クエリパラメータ">
         <div className="flex flex-col gap-0.5">
           <ParameterTable
-            rows={ai.instanceParameter.queryParams ?? []}
+            rows={
+              ai.instanceParameter.queryParams?.map((kv) => ({
+                ...kv,
+                defined:
+                  keyStatus == null
+                    ? undefined
+                    : keyStatus.queryParams.get(kv.key) != null,
+                required:
+                  keyStatus == null
+                    ? undefined
+                    : keyStatus.queryParams.get(kv.key)?.required === true,
+                dataType:
+                  keyStatus == null
+                    ? undefined
+                    : keyStatus.queryParams.get(kv.key)?.dataType,
+              })) ?? []
+            }
             setRows={handleUpdateQueryParamsParameter}
             placeholderKey="limit"
             placeholderValue="100"
@@ -94,7 +133,23 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
       <Section title="ヘッダー">
         <div className="flex flex-col gap-0.5">
           <ParameterTable
-            rows={ai.instanceParameter.headers ?? []}
+            rows={
+              ai.instanceParameter.headers?.map((kv) => ({
+                ...kv,
+                defined:
+                  keyStatus == null
+                    ? undefined
+                    : keyStatus.headers.get(kv.key) != null,
+                required:
+                  keyStatus == null
+                    ? undefined
+                    : keyStatus.headers.get(kv.key)?.required === true,
+                dataType:
+                  keyStatus == null
+                    ? undefined
+                    : keyStatus.headers.get(kv.key)?.dataType,
+              })) ?? []
+            }
             setRows={handleUpdateHeadersParameter}
             placeholderKey="Authorization"
             placeholderValue="Bearer token"
@@ -106,7 +161,23 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
       <Section title="Cookie">
         <div className="flex flex-col gap-0.5">
           <ParameterTable
-            rows={ai.instanceParameter.cookies ?? []}
+            rows={
+              ai.instanceParameter.cookies?.map((kv) => ({
+                ...kv,
+                defined:
+                  keyStatus == null
+                    ? undefined
+                    : keyStatus.cookies.get(kv.key) != null,
+                required:
+                  keyStatus == null
+                    ? undefined
+                    : keyStatus.cookies.get(kv.key)?.required === true,
+                dataType:
+                  keyStatus == null
+                    ? undefined
+                    : keyStatus.cookies.get(kv.key)?.dataType,
+              })) ?? []
+            }
             setRows={handleUpdateCookiesParameter}
             placeholderKey="session_id"
             placeholderValue="1234567890"

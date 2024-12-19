@@ -60,7 +60,11 @@ export type RunBookStepMediaTypeObject = Json
 
 export type RunBookStepIncludeObject = {
   path: string
-  vars: Record<string, string>
+  vars?: Record<string, string>
+}
+
+export type RunBookStepDbObject = {
+  query: string
 }
 
 export type RunBookStep = {
@@ -71,4 +75,5 @@ export type RunBookStep = {
   test?: string
   include?: RunBookStepIncludeObject
   bind?: Record<string, string>
+  db?: RunBookStepDbObject
 }

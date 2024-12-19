@@ -9,6 +9,7 @@ import { ApiCallSection } from "../sections/ApiCallSection"
 import { ValidatorSection } from "../sections/ValidatorSection"
 import { useUpdateNodeSize } from "../../FlowProvider"
 import { IncludeSection } from "../sections/IncludeSection"
+import { DbSection } from "../sections/DbSection"
 
 import { ResultChips } from "./ResultChips"
 
@@ -21,7 +22,12 @@ import type { RouteId } from "@/domain/entity/route/route"
 import { useNode } from "@/ui/adapter/query"
 import { useIsNodeFocused } from "@/ui/state/focusedNodeId"
 import { useFocusedRouteByNodeId } from "@/ui/state/focusedRouteId"
-import { appendIncludeNode, appendNode, deleteNode } from "@/ui/adapter/command"
+import {
+  appendIncludeNode,
+  appendNode,
+  appendUserDefinedRestCallNode,
+  deleteNode,
+} from "@/ui/adapter/command"
 import { useIsNodeHighlighted } from "@/ui/state/highlightedNodeId"
 import { useHotkey } from "@/ui/lib/hotkey"
 import { IconButton } from "@/ui/components/common/IconButton"
@@ -39,6 +45,8 @@ const getComponent = (type: ActionInstance["type"]) => {
     return ValidatorSection
   } else if (type === "include") {
     return IncludeSection
+  } else if (type === "db") {
+    return DbSection
   } else if (type === "unknown") {
     return NotFound
   }
@@ -71,6 +79,15 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
     useCallback(
       (get, _, routeId: RouteId) => {
         appendIncludeNode(nodeId, routeId, get(currentPageAtom))
+      },
+      [nodeId],
+    ),
+  )
+
+  const handleInsertUserDefinedApiCallNode = useAtomCallback(
+    useCallback(
+      (get, _) => {
+        appendUserDefinedRestCallNode(nodeId, get(currentPageAtom))
       },
       [nodeId],
     ),
@@ -155,6 +172,7 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
           <OpenCreateDropdown
             mode="append"
             onCreateApiCall={handleCreateNewApiCallNode}
+            onCreateUserDefinedApiCall={handleInsertUserDefinedApiCallNode}
             onCreateIclude={handleCreateNewIncludeNode}
           >
             <button

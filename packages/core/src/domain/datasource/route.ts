@@ -24,6 +24,9 @@ import { wrapAtomFamily } from "@/lib/jotai/wrapAtomFamily"
 import { addSetOp } from "@/utils/set"
 import { applyUpdate } from "@/ui/utils/applyUpdate"
 
+// route name cache
+export const routeNamesCache = atom(new Set<string>())
+
 // atoms
 export const routeIdsAtom = atomSet<RouteId>([])
 routeIdsAtom.debugLabel = "routeIdsAtom"
@@ -44,23 +47,43 @@ export const primitiveRouteAtom = wrapAtomFamily(_primitiveRouteAtom, {
       const getDefaultName = () => `シナリオ${get(routeIdsAtom).size + 1}`
       const getColor = () => get(routeColorCache)
 
+      const name =
+        param.create.name == null || param.create.name.length === 0
+          ? getDefaultName()
+          : param.create.name
+
+      // Cache
+      set(routeNamesCache, addSetOp(name))
+
       _primitiveRouteAtom(
         id,
         buildPrimitiveRoute(id, {
           ...param.create,
           color: param.create.color ?? getColor(),
-          name:
-            param.create.name == null || param.create.name.length === 0
-              ? getDefaultName()
-              : param.create.name,
+          name,
         }),
       )
       set(routeIdsAtom, addSetOp(id))
     } else {
       // 更新
-      set(_primitiveRouteAtom(id), (prevValue) =>
-        buildPrimitiveRoute(id, applyUpdate(param.update, prevValue)),
-      )
+      set(_primitiveRouteAtom(id), (prevValue) => {
+        const newRoute = buildPrimitiveRoute(
+          id,
+          applyUpdate(param.update, prevValue),
+        )
+
+        // Cache
+        if (newRoute.name !== prevValue.name) {
+          set(routeNamesCache, (prev) => {
+            const newSet = new Set(prev)
+            newSet.delete(prevValue.name)
+            newSet.add(newRoute.name)
+            return newSet
+          })
+        }
+
+        return newRoute
+      })
     }
   },
 })

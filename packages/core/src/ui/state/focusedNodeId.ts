@@ -24,3 +24,8 @@ export const useFocusedNodeId = () => useAtomValue(focusedNodeId)
 export const useIsNodeFocused = (nodeId: NodeId) => {
   return useAtomValue(isNodeFocused(nodeId))
 }
+
+const focusedNodeExists = atom((get) => get(focusedNodeId) !== null)
+export const useFocusedNodeExists = () => {
+  return useAtomValue(focusedNodeExists)
+}

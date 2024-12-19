@@ -11,6 +11,7 @@ import type { RouteId } from "@/domain/entity/route/route"
 import {
   createIncludeRootNode,
   createRestCallRootNode,
+  createUserDefinedRestCallRootNode,
 } from "@/ui/adapter/command"
 import { currentPageAtom } from "@/ui/state/page"
 
@@ -27,15 +28,23 @@ export const StartNode = () => {
     }, []),
   )
 
+  const handleInsertUserDefinedApiCallNode = useAtomCallback(
+    useCallback((get, _) => {
+      createUserDefinedRestCallRootNode(get(currentPageAtom))
+    }, []),
+  )
+
   return (
-    <div className="cursor-arrowhead w-[240px] rounded-lg bg-slate-100 p-2 pb-6">
+    <div className="w-[240px] cursor-arrowhead rounded-lg bg-slate-100 p-2 pb-6">
       <section className="flex w-full flex-col items-center gap-1 rounded-lg bg-white py-3 text-sm shadow-object">
         シナリオ開始
       </section>
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[40%]">
         <OpenCreateDropdown
           onCreateApiCall={handleCreateNewApiCallNode}
+          onCreateUserDefinedApiCall={handleInsertUserDefinedApiCallNode}
           onCreateIclude={handleCreateNewIncludeNode}
+          mode="append"
         >
           <button
             type="button"

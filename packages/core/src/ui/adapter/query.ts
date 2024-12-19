@@ -50,6 +50,7 @@ import {
   latestResolvedNodeRunResultAtom,
   nodeStatesAtom,
 } from "@/domain/datasource/nodeStates"
+import { userDefinedActionIdsAtom } from "@/domain/datasource/userDefinedAction"
 
 const nullAtom = atom(null)
 
@@ -72,6 +73,9 @@ export const useResource = (id: ResourceId) => useAtomValue(resourceAtom(id))
 
 export const useResourceIds = () =>
   useAtomValue(resourceIdsAtom).values().toArray()
+
+export const useUserDefinedActionIds = () =>
+  useAtomValue(userDefinedActionIdsAtom).values().toArray()
 
 export const useResources = () => useAtomValue(resourcesAtom)
 

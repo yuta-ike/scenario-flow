@@ -1,3 +1,5 @@
+import { TbComponents } from "react-icons/tb"
+
 import type { SectionComponentInterface } from "./interface"
 
 import { MethodChip } from "@/ui/components/common/MethodChip"
@@ -25,9 +27,12 @@ export const ApiCallSection: SectionComponentInterface = ({
         <MethodChip truncate={3}>
           {actionInstance.instanceParameter.method!}
         </MethodChip>
-        <div className="text-xs text-slate-400">
-          {actionInstance.action.schema.jsonSchema?.operationId}
-        </div>
+        {actionInstance.action.resourceType === "resource" && (
+          <div className="flex translate-x-2 items-center gap-0.5 rounded border border-blue-200 bg-blue-100 px-2 py-1 text-xs leading-none">
+            <TbComponents />
+            {actionInstance.action.schema.jsonSchema?.operationId}
+          </div>
+        )}
       </div>
       {/* Body */}
       <div className="text-sm leading-none">

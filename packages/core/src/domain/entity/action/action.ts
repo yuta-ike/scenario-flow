@@ -14,6 +14,8 @@ import type {
 } from "./actionParameter"
 import type { Id } from "@/utils/idType"
 
+import { nonNull } from "@/utils/assert"
+
 declare const _action: unique symbol
 export type ActionId = Id & { [_action]: never }
 
@@ -107,5 +109,38 @@ export const getIdentifier = (action: Action) => {
       resourceType: "user_defined",
       resourceIdentifier: action.resourceIdentifier,
     })
+  }
+}
+
+export const updateRestCallActionParameter = (
+  action: ResolvedAction,
+  base: ResolvedAction<"rest_call">["schema"]["base"],
+): ResolvedAction => {
+  if (action.type === "rest_call") {
+    const path = base.path ?? action.schema.base.path
+
+    return {
+      ...action,
+      name: `${base.method ?? action.schema.base.method} ${base.path ?? action.schema.base.path}`,
+      schema: {
+        ...action.schema,
+        base: {
+          ...action.schema.base,
+          ...base,
+          pathParams: path
+            ?.matchAll(/\{(?<frags>[^}]+)\}/g)
+            .map((match) => match.groups?.["frags"])
+            .filter(nonNull)
+            .map((key) => ({
+              id: key,
+              key,
+              value: "",
+            }))
+            .toArray(),
+        },
+      },
+    }
+  } else {
+    return action
   }
 }

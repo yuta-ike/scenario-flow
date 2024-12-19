@@ -1,5 +1,6 @@
 import { display, eq, type ActionSourceIdentifier } from "../action/identifier"
 import { mergeActionParameter } from "../action/actionParameter"
+import { getUniqName } from "../getUniqName"
 
 import { CannotChangeActionTypeError } from "./node.error"
 import {
@@ -10,11 +11,11 @@ import {
 } from "./actionInstance"
 
 import type { Time } from "../value/time"
-import type { Receiver, StripeSymbol, Transition } from "../type"
+import type { BuilderParams, Receiver, StripeSymbol, Transition } from "../type"
 import type { ActionType, ResolvedAction } from "../action/action"
 import type { Expression } from "../value/expression"
 import type { Id, OmitId } from "@/utils/idType"
-import type { Replace } from "@/utils/typeUtil"
+import type { DistributiveOmit, Replace } from "@/utils/typeUtil"
 
 export type LoopConfig = {
   interval?: Time
@@ -40,10 +41,16 @@ export type PrimitiveNode = {
 
 export const buildPrimitiveNode = (
   id: string,
-  params: OmitId<StripeSymbol<PrimitiveNode>>,
+  {
+    name,
+    ...params
+  }: BuilderParams<DistributiveOmit<PrimitiveNode, "name">> & { name?: string },
+  userNames: string[],
 ) => {
+  const uniqName = getUniqName(name ?? "シナリオ", userNames)
   return {
     id,
+    name: uniqName,
     ...params,
   } as PrimitiveNode
 }

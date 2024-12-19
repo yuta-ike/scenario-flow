@@ -29,14 +29,17 @@ export type InjectedIo<
   createFile: (
     entry: DirHandle<FileEntryAdditional, DirEntryAdditional>,
     name: string,
+    option?: { cacheKey?: string },
   ) => Promise<FileHandle<FileEntryAdditional>>
   createDir: (
     entry: DirHandle<FileEntryAdditional, DirEntryAdditional>,
     name: string,
+    option?: { cacheKey?: string },
   ) => Promise<DirHandle<FileEntryAdditional, DirEntryAdditional>>
   getOrCreateFile: (
     entry: DirHandle<FileEntryAdditional, DirEntryAdditional>,
     name: string,
+    option?: { cacheKey?: string },
   ) => Promise<FileHandle<FileEntryAdditional>>
   deleteFile: (
     entry: DirHandle<FileEntryAdditional, DirEntryAdditional>,
@@ -62,7 +65,13 @@ export type InjectedIo<
     cb: () => void,
   ) => Promise<void>
 
-  // Open
-  openDir: () => Promise<DirHandle<FileEntryAdditional, DirEntryAdditional>>
-  openFile: () => Promise<FileHandle<FileEntryAdditional>>
+  // Select
+  selectDir: (
+    path?: string,
+    option?: { cacheKey?: string },
+  ) => Promise<DirHandle<FileEntryAdditional, DirEntryAdditional>>
+  selectFile: (
+    path?: string,
+    option?: { silent?: boolean; cacheKey?: string },
+  ) => Promise<FileHandle<FileEntryAdditional>>
 }

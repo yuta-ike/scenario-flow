@@ -5,8 +5,8 @@ import { useResource } from "@/ui/adapter/query"
 export const ResourceTile = ({ resourceId }: { resourceId: ResourceId }) => {
   const resource = useResource(resourceId)
   return (
-    <div className="rounded border border-slate-200 px-1.5 py-1 text-sm leading-none text-slate-500">
+    <h3 className="sticky top-0 w-full grow bg-white px-2 py-1 text-xs text-slate-600">
       {resource.name}
-    </div>
+    </h3>
   )
 }
