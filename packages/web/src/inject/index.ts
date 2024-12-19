@@ -11,7 +11,7 @@ import {
 } from "./io"
 import { loadStore, saveStore, subscribeStore } from "./store"
 
-import type { InjectedContent } from "@/injector/injector"
+import type { InjectedContent } from "@scenario-flow/core"
 
 export const injectedContent: InjectedContent = {
   io: {

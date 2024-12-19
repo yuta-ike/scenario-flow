@@ -1,4 +1,4 @@
-import type { AppStore, InjectedStore } from "@/injector/parts/store"
+import type { AppStore, InjectedStore } from "@scenario-flow/core"
 
 const KEY = "scenario-flow:projects.json"
 

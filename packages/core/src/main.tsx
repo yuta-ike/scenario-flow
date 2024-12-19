@@ -13,6 +13,8 @@ import { useContainerReady, useContainer } from "./ui/adapter/container"
 
 import type { InjectedContent } from "./injector/injector"
 
+export type * from "./injector"
+
 const queryClient = new QueryClient()
 
 // NOTE: polyfill https://github.com/vitejs/vite/discussions/2785
