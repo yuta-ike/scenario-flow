@@ -12,6 +12,7 @@ import {
   createIncludeRootNode,
   createRestCallRootNode,
   createUserDefinedRestCallRootNode,
+  createDbNode,
 } from "@/ui/adapter/command"
 import { currentPageAtom } from "@/ui/state/page"
 
@@ -29,8 +30,14 @@ export const StartNode = () => {
   )
 
   const handleInsertUserDefinedApiCallNode = useAtomCallback(
-    useCallback((get, _) => {
+    useCallback((get) => {
       createUserDefinedRestCallRootNode(get(currentPageAtom))
+    }, []),
+  )
+
+  const handleCreateDbNode = useAtomCallback(
+    useCallback((get) => {
+      createDbNode(get(currentPageAtom))
     }, []),
   )
 
@@ -44,6 +51,7 @@ export const StartNode = () => {
           onCreateApiCall={handleCreateNewApiCallNode}
           onCreateUserDefinedApiCall={handleInsertUserDefinedApiCallNode}
           onCreateIclude={handleCreateNewIncludeNode}
+          onCreateDbNode={handleCreateDbNode}
           mode="append"
         >
           <button

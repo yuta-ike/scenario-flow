@@ -1009,7 +1009,7 @@ const _createAndAddRoute = (
   )
 
 // ルートノードを作成する
-export const createRestCallRootNode = (
+export const createRootNode = (
   node: OmitId<StripeSymbol<PrimitiveNode>, "name">,
   page: string,
 ) =>

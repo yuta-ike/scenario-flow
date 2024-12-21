@@ -33,7 +33,7 @@ import {
 } from "@/domain/workflow/route"
 import {
   appendNode as appendNodeWf,
-  createRestCallRootNode as createRestCallRootNodeWf,
+  createRootNode as createRootNodeWf,
   updateActionInstancesParameter as updateActionInstancesParameterWf,
   upsertVariables as upsertVariablesWf,
   replaceAction as replaceActionWf,
@@ -50,6 +50,7 @@ import {
   unshiftUserDefinedRestCallNode as unshiftUserDefinedRestCallNodeWf,
   createUserDefinedRestCallRootNode as createUserDefinedRestCallRootNodeWf,
   updateUserDefinedAction as updateUserDefinedActionWf,
+  createRootNode,
 } from "@/domain/workflow/node"
 import {
   addGlobalVariable as addGlobalVariableWf,
@@ -76,7 +77,7 @@ export const createRestCallRootNode = (
   page: string,
 ) => {
   run(
-    createRestCallRootNodeWf(
+    createRootNodeWf(
       {
         description: "",
         actionInstances: [
@@ -120,7 +121,7 @@ export const createRestCallRootNode = (
 
 export const createIncludeRootNode = (routeId: RouteId, page: string) => {
   run(
-    createRestCallRootNodeWf(
+    createRootNodeWf(
       {
         description: "",
         actionInstances: [
@@ -130,6 +131,46 @@ export const createIncludeRootNode = (routeId: RouteId, page: string) => {
             instanceParameter: {
               ref: routeId,
               parameters: [],
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "validator",
+            instanceParameter: {
+              contents: toExpression(""),
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "binder",
+            instanceParameter: {
+              assignments: [],
+            },
+          },
+        ],
+        config: {
+          condition: toExpression("true"),
+          loop: {
+            maxRetries: 0,
+          },
+        },
+      },
+      page,
+    ),
+  )
+}
+
+export const createDbNode = (page: string) => {
+  run(
+    createRootNode(
+      {
+        description: "",
+        actionInstances: [
+          {
+            id: toActionInstanceId(genId()),
+            type: "db",
+            instanceParameter: {
+              query: "",
             },
           },
           {
@@ -422,6 +463,115 @@ export const insertUserDefinedRestCallNode = applyRunner(
 export const unshiftUserDefinedRestCallNode = applyRunner(
   unshiftUserDefinedRestCallNodeWf,
 )
+
+export const unshiftDbNode = (routeId: RouteId) =>
+  run(
+    unshiftNodeWf(
+      {
+        description: "",
+        actionInstances: [
+          {
+            id: toActionInstanceId(genId()),
+            type: "db",
+            instanceParameter: {
+              query: "",
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "validator",
+            instanceParameter: {
+              contents: toExpression(""),
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "binder",
+            instanceParameter: {
+              assignments: [],
+            },
+          },
+        ],
+        config: {},
+      },
+      routeId,
+    ),
+  )
+
+export const insertDbNode = (
+  fromNodeId: NodeId,
+  toNodeId: NodeId,
+  page: string,
+) =>
+  run(
+    insertNodeWf(
+      {
+        description: "",
+        actionInstances: [
+          {
+            id: toActionInstanceId(genId()),
+            type: "db",
+            instanceParameter: {
+              query: "",
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "validator",
+            instanceParameter: {
+              contents: toExpression(""),
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "binder",
+            instanceParameter: {
+              assignments: [],
+            },
+          },
+        ],
+        config: {},
+      },
+      fromNodeId,
+      toNodeId,
+      page,
+    ),
+  )
+
+export const appendDbNode = (fromNodeId: NodeId, page: string) =>
+  run(
+    appendNodeWf(
+      {
+        description: "",
+        actionInstances: [
+          {
+            id: toActionInstanceId(genId()),
+            type: "db",
+            instanceParameter: {
+              query: "",
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "validator",
+            instanceParameter: {
+              contents: toExpression(""),
+            },
+          },
+          {
+            id: toActionInstanceId(genId()),
+            type: "binder",
+            instanceParameter: {
+              assignments: [],
+            },
+          },
+        ],
+        config: {},
+      },
+      fromNodeId,
+      page,
+    ),
+  )
 
 // action instanceを追加する
 export const appendActionInstance = (

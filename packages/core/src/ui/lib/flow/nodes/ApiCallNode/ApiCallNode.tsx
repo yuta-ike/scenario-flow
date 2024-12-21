@@ -23,6 +23,7 @@ import { useNode } from "@/ui/adapter/query"
 import { useIsNodeFocused } from "@/ui/state/focusedNodeId"
 import { useFocusedRouteByNodeId } from "@/ui/state/focusedRouteId"
 import {
+  appendDbNode,
   appendIncludeNode,
   appendNode,
   appendUserDefinedRestCallNode,
@@ -88,6 +89,15 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
     useCallback(
       (get, _) => {
         appendUserDefinedRestCallNode(nodeId, get(currentPageAtom))
+      },
+      [nodeId],
+    ),
+  )
+
+  const handleAppendDbNode = useAtomCallback(
+    useCallback(
+      (get, _) => {
+        appendDbNode(nodeId, get(currentPageAtom))
       },
       [nodeId],
     ),
@@ -174,6 +184,7 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
             onCreateApiCall={handleCreateNewApiCallNode}
             onCreateUserDefinedApiCall={handleInsertUserDefinedApiCallNode}
             onCreateIclude={handleCreateNewIncludeNode}
+            onCreateDbNode={handleAppendDbNode}
           >
             <button
               type="button"

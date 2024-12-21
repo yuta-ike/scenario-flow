@@ -5,7 +5,6 @@ import {
   TbFlag2,
   TbLayoutSidebarRightCollapse,
   TbTrash,
-  TbViewfinder,
 } from "react-icons/tb"
 import clsx from "clsx"
 import { flushSync } from "react-dom"
@@ -20,8 +19,7 @@ import { useRoute } from "@/ui/adapter/query"
 import { MethodChip } from "@/ui/components/common/MethodChip"
 import { AccordionItem } from "@/ui/components/common/Accordion"
 import { deleteRoute, updteRoute } from "@/ui/adapter/command"
-import { useFocusNode } from "@/ui/state/focusedNodeId"
-import { IconButton } from "@/ui/components/common/IconButton"
+import { useFocusedNodeId, useFocusNode } from "@/ui/state/focusedNodeId"
 import {
   useIsFocusedRouteId,
   useSetFocuseRoute,
@@ -35,6 +33,7 @@ type Props = {
 export const RouteTile = ({ routeId }: Props) => {
   const route = useRoute(routeId)
   const focusNode = useFocusNode()
+  const focusedNodeId = useFocusedNodeId()
 
   const [editMode, setEditMode] = useState(false)
 
@@ -165,90 +164,44 @@ export const RouteTile = ({ routeId }: Props) => {
       gap={4}
     >
       {/* ノード一覧 */}
-      <ol className="flex flex-col pl-5">
+      <ol className="flex flex-col gap-0.5 pl-5">
         {route.path.map((node) => (
-          <li
-            key={node.id}
-            className="group rounded px-2 py-1 transition hover:bg-slate-50"
-          >
-            {node.actionInstances.map((ai) => {
-              if ("action" in ai && ai.action.type === "rest_call") {
-                return (
-                  <div
-                    key={ai.id}
-                    className="flex w-full justify-between gap-2 text-sm"
-                  >
-                    <div className="flex grow items-center gap-2">
-                      <MethodChip truncate={3}>
-                        {ai.instanceParameter.method!}
-                      </MethodChip>
-                      <div className="grow truncate">
-                        {ai.instanceParameter.path!}
-                      </div>
-                    </div>
-                    <div className="shrink-0 opacity-0 group-hover:opacity-100">
-                      <IconButton
-                        onClick={() => focusNode(node.id)}
-                        icon={TbViewfinder}
-                        size="sm"
-                        label="フォーカス"
-                        variant="segmented"
-                      />
+          <li key={node.id}>
+            <button
+              type="button"
+              aria-pressed={focusedNodeId === node.id}
+              className="group w-full rounded px-2 py-1 hover:bg-slate-50 aria-[pressed=true]:bg-slate-100"
+              onClick={() => focusNode(node.id)}
+            >
+              {node.actionInstances.map((ai) =>
+                "action" in ai && ai.action.type === "rest_call" ? (
+                  <div key={ai.id} className="flex grow items-center gap-2">
+                    <MethodChip truncate={3}>
+                      {ai.instanceParameter.method!}
+                    </MethodChip>
+                    <div className="grow truncate text-start text-sm">
+                      {ai.instanceParameter.path!}
                     </div>
                   </div>
-                )
-              } else if (ai.type === "include") {
-                return (
-                  <div
-                    key={ai.id}
-                    className="flex w-full justify-between gap-2 text-sm"
-                  >
-                    <div className="flex grow items-center gap-2">
-                      <div className="text-xs font-bold text-blue-400">
-                        Include
-                      </div>
-                      <div className="line-clamp-1 grow">
-                        {unwrapNull(ai.instanceParameter.ref)?.name}
-                      </div>
+                ) : ai.type === "include" ? (
+                  <div key={ai.id} className="flex grow items-center gap-2">
+                    <div className="text-xs font-bold text-blue-400">
+                      Include
                     </div>
-                    <div className="shrink-0 opacity-0 group-hover:opacity-100">
-                      <IconButton
-                        onClick={() => focusNode(node.id)}
-                        icon={TbViewfinder}
-                        size="sm"
-                        label="フォーカス"
-                        variant="segmented"
-                      />
+                    <div className="line-clamp-1 grow text-start text-sm">
+                      {unwrapNull(ai.instanceParameter.ref)?.name}
                     </div>
                   </div>
-                )
-              } else if (ai.type === "db") {
-                return (
-                  <div
-                    key={ai.id}
-                    className="flex w-full justify-between gap-2 text-sm"
-                  >
-                    <div className="flex grow items-center gap-2">
-                      <div className="text-xs font-bold text-blue-400">SQL</div>
-                      <div className="line-clamp-1 grow">
-                        {ai.instanceParameter.query}
-                      </div>
-                    </div>
-                    <div className="shrink-0 opacity-0 group-hover:opacity-100">
-                      <IconButton
-                        onClick={() => focusNode(node.id)}
-                        icon={TbViewfinder}
-                        size="sm"
-                        label="フォーカス"
-                        variant="segmented"
-                      />
+                ) : ai.type === "db" ? (
+                  <div key={ai.id} className="flex grow items-center gap-2">
+                    <div className="text-xs font-bold text-blue-400">SQL</div>
+                    <div className="line-clamp-1 grow text-start text-sm">
+                      {ai.instanceParameter.query}
                     </div>
                   </div>
-                )
-              } else {
-                return null
-              }
-            })}
+                ) : null,
+              )}
+            </button>
           </li>
         ))}
       </ol>

@@ -9,9 +9,11 @@ import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
 import type { RouteId } from "@/domain/entity/route/route"
 
 import {
+  insertDbNode,
   insertIncludeNode,
   insertNode,
   insertUserDefinedRestCallNode,
+  unshiftDbNode,
   unshiftIncludeNode,
   unshiftNode,
   unshiftUserDefinedRestCallNode,
@@ -79,12 +81,26 @@ export const InsertButton = ({
     ),
   )
 
+  const handleCreateDbNode = useAtomCallback(
+    useCallback(
+      (get, _) => {
+        if (fromNodeId === "$root") {
+          unshiftDbNode(routeIds[0]!)
+        } else {
+          insertDbNode(fromNodeId, toNodeId, get(currentPageAtom))
+        }
+      },
+      [fromNodeId, routeIds, toNodeId],
+    ),
+  )
+
   return (
     <OpenCreateDropdown
       mode="insert"
       onCreateApiCall={handleInsertApiCallNode}
       onCreateIclude={handleInsertIncludeNode}
       onCreateUserDefinedApiCall={handleInsertUserDefinedApiCallNode}
+      onCreateDbNode={handleCreateDbNode}
     >
       <button
         data-expanded={expanded}

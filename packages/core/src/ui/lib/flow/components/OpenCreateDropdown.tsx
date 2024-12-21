@@ -2,7 +2,7 @@ import * as Popover from "@radix-ui/react-popover"
 import clsx from "clsx"
 import { useEffect, useMemo, useState } from "react"
 import { RxCaretLeft, RxCaretRight, RxPlus } from "react-icons/rx"
-import { TbApi, TbArrowRightCircle, TbFlag2 } from "react-icons/tb"
+import { TbApi, TbArrowRightCircle, TbDatabase, TbFlag2 } from "react-icons/tb"
 import { Handle, Position } from "@xyflow/react"
 import { FiPlus } from "react-icons/fi"
 
@@ -27,6 +27,7 @@ type OpenCreateDropdownProps = {
   onCreateApiCall: (actionId: ActionSourceIdentifier) => void
   onCreateUserDefinedApiCall: () => void
   onCreateIclude: (routeId: RouteId) => void
+  onCreateDbNode: () => void
   mode: "append" | "insert"
 }
 
@@ -35,6 +36,7 @@ export const OpenCreateDropdown = ({
   onCreateApiCall,
   onCreateUserDefinedApiCall,
   onCreateIclude,
+  onCreateDbNode,
   mode,
 }: OpenCreateDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false)
@@ -80,6 +82,11 @@ export const OpenCreateDropdown = ({
 
   const handleCreatNewNode = () => {
     onCreateUserDefinedApiCall()
+    setIsOpen(false)
+  }
+
+  const handleCreateDbNode = () => {
+    onCreateDbNode()
     setIsOpen(false)
   }
 
@@ -134,6 +141,19 @@ export const OpenCreateDropdown = ({
                   className="m-0.5 fill-current text-orange-500"
                 />
                 シナリオ呼び出し
+                <RxCaretRight size={18} className="ml-auto" />
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateDbNode}
+                className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-4 py-3 text-sm leading-none text-slate-700 hover:bg-slate-100 hover:text-slate-900 hover:outline-none"
+              >
+                <TbDatabase
+                  size={20}
+                  strokeWidth={2.5}
+                  className="m-0.5 text-blue-500"
+                />
+                クエリ呼び出し
                 <RxCaretRight size={18} className="ml-auto" />
               </button>
               {mode === "append" && (
