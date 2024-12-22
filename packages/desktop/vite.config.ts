@@ -10,8 +10,6 @@ import jotaiReactRefresh from "jotai/babel/plugin-react-refresh"
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill"
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill"
 
-import type { PluginOption } from "vite"
-
 // @ts-expect-error process is a nodejs global
 const host: string = process.env.TAURI_DEV_HOST
 
@@ -25,7 +23,7 @@ export default defineConfig(({ mode }) => ({
         plugins: [jotaiReactRefresh, jotaiDebugLabel],
         presets: ["jotai/babel/preset"],
       },
-    }) as PluginOption[],
+    }),
     mode === "analyze" &&
       visualizer({
         open: true,

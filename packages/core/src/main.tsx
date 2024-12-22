@@ -16,7 +16,9 @@ import type { InjectedContent } from "./injector/injector"
 
 export type * from "./injector"
 
-export { success, error } from "@/utils/result"
+import { success, error } from "@/utils/result"
+
+export { success, error }
 
 const queryClient = new QueryClient()
 

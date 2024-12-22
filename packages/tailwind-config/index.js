@@ -1,4 +1,5 @@
 import plugin from 'tailwindcss'
+import containerQueriesPlugin from "@tailwindcss/container-queries"
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -35,7 +36,7 @@ export default {
     },
   },
   plugins: [
-    require("@tailwindcss/container-queries"),
+    containerQueriesPlugin,
     plugin(function ({ addUtilities }) {
       addUtilities({
         ".text-between": {
