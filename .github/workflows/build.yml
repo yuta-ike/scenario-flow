@@ -20,18 +20,15 @@ jobs:
           - platform: "windows-latest"
             args: ""
 
-    defaults:
-      run:
-        working-directory: packages/desktop
-
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up node
-        uses: pnpm/action-setup@v2
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 9.12.3
+          run_install: false
 
       - name: setup node
         uses: actions/setup-node@v4
@@ -53,6 +50,9 @@ jobs:
 
       - name: install frontend dependencies
         run: pnpm install
+      - name: build frontend
+        run: pnpm build
+        working-directory: packages/desktop
 
       - uses: tauri-apps/tauri-action@v0
         env:
@@ -64,3 +64,5 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+          projectPath: packages/desktop
+          tauriScript: pnpm run tauri
