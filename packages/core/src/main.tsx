@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import "./globals.css"
 import "./worker"
 // For safari
@@ -14,6 +15,8 @@ import { useContainerReady, useContainer } from "./ui/adapter/container"
 import type { InjectedContent } from "./injector/injector"
 
 export type * from "./injector"
+
+export * from "@/utils/result"
 
 const queryClient = new QueryClient()
 
