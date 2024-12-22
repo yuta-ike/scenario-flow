@@ -1,4 +1,4 @@
-use tauri::{TitleBarStyle, WebviewUrl, WebviewWindowBuilder};
+use tauri::{WebviewUrl, WebviewWindowBuilder};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -14,8 +14,8 @@ pub fn run() {
                 .inner_size(800.0, 600.0);
 
             // set transparent title bar only when building for macOS
-            #[cfg(target_os = "macos")]
-            let win_builder = win_builder.title_bar_style(TitleBarStyle::Transparent);
+            // #[cfg(target_os = "macos")]
+            // let win_builder = win_builder.title_bar_style(TitleBarStyle::Transparent);
 
             let window = win_builder.build().unwrap();
 
