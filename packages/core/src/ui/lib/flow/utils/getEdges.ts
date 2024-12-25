@@ -19,7 +19,15 @@ const getEdgesInRoute = (route: PrimitiveRoute) => {
 }
 
 export const getEdges = (routes: PrimitiveRoute[], initialNodeId: NodeId) => {
-  const edgePairs = routes.flatMap((route) => getEdgesInRoute(route))
+  const edgePairs = routes.flatMap<[string, string]>((route) => {
+    const edges = getEdgesInRoute(route)
+    if (edges.length === 0) {
+      return []
+    }
+    const lastNodeId = edges.at(-1)?.[1]
+
+    return [...edges, [lastNodeId!, `${lastNodeId!}_virtual`]]
+  })
 
   const rootNodeIds = getRootNodeIds(routes)
   rootNodeIds.forEach((rootNodeId) => {
@@ -30,7 +38,7 @@ export const getEdges = (routes: PrimitiveRoute[], initialNodeId: NodeId) => {
     id: `${source}-${target}`,
     source,
     target,
-    type: "basicEdge",
+    type: target.endsWith("_virtual") ? "skeltonEdge" : "basicEdge",
   }))
   return dedupeArrayByKey(edges, "id")
 }

@@ -34,6 +34,7 @@ export const ApiCallSection: SectionComponentInterface = ({
           </div>
         )}
       </div>
+
       {/* Body */}
       <div className="text-sm leading-none">
         {actionInstance.instanceParameter.path!}

@@ -64,7 +64,6 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
 
   const keyStatus = getKeyStatus(ai.action.schema.jsonSchema)
 
-  console.log(ai.instanceParameter.pathParams)
   return (
     <div className="flex h-full w-full flex-col bg-white">
       {/* タイトル */}

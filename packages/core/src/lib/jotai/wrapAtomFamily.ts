@@ -18,6 +18,7 @@ export const wrapAtomFamily = <
     clearAll: () => void
   },
   { write }: WrapOption<FamilyId, InputParam>,
+  onRemoved?: (id: FamilyId) => void,
 ): AtomFamily<FamilyId, WritableAtom<AtomType, InputParam, void>> & {
   clearAll: () => void
 } => {
@@ -31,7 +32,10 @@ export const wrapAtomFamily = <
   // @ts-expect-error
   wrappedAtom.clearAll = () => innerAtomFamily.clearAll()
 
-  wrappedAtom.remove = (id: FamilyId) => innerAtomFamily.remove(id)
+  wrappedAtom.remove = (id: FamilyId) => {
+    innerAtomFamily.remove(id)
+    onRemoved?.(id)
+  }
 
   wrappedAtom.getParams = () => innerAtomFamily.getParams()
 

@@ -148,6 +148,7 @@ export const StepItem = ({ node, index }: Props) => {
                   </div>
                 ) : ai.type === "db" ? (
                   <div className="flex items-center gap-2">
+                    <div className="text-sm font-bold text-blue-400">DB </div>
                     <div className="line-clamp-3 text-start font-mono text-xs">
                       {ai.instanceParameter.query}
                     </div>

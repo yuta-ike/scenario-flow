@@ -19,25 +19,25 @@ import { currentPageAtom } from "@/ui/state/page"
 export const StartNode = () => {
   const handleCreateNewApiCallNode = useAtomCallback(
     useCallback((get, __, actionIdentifier: ActionSourceIdentifier) => {
-      createRestCallRootNode(actionIdentifier, get(currentPageAtom))
+      return createRestCallRootNode(actionIdentifier, get(currentPageAtom))
     }, []),
   )
 
   const handleCreateNewIncludeNode = useAtomCallback(
     useCallback((get, __, routeId: RouteId) => {
-      createIncludeRootNode(routeId, get(currentPageAtom))
+      return createIncludeRootNode(routeId, get(currentPageAtom))
     }, []),
   )
 
   const handleInsertUserDefinedApiCallNode = useAtomCallback(
     useCallback((get) => {
-      createUserDefinedRestCallRootNode(get(currentPageAtom))
+      return createUserDefinedRestCallRootNode(get(currentPageAtom))
     }, []),
   )
 
   const handleCreateDbNode = useAtomCallback(
     useCallback((get) => {
-      createDbNode(get(currentPageAtom))
+      return createDbNode(get(currentPageAtom))
     }, []),
   )
 

@@ -11,7 +11,7 @@ type ButtonProps = ComposeComponentProps<
     children: string
     type?: "button" | "submit" | "reset"
     size?: "sm" | "md"
-    theme?: "primary" | "secondary"
+    theme?: "primary" | "secondary" | "skelton"
     prefix?: IconType
     loading?: boolean
   }
@@ -45,6 +45,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             "border-slate-800 bg-slate-800 text-white hover:bg-slate-700 disabled:border-slate-200 disabled:bg-slate-200",
           theme === "secondary" &&
             "border-slate-200 bg-white text-slate-800 hover:bg-slate-50",
+          theme === "skelton" &&
+            "border-transparent text-slate-800 hover:bg-slate-400/20",
           "data-[size=sm]:gap-1 data-[size=sm]:px-3 data-[size=sm]:py-2 data-[size=sm]:text-xs data-[size=sm]:leading-none",
         )}
       >

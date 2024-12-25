@@ -363,16 +363,16 @@ export const appendNode = (
   parentNodeId: NodeId,
   page: string,
 ): Effect.Effect<
-  void,
+  NodeId,
   never,
   ContextOf<typeof _createAndAddNode | typeof _appendNodeToRoutePath>
 > =>
   pipe(
     // ノードの作成と追加
     _createAndAddNode(nodeParam),
+    Effect.map((node) => node.id),
     // 親ノードの最後にノードを追加する
-    Effect.tap((_) => _appendNodeToRoutePath(_.id, parentNodeId, page)),
-    Effect.asVoid,
+    Effect.tap((_) => _appendNodeToRoutePath(_, parentNodeId, page)),
   )
 
 // 途中にノードを追加する
@@ -440,7 +440,20 @@ export const unshiftNode = (
     ),
   )
 
-export const createUserDefinedRestCallRootNode = (page: string) =>
+export const createUserDefinedRestCallRootNode = (
+  page: string,
+): Effect.Effect<
+  NodeId,
+  never,
+  | GenId
+  | AddAction
+  | GetUsedNodeNames
+  | GetRoutes
+  | GetDefaultNodeName
+  | GetResolvedAction
+  | AddNode
+  | AddRoute
+> =>
   Effect.Do.pipe(
     Effect.bind("id", () => _genId()),
     Effect.bind("action", ({ id }) =>
@@ -502,7 +515,7 @@ export const createUserDefinedRestCallRootNode = (page: string) =>
       }),
     ),
     Effect.map((_) => _.id),
-    Effect.flatMap((_) =>
+    Effect.tap((_) =>
       _createAndAddRoute({
         path: [_],
         page,
@@ -741,6 +754,50 @@ export const updateUserDefinedAction = (
     _getResolvedAction(identifier),
     Effect.map((action) => updateRestCallActionParameter(action, param)),
     Effect.flatMap((action) => _updateActionParameter(identifier, action)),
+  )
+
+// 新しいActionを作成し、既存のインスタンスの向き先を変更する
+export const changeToNewAction = (
+  nodeId: NodeId,
+  actionInstanceId: ActionInstanceId,
+  param: RestCallActionParameter,
+) =>
+  pipe(
+    _genId(),
+    Effect.flatMap((id) =>
+      pipe(
+        Effect.succeed(id),
+        Effect.map((id) =>
+          buildUserDefinedAction(id, {
+            name: `${param.method} ${param.path}`,
+            description: "",
+            type: "rest_call",
+            schema: {
+              base: param,
+              examples: [],
+            },
+          }),
+        ),
+        Effect.tap((action) => _addAction(action)),
+      ),
+    ),
+    Effect.flatMap((action) =>
+      pipe(
+        _getNode(nodeId),
+        Effect.map((node) =>
+          updateActionInstanceParameter(node, actionInstanceId, {
+            ...node.actionInstances.find((ai) => ai.id === actionInstanceId)!,
+            actionIdentifier: {
+              resourceType: "user_defined",
+              resourceIdentifier: {
+                userDefinedActionId: action.id,
+              },
+            },
+          }),
+        ),
+        Effect.tap((node) => _setNode(nodeId, node)),
+      ),
+    ),
   )
 
 /**
@@ -1012,11 +1069,15 @@ const _createAndAddRoute = (
 export const createRootNode = (
   node: OmitId<StripeSymbol<PrimitiveNode>, "name">,
   page: string,
-) =>
+): Effect.Effect<
+  NodeId,
+  unknown,
+  ContextOf<typeof _createAndAddNode | typeof _createAndAddRoute>
+> =>
   pipe(
     _createAndAddNode(node),
     Effect.map((_) => _.id),
-    Effect.flatMap((_) =>
+    Effect.tap((_) =>
       _createAndAddRoute({
         path: [_],
         page,

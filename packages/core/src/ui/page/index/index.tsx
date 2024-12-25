@@ -155,7 +155,7 @@ export const IndexPage = () => {
                 // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
                 <div
                   key={`${path}_${index}`}
-                  className="group relative flex items-center justify-between gap-4 overflow-hidden border-t border-t-slate-200 px-4 py-3 transition first:border-none hover:bg-slate-50"
+                  className="group relative flex cursor-pointer items-center justify-between gap-4 overflow-hidden border-t border-t-slate-200 px-4 py-3 transition first:border-none hover:bg-slate-50"
                   onClick={() => handleOpen(path)}
                 >
                   <div className="flex grow flex-col gap-1">
@@ -256,10 +256,6 @@ const Inner = () => {
 }
 
 const Inner2 = () => {
-  return <Inner3 />
-}
-
-const Inner3 = () => {
   useWriteOutSubscription()
 
   return <Main />

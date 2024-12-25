@@ -60,12 +60,6 @@ catalogs:
     '@esbuild-plugins/node-modules-polyfill':
       specifier: ^0.2.2
       version: 0.2.2
-    '@eslint/js':
-      specifier: ^9.12.0
-      version: 9.15.0
-    '@go-task/cli':
-      specifier: ^3.39.2
-      version: 3.40.0
     '@radix-ui/react-accordion':
       specifier: ^1.2.1
       version: 1.2.1
@@ -93,36 +87,12 @@ catalogs:
     '@stoplight/json-schema-sampler':
       specifier: ^0.3.0
       version: 0.3.0
-    '@tailwindcss/container-queries':
-      specifier: ^0.1.1
-      version: 0.1.1
-    '@tanstack/eslint-plugin-query':
-      specifier: ^5.59.7
-      version: 5.61.6
     '@tanstack/react-query':
       specifier: ^5.59.15
       version: 5.61.5
     '@tanstack/react-table':
       specifier: ^8.20.5
       version: 8.20.5
-    '@tauri-apps/api':
-      specifier: ^2.1.1
-      version: 2.1.1
-    '@tauri-apps/cli':
-      specifier: ^2.1.0
-      version: 2.1.0
-    '@tauri-apps/plugin-dialog':
-      specifier: ^2.0.1
-      version: 2.0.1
-    '@tauri-apps/plugin-fs':
-      specifier: ^2.0.2
-      version: 2.0.2
-    '@tauri-apps/plugin-http':
-      specifier: ^2.0.1
-      version: 2.0.1
-    '@tauri-apps/plugin-shell':
-      specifier: ^2.0.1
-      version: 2.0.1
     '@types/d3-hierarchy':
       specifier: ^3.1.7
       version: 3.1.7
@@ -144,9 +114,6 @@ catalogs:
     '@types/wicg-file-system-access':
       specifier: ^2023.10.5
       version: 2023.10.5
-    '@vitest/eslint-plugin':
-      specifier: ^1.1.7
-      version: 1.1.12
     '@xyflow/react':
       specifier: ^12.3.2
       version: 12.3.5
@@ -180,33 +147,6 @@ catalogs:
     elkjs:
       specifier: ^0.9.3
       version: 0.9.3
-    eslint:
-      specifier: ^9.12.0
-      version: 9.15.0
-    eslint-config-flat-gitignore:
-      specifier: ^0.3.0
-      version: 0.3.0
-    eslint-config-prettier:
-      specifier: ^9.1.0
-      version: 9.1.0
-    eslint-plugin-import:
-      specifier: ^2.31.0
-      version: 2.31.0
-    eslint-plugin-jsx-a11y:
-      specifier: ^6.10.0
-      version: 6.10.2
-    eslint-plugin-react:
-      specifier: ^7.37.1
-      version: 7.37.2
-    eslint-plugin-react-hooks:
-      specifier: 5.1.0-rc-fb9a90fa48-20240614
-      version: 5.1.0-rc-fb9a90fa48-20240614
-    eslint-plugin-react-refresh:
-      specifier: ^0.4.12
-      version: 0.4.14
-    eslint-plugin-unused-imports:
-      specifier: ^4.1.4
-      version: 4.1.4
     fuzzysort:
       specifier: ^3.1.0
       version: 3.1.0
@@ -222,21 +162,9 @@ catalogs:
     nanoid:
       specifier: ^5.0.7
       version: 5.0.9
-    npm-run-all:
-      specifier: ^4.1.5
-      version: 4.1.5
     openapi3-ts:
       specifier: ^4.4.0
       version: 4.4.0
-    prettier:
-      specifier: ^3.3.3
-      version: 3.4.1
-    prettier-plugin-tailwindcss:
-      specifier: ^0.6.8
-      version: 0.6.9
-    quicktype:
-      specifier: ^23.0.170
-      version: 23.0.170
     react:
       specifier: ^18.3.1
       version: 18.3.1
@@ -252,25 +180,20 @@ catalogs:
     rollup-plugin-visualizer:
       specifier: ^5.12.0
       version: 5.12.0
-    tailwindcss:
-      specifier: ^3.4.14
-      version: 3.4.15
     thememirror:
       specifier: ^2.0.1
       version: 2.0.1
     throttle-debounce:
       specifier: ^5.0.2
       version: 5.0.2
-    typescript-eslint:
-      specifier: ^8.9.0
-      version: 8.16.0
-    vitest:
-      specifier: ^2.1.3
-      version: 2.1.6
 
 importers:
 
   .:
+    dependencies:
+      '@headlessui/react':
+        specifier: ^2.2.0
+        version: 2.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
       '@eslint/js':
         specifier: 'catalog:'
@@ -479,6 +402,9 @@ importers:
       nanoid:
         specifier: 'catalog:'
         version: 5.0.9
+      re-resizable:
+        specifier: ^6.10.3
+        version: 6.10.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: 'catalog:'
         version: 18.3.1
@@ -1323,6 +1249,13 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
+  '@headlessui/react@2.2.0':
+    resolution: {integrity: sha512-RzCEg+LXsuI7mHiSomsu/gBJSjpupm6A1qIZ5sWjd7JhARNlMiSA4kKfJpCKwU9tE+zMRterhhrP74PvfJrpXQ==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: ^18 || ^19 || ^19.0.0-rc
+      react-dom: ^18 || ^19 || ^19.0.0-rc
+
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
     engines: {node: '>=18.18.0'}
@@ -1851,6 +1784,37 @@ packages:
   '@radix-ui/rect@1.1.0':
     resolution: {integrity: sha512-A9+lCBZoaMJlVKcRBz2YByCG+Cp2t6nAnMnNba+XiWxnj6r4JUFqfsgwocMBZU9LPtdxC6wB56ySYpc7LQIoJg==}
 
+  '@react-aria/focus@3.19.0':
+    resolution: {integrity: sha512-hPF9EXoUQeQl1Y21/rbV2H4FdUR2v+4/I0/vB+8U3bT1CJ+1AFj1hc/rqx2DqEwDlEwOHN+E4+mRahQmlybq0A==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
+
+  '@react-aria/interactions@3.22.5':
+    resolution: {integrity: sha512-kMwiAD9E0TQp+XNnOs13yVJghiy8ET8L0cbkeuTgNI96sOAp/63EJ1FSrDf17iD8sdjt41LafwX/dKXW9nCcLQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
+
+  '@react-aria/ssr@3.9.7':
+    resolution: {integrity: sha512-GQygZaGlmYjmYM+tiNBA5C6acmiDWF52Nqd40bBp0Znk4M4hP+LTmI0lpI1BuKMw45T8RIhrAsICIfKwZvi2Gg==}
+    engines: {node: '>= 12'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
+
+  '@react-aria/utils@3.26.0':
+    resolution: {integrity: sha512-LkZouGSjjQ0rEqo4XJosS4L3YC/zzQkfRM3KoqK6fUOmUJ9t0jQ09WjiF+uOoG9u+p30AVg3TrZRUWmoTS+koQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
+
+  '@react-stately/utils@3.10.5':
+    resolution: {integrity: sha512-iMQSGcpaecghDIh3mZEpZfoFH3ExBwTtuBEcvZ2XnGzCgQjeYXcMdIUwAfVQLXFTdHUHGF6Gu6/dFrYsCzySBQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
+
+  '@react-types/shared@3.26.0':
+    resolution: {integrity: sha512-6FuPqvhmjjlpEDLTiYx29IJCbCNWPlsyO+ZUmCUXzhUv2ttShOXfw8CmeHWHftT/b2KweAWuzqSlfeXPR76jpw==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
+
   '@redux-devtools/extension@3.3.0':
     resolution: {integrity: sha512-X34S/rC8S/M1BIrkYD1mJ5f8vlH0BDqxXrs96cvxSBo4FhMdbhU+GUGsmNYov1xjSyLMHgo8NYrUG8bNX7525g==}
     peerDependencies:
@@ -1959,6 +1923,9 @@ packages:
   '@stoplight/json-schema-sampler@0.3.0':
     resolution: {integrity: sha512-G7QImi2xr9+8iPEg0D9YUi1BWhIiiEm19aMb91oWBSdxuhezOAqqRP3XNY6wczHV9jLWW18f+KkghTy9AG0BQA==}
 
+  '@swc/helpers@0.5.15':
+    resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
+
   '@szmarczak/http-timer@4.0.6':
     resolution: {integrity: sha512-4BAffykYOgO+5nzBWYwE3W90sBgLJoUPRWWcL8wlyiM8IB8ipJz3UMJ9KXQd1RKQXpKp8Tutn80HZtWsu2u76w==}
     engines: {node: '>=10'}
@@ -1988,9 +1955,18 @@ packages:
       react: '>=16.8'
       react-dom: '>=16.8'
 
+  '@tanstack/react-virtual@3.11.2':
+    resolution: {integrity: sha512-OuFzMXPF4+xZgx8UzJha0AieuMihhhaWG0tCqpp6tDzlFwOmNBPYMuLOtMJ1Tr4pXLHmgjcWhG6RlknY2oNTdQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   '@tanstack/table-core@8.20.5':
     resolution: {integrity: sha512-P9dF7XbibHph2PFRz8gfBKEXEY/HJPOhym8CHmjF8y3q5mWpKx9xtZapXQUWCgkqvsK0R46Azuz+VaxD4Xl+Tg==}
     engines: {node: '>=12'}
+
+  '@tanstack/virtual-core@3.11.2':
+    resolution: {integrity: sha512-vTtpNt7mKCiZ1pwU9hfKPhpdVO2sVzFQsxoVBGtOSHxlrRRzYr8iQ2TlwbAcRYCcEiZ9ECAM8kBzH0v2+VzfKw==}
 
   '@tauri-apps/api@2.1.1':
     resolution: {integrity: sha512-fzUfFFKo4lknXGJq8qrCidkUcKcH2UHhfaaCNt4GzgzGaW2iS26uFOg4tS3H4P8D6ZEeUxtiD5z0nwFF0UN30A==}
@@ -4166,6 +4142,12 @@ packages:
     engines: {node: '>=18.12.0'}
     hasBin: true
 
+  re-resizable@6.10.3:
+    resolution: {integrity: sha512-zvWb7X3RJMA4cuSrqoxgs3KR+D+pEXnGrD2FAD6BMYAULnZsSF4b7AOVyG6pC3VVNVOtlagGDCDmZSwWLjjBBw==}
+    peerDependencies:
+      react: ^16.13.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.13.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   react-base16-styling@0.9.1:
     resolution: {integrity: sha512-1s0CY1zRBOQ5M3T61wetEpvQmsYSNtWEcdYzyZNxKa8t7oDvaOn9d21xrGezGAHFWLM7SHcktPuPTrvoqxSfKw==}
 
@@ -5547,6 +5529,15 @@ snapshots:
       protobufjs: 7.4.0
       yargs: 17.7.2
 
+  '@headlessui/react@2.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@floating-ui/react': 0.26.28(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-aria/focus': 3.19.0(react@18.3.1)
+      '@react-aria/interactions': 3.22.5(react@18.3.1)
+      '@tanstack/react-virtual': 3.11.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.6':
@@ -6088,6 +6079,46 @@ snapshots:
 
   '@radix-ui/rect@1.1.0': {}
 
+  '@react-aria/focus@3.19.0(react@18.3.1)':
+    dependencies:
+      '@react-aria/interactions': 3.22.5(react@18.3.1)
+      '@react-aria/utils': 3.26.0(react@18.3.1)
+      '@react-types/shared': 3.26.0(react@18.3.1)
+      '@swc/helpers': 0.5.15
+      clsx: 2.1.1
+      react: 18.3.1
+
+  '@react-aria/interactions@3.22.5(react@18.3.1)':
+    dependencies:
+      '@react-aria/ssr': 3.9.7(react@18.3.1)
+      '@react-aria/utils': 3.26.0(react@18.3.1)
+      '@react-types/shared': 3.26.0(react@18.3.1)
+      '@swc/helpers': 0.5.15
+      react: 18.3.1
+
+  '@react-aria/ssr@3.9.7(react@18.3.1)':
+    dependencies:
+      '@swc/helpers': 0.5.15
+      react: 18.3.1
+
+  '@react-aria/utils@3.26.0(react@18.3.1)':
+    dependencies:
+      '@react-aria/ssr': 3.9.7(react@18.3.1)
+      '@react-stately/utils': 3.10.5(react@18.3.1)
+      '@react-types/shared': 3.26.0(react@18.3.1)
+      '@swc/helpers': 0.5.15
+      clsx: 2.1.1
+      react: 18.3.1
+
+  '@react-stately/utils@3.10.5(react@18.3.1)':
+    dependencies:
+      '@swc/helpers': 0.5.15
+      react: 18.3.1
+
+  '@react-types/shared@3.26.0(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+
   '@redux-devtools/extension@3.3.0(redux@5.0.1)':
     dependencies:
       '@babel/runtime': 7.26.0
@@ -6188,6 +6219,10 @@ snapshots:
       '@types/json-schema': 7.0.15
       json-pointer: 0.6.2
 
+  '@swc/helpers@0.5.15':
+    dependencies:
+      tslib: 2.8.1
+
   '@szmarczak/http-timer@4.0.6':
     dependencies:
       defer-to-connect: 2.0.1
@@ -6217,7 +6252,15 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
+  '@tanstack/react-virtual@3.11.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@tanstack/virtual-core': 3.11.2
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
   '@tanstack/table-core@8.20.5': {}
+
+  '@tanstack/virtual-core@3.11.2': {}
 
   '@tauri-apps/api@2.1.1': {}
 
@@ -6514,7 +6557,7 @@ snapshots:
       std-env: 3.8.0
       test-exclude: 7.0.1
       tinyrainbow: 1.2.0
-      vitest: 2.1.6(@types/node@22.10.1)(@vitest/ui@2.1.6)
+      vitest: 2.1.6(@types/node@22.10.1)(@vitest/ui@2.1.6)(jiti@1.21.6)(yaml@2.6.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -6540,6 +6583,14 @@ snapshots:
       magic-string: 0.30.14
     optionalDependencies:
       vite: 5.4.11(@types/node@22.10.1)
+
+  '@vitest/mocker@2.1.6(vite@6.0.1(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1))':
+    dependencies:
+      '@vitest/spy': 2.1.6
+      estree-walker: 3.0.3
+      magic-string: 0.30.14
+    optionalDependencies:
+      vite: 6.0.1(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1)
 
   '@vitest/pretty-format@2.1.6':
     dependencies:
@@ -6569,7 +6620,7 @@ snapshots:
       sirv: 3.0.0
       tinyglobby: 0.2.10
       tinyrainbow: 1.2.0
-      vitest: 2.1.6(@types/node@22.10.1)(@vitest/ui@2.1.6)
+      vitest: 2.1.6(@types/node@22.10.1)(@vitest/ui@2.1.6)(jiti@1.21.6)(yaml@2.6.1)
 
   '@vitest/utils@2.1.6':
     dependencies:
@@ -8630,6 +8681,11 @@ snapshots:
       - '@swc/wasm'
       - encoding
 
+  re-resizable@6.10.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
   react-base16-styling@0.9.1:
     dependencies:
       '@babel/runtime': 7.26.0
@@ -9402,6 +9458,27 @@ snapshots:
       - supports-color
       - terser
 
+  vite-node@2.1.6(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1):
+    dependencies:
+      cac: 6.7.14
+      debug: 4.3.7
+      es-module-lexer: 1.5.4
+      pathe: 1.1.2
+      vite: 6.0.1(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1)
+    transitivePeerDependencies:
+      - '@types/node'
+      - jiti
+      - less
+      - lightningcss
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - tsx
+      - yaml
+
   vite@5.4.11(@types/node@22.10.1):
     dependencies:
       esbuild: 0.21.5
@@ -9457,6 +9534,45 @@ snapshots:
       - sugarss
       - supports-color
       - terser
+
+  vitest@2.1.6(@types/node@22.10.1)(@vitest/ui@2.1.6)(jiti@1.21.6)(yaml@2.6.1):
+    dependencies:
+      '@vitest/expect': 2.1.6
+      '@vitest/mocker': 2.1.6(vite@6.0.1(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1))
+      '@vitest/pretty-format': 2.1.6
+      '@vitest/runner': 2.1.6
+      '@vitest/snapshot': 2.1.6
+      '@vitest/spy': 2.1.6
+      '@vitest/utils': 2.1.6
+      chai: 5.1.2
+      debug: 4.3.7
+      expect-type: 1.1.0
+      magic-string: 0.30.14
+      pathe: 1.1.2
+      std-env: 3.8.0
+      tinybench: 2.9.0
+      tinyexec: 0.3.1
+      tinypool: 1.0.2
+      tinyrainbow: 1.2.0
+      vite: 6.0.1(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1)
+      vite-node: 2.1.6(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@types/node': 22.10.1
+      '@vitest/ui': 2.1.6(vitest@2.1.6)
+    transitivePeerDependencies:
+      - jiti
+      - less
+      - lightningcss
+      - msw
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - tsx
+      - yaml
 
   w3c-keyname@2.2.8: {}
 

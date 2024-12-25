@@ -16,7 +16,7 @@ type SectionProps = {
 
 export const Section = ({ title, children }: SectionProps) => {
   return (
-    <section className="flex w-full flex-col gap-2 border-t border-t-slate-200 bg-white px-4 pb-6 pt-4 first:border-t-0">
+    <section className="flex w-full flex-col gap-2 border-t border-t-slate-200 bg-white px-3 pb-4 pt-3 first:border-t-0">
       {title != null && (
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold text-slate-600">{title}</h3>

@@ -9,6 +9,7 @@ import type { NodeId } from "@/domain/entity/node/node"
 import type { ResourceId } from "@/domain/entity/resource/resource"
 import type { RouteId } from "@/domain/entity/route/route"
 import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
+import type { HttpMethod } from "@/utils/http"
 
 import {
   nodeAtom,
@@ -50,7 +51,10 @@ import {
   latestResolvedNodeRunResultAtom,
   nodeStatesAtom,
 } from "@/domain/datasource/nodeStates"
-import { userDefinedActionIdsAtom } from "@/domain/datasource/userDefinedAction"
+import {
+  userDefinedActionCacheAtom,
+  userDefinedActionIdsAtom,
+} from "@/domain/datasource/userDefinedAction"
 
 const nullAtom = atom(null)
 
@@ -71,11 +75,32 @@ export const useActions = () => useAtomValue(actionsAtom)
 
 export const useResource = (id: ResourceId) => useAtomValue(resourceAtom(id))
 
+const resourceNameAtom = atomFamily((identifier: ActionSourceIdentifier) => {
+  const newAtom = atom((get) => {
+    if (identifier.resourceType === "user_defined") {
+      return "ユーザー定義"
+    }
+    const resource = get(resourceAtom(identifier.resourceIdentifier.resourceId))
+    return resource.name
+  })
+  return newAtom
+})
+
+export const useResourceName = (identifier: ActionSourceIdentifier) =>
+  useAtomValue(resourceNameAtom(identifier))
+
 export const useResourceIds = () =>
   useAtomValue(resourceIdsAtom).values().toArray()
 
 export const useUserDefinedActionIds = () =>
   useAtomValue(userDefinedActionIdsAtom).values().toArray()
+
+export const useUserDefinedActionCount = (method: HttpMethod, path: string) =>
+  useAtomValue(
+    userDefinedActionCacheAtom(
+      useMemo(() => ({ method, path }), [method, path]),
+    ),
+  )
 
 export const useResources = () => useAtomValue(resourcesAtom)
 

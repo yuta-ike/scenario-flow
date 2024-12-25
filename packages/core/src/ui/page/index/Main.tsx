@@ -7,8 +7,9 @@ import { ErrorBoundary } from "@/ui/components/ErrorBoundary"
 import { ErrorDisplay } from "@/ui/components/ErrorDisplay"
 import { Code } from "@/ui/lib/code"
 import { Flow } from "@/ui/lib/flow"
+import { List } from "@/ui/lib/flow/List"
 
-export type PageContent = "flow" | "code" | "settings"
+export type PageContent = "flow" | "list" | "code" | "settings"
 
 export const Main = () => {
   const [content, setContent] = useState<PageContent>("flow")
@@ -26,13 +27,23 @@ export const Main = () => {
               <Flow />
             </ErrorBoundary>
           </div>
+        ) : content === "list" ? (
+          <div className="relative h-full grow">
+            <ErrorBoundary fallback={<ErrorDisplay />}>
+              <List />
+            </ErrorBoundary>
+          </div>
         ) : content === "code" ? (
           <div className="relative grow">
-            <Code />
+            <ErrorBoundary fallback={<ErrorDisplay />}>
+              <Code />
+            </ErrorBoundary>
           </div>
         ) : (
           <div className="relative grow">
-            <Settings />
+            <ErrorBoundary fallback={<ErrorDisplay />}>
+              <Settings />
+            </ErrorBoundary>
           </div>
         )}
       </div>

@@ -5,7 +5,9 @@
   "license": "MIT",
   "scripts": {
     "dev:web": "pnpm --filter @scenario-flow/web dev",
-    "dev:desktop": "pnpm --filter @scenario-flow/desktop dev"
+    "dev:desktop": "pnpm --filter @scenario-flow/desktop dev",
+    "build:desktop": "pnpm --filter @scenario-flow/desktop build",
+    "build:debug:desktop": "pnpm --filter @scenario-flow/desktop build:debug"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
@@ -29,5 +31,8 @@
     "typescript-eslint": "catalog:",
     "vite": "^6.0.1",
     "vitest": "catalog:"
+  },
+  "dependencies": {
+    "@headlessui/react": "^2.2.0"
   }
 }

@@ -14,7 +14,7 @@ import type { InjectedContent } from "@/injector/injector"
 import type { DirHandle } from "@/injector/parts/io"
 
 export const createFile: InjectedContent["io"]["createFile"] = async (
-  entry,
+  entry: DirHandle,
   name,
 ) => {
   const path = `${entry.path}/${name}`
@@ -26,7 +26,7 @@ export const createFile: InjectedContent["io"]["createFile"] = async (
 }
 
 export const createDir: InjectedContent["io"]["createDir"] = async (
-  entry,
+  entry: DirHandle,
   name,
 ) => {
   const path = `${entry.path}/${name}`
@@ -131,7 +131,7 @@ export const deleteFile: InjectedContent["io"]["deleteFile"] = async (
 }
 
 export const watchDir: InjectedContent["io"]["watchDir"] = async (
-  { path },
+  { path }: DirHandle,
   cb,
 ) => {
   await watch(path, cb, {
@@ -140,7 +140,7 @@ export const watchDir: InjectedContent["io"]["watchDir"] = async (
 }
 
 export const deleteDir: InjectedContent["io"]["deleteDir"] = async (
-  entity,
+  entity: DirHandle,
   name,
 ) => {
   await remove(`${entity.path}/${name}`)
@@ -151,13 +151,15 @@ const decode = (buffer: ArrayBuffer) => {
   return decoder.decode(buffer)
 }
 
-export const readFile: InjectedContent["io"]["readFile"] = async ({ path }) => {
+export const readFile: InjectedContent["io"]["readFile"] = async ({
+  path,
+}: DirHandle) => {
   const raw: string | ArrayBuffer = await readTextFile(path)
   return typeof raw === "string" ? raw : decode(raw)
 }
 
 export const writeFile: InjectedContent["io"]["writeFile"] = async (
-  { path },
+  { path }: DirHandle,
   content,
 ) => {
   await writeTextFile(path, content)
@@ -182,7 +184,7 @@ export const getOrCreateFile: InjectedContent["io"]["getOrCreateFile"] = async (
 }
 
 export const watchFile: InjectedContent["io"]["watchFile"] = async (
-  { path },
+  { path }: DirHandle,
   cb,
 ) => {
   await watch(path, cb, {

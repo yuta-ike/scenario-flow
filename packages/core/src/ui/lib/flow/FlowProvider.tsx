@@ -32,13 +32,7 @@ export const FlowProvider = ({
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useReactFlow = () => {
-  const context = useContext(FlowContext)
-  if (context == null) {
-    throw new Error("useReactFlow must be used inside FlowProvider")
-  }
-  return context.reactFlow
-}
+export const useReactFlow = () => useContext(FlowContext)?.reactFlow ?? null
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useUpdateNodeSize = () => {

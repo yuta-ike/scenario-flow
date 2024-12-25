@@ -19,7 +19,17 @@ export type StartUiNode = {
   data: Empty
 }
 
-export type UiNode = GeneralUiNode | StartUiNode
+export type CreateNode = {
+  id: string
+  type: "createNode"
+  position: { x: number; y: number }
+  data: {
+    nodeId: NodeId
+    originalNodeId: NodeId
+  }
+}
+
+export type UiNode = GeneralUiNode | StartUiNode | CreateNode
 
 export type UiEdgeType = "basicEdge"
 

@@ -20,6 +20,8 @@ export default {
         overlayShow: 'overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1)',
         contentShow: 'contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1)',
         drawerShow: 'drawerShow 300ms ease-in-out',
+        accordionShow: 'accordionShow 100ms ease-in-out',
+        accordionHide: 'accordionHide 100ms ease-in-out',
       },
       colors: {
         "base": "#171717"
@@ -28,6 +30,14 @@ export default {
         drawerShow: {
           '0%': { transform: 'translateX(100%)' },
           '100%': { transform: 'translateX(0)' },
+        },
+        accordionShow: {
+          '0%': { height: '0' },
+          '100%': { height: ' var(--radix-accordion-content-height)' },
+        },
+        accordionHide: {
+          '0%': { height: ' var(--radix-accordion-content-height)' },
+          '100%': { height: '0' },
         }
       },
       cursor: {

@@ -1,6 +1,4 @@
 import { useCallback } from "react"
-import { FiEdit } from "react-icons/fi"
-import { Controller, useForm } from "react-hook-form"
 
 import { Section } from "../Section"
 
@@ -8,31 +6,21 @@ import { DefinitionPanel } from "./DefinitionPanel"
 
 import type { ResolvedRestCallActionInstance } from "@/domain/entity/node/actionInstance"
 import type { NodeId } from "@/domain/entity/node/node"
-import type { RestCallActionParameter } from "@/domain/entity/action/actionParameter"
+import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
 
-import { HTTP_METHODS, type HttpMethod } from "@/utils/http"
+import { type HttpMethod } from "@/utils/http"
 import { TextareaAutosize } from "@/ui/components/common/TextareaAutosize"
-import { MethodChip } from "@/ui/components/common/MethodChip"
 import {
+  changeToNewAction,
   updateActionInstance,
   updateUserDefinedAction,
 } from "@/ui/adapter/command"
 import { applyUpdate } from "@/ui/utils/applyUpdate"
 import { isResourceAction } from "@/domain/entity/action/identifier"
+import { PathMethodInput } from "@/ui/components/common/PathMethodInput"
+import { MethodChip } from "@/ui/components/common/MethodChip"
+import { useUserDefinedActionCount } from "@/ui/adapter/query"
 import { Button } from "@/ui/components/common/Button"
-import {
-  FormModal,
-  FormModalContent,
-  useFormRef,
-} from "@/ui/lib/common/FormModal"
-import { FormItem } from "@/ui/components/FormItem"
-import { TextInput } from "@/ui/components/common/TextInput"
-import { Select } from "@/ui/components/common/Select"
-
-type FormData = {
-  method: HttpMethod
-  path: string
-}
 
 type Props = {
   nodeId: NodeId
@@ -40,15 +28,6 @@ type Props = {
 }
 
 export const HeaderSection = ({ nodeId, ai }: Props) => {
-  const actionBaseParams = ai.action.schema.base as RestCallActionParameter
-
-  const { handleSubmit, register, control } = useForm<FormData>({
-    defaultValues: {
-      method: actionBaseParams.method,
-      path: actionBaseParams.path,
-    },
-  })
-
   // description
   const handleUpdateDescription = useCallback(
     (update: string) => {
@@ -63,67 +42,122 @@ export const HeaderSection = ({ nodeId, ai }: Props) => {
     [ai, nodeId],
   )
 
-  const ref = useFormRef()
+  const handleChangeMethodPath = useCallback(
+    (
+      data:
+        | {
+            method: HttpMethod
+            path: string
+          }
+        | {
+            identifier: ActionSourceIdentifier
+          },
+    ) => {
+      if ("identifier" in data) {
+        updateActionInstance(nodeId, ai.id, {
+          ...ai,
+          instanceParameter: {
+            method: undefined,
+            path: undefined,
+          },
+          actionIdentifier: data.identifier,
+        })
+      } else {
+        updateActionInstance(nodeId, ai.id, {
+          ...ai,
+          instanceParameter: {
+            ...ai.instanceParameter,
+            path: data.path,
+            method: data.method,
+          },
+        })
+      }
+    },
+    [ai, nodeId],
+  )
 
-  const onSubmit = handleSubmit((data) => {
+  const handleApplyInstanceParameterToAction = () => {
     if (ai.actionIdentifier.resourceType === "user_defined") {
-      updateUserDefinedAction(ai.actionIdentifier, data)
-      ref.current?.close()
+      updateUserDefinedAction(ai.actionIdentifier, {
+        method: ai.instanceParameter.method,
+        path: ai.instanceParameter.path,
+      })
     }
-  })
+  }
+
+  const handleChangeToNewAction = () => {
+    if (ai.actionIdentifier.resourceType === "user_defined") {
+      changeToNewAction(nodeId, ai.id, {
+        method: ai.instanceParameter.method ?? "GET",
+        path: ai.instanceParameter.path ?? "",
+        headers: [],
+        cookies: [],
+        pathParams: [],
+        queryParams: [],
+        baseUrl: ai.instanceParameter.baseUrl ?? "",
+      })
+    }
+  }
+
+  const conflictedParameter =
+    ("method" in ai.action.schema.base &&
+      ai.action.schema.base.method !== ai.instanceParameter.method) ||
+    ("path" in ai.action.schema.base &&
+      ai.action.schema.base.path !== ai.instanceParameter.path)
+
+  const refCount = useUserDefinedActionCount(
+    ai.instanceParameter.method!,
+    ai.instanceParameter.path!,
+  )
 
   return (
     <Section>
       <div className="flex flex-col gap-2">
         <div className="flex items-center">
-          <div className="flex grow items-center gap-3">
-            <MethodChip size="lg">{ai.instanceParameter.method!}</MethodChip>{" "}
-            <div className="text flex grow items-baseline gap-4 leading-none">
-              {ai.instanceParameter.path!}
-            </div>
-          </div>
-          {ai.actionIdentifier.resourceType === "user_defined" && (
-            <div>
-              <FormModal
-                title="呼び出し情報を編集する"
-                description="API呼び出しの情報を編集します"
-                ref={ref}
-                modal={
-                  <FormModalContent onSubmit={onSubmit} okLabel="更新する">
-                    <div className="flex flex-col gap-4">
-                      <FormItem id="method" label="メソッド">
-                        <Controller
-                          name="method"
-                          control={control}
-                          render={({ field: { value, onChange } }) => (
-                            <Select
-                              items={HTTP_METHODS.map((method) => ({
-                                id: method,
-                                label: method,
-                              }))}
-                              value={value}
-                              onChange={(value) => onChange(value)}
-                            />
-                          )}
-                        />
-                      </FormItem>
-                      <FormItem id="description" label="パス">
-                        <TextInput {...register("path")} />
-                      </FormItem>
-                    </div>
-                  </FormModalContent>
-                }
-              >
-                <Button prefix={FiEdit} size="sm" theme="secondary">
-                  編集する
-                </Button>
-              </FormModal>
+          {ai.actionIdentifier.resourceType === "user_defined" ? (
+            <PathMethodInput
+              method={ai.instanceParameter.method!}
+              path={ai.instanceParameter.path!}
+              onChange={handleChangeMethodPath}
+            />
+          ) : (
+            <div className="flex items-center gap-4 px-2">
+              <MethodChip size="lg">
+                {ai.instanceParameter.method ?? "GET"}
+              </MethodChip>
+              <div>{ai.instanceParameter.path}</div>
             </div>
           )}
         </div>
+        {1 < refCount && conflictedParameter && (
+          <div>
+            <div className="rounded border border-blue-100 bg-blue-50 p-2 text-[13px] text-slate-600">
+              同じエンドポイントを利用している他の呼び出し箇所も修正しますか？
+              <br />
+              {/* @ts-expect-error */}
+              {`・${ai.action.schema.base.method} ${ai.action.schema.base.path} → ${ai.instanceParameter.method!} ${ai.instanceParameter.path!}`}
+              <div className="flex items-center justify-end gap-1">
+                <Button
+                  size="sm"
+                  theme="skelton"
+                  onClick={handleChangeToNewAction}
+                >
+                  キャンセル
+                </Button>
+                <Button
+                  size="sm"
+                  theme="secondary"
+                  onClick={handleApplyInstanceParameterToAction}
+                >
+                  修正する
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="relative">
           <TextareaAutosize
-            className="w-[calc(100%+16px)] -translate-x-2 resize-none rounded border border-transparent px-[7px] py-1 text-sm transition hover:border-slate-200 focus:border-slate-200 focus:outline-none"
+            className="resize-none rounded border border-transparent px-[7px] py-1 text-sm transition hover:border-slate-200 focus:border-slate-200 focus:outline-none"
             value={
               0 < ai.description.length ? ai.description : ai.action.description
             }

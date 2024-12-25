@@ -50,7 +50,7 @@ import {
   unshiftUserDefinedRestCallNode as unshiftUserDefinedRestCallNodeWf,
   createUserDefinedRestCallRootNode as createUserDefinedRestCallRootNodeWf,
   updateUserDefinedAction as updateUserDefinedActionWf,
-  createRootNode,
+  changeToNewAction as changeToNewActionWf,
 } from "@/domain/workflow/node"
 import {
   addGlobalVariable as addGlobalVariableWf,
@@ -63,19 +63,16 @@ import { resolveRefs } from "@/lib/json-schema/resolveRefs"
 import { success } from "@/utils/result"
 
 export const applyRunner =
-  <
-    Eff extends (...args: any[]) => Effect<unknown, unknown, Context>,
-    Args extends Parameters<Eff>,
-  >(
-    effect: Eff,
+  <Args extends unknown[], A, E>(
+    effect: (...args: Args) => Effect<A, E, Context>,
   ) =>
-  (...args: Args) =>
+  (...args: Args): A =>
     run(effect(...args))
 
 export const createRestCallRootNode = (
   actionIdentifier: ActionSourceIdentifier,
   page: string,
-) => {
+) =>
   run(
     createRootNodeWf(
       {
@@ -117,9 +114,8 @@ export const createRestCallRootNode = (
       page,
     ),
   )
-}
 
-export const createIncludeRootNode = (routeId: RouteId, page: string) => {
+export const createIncludeRootNode = (routeId: RouteId, page: string) =>
   run(
     createRootNodeWf(
       {
@@ -158,11 +154,10 @@ export const createIncludeRootNode = (routeId: RouteId, page: string) => {
       page,
     ),
   )
-}
 
-export const createDbNode = (page: string) => {
+export const createDbNode = (page: string) =>
   run(
-    createRootNode(
+    createRootNodeWf(
       {
         description: "",
         actionInstances: [
@@ -198,7 +193,6 @@ export const createDbNode = (page: string) => {
       page,
     ),
   )
-}
 
 export const createUserDefinedRestCallRootNode = applyRunner(
   createUserDefinedRestCallRootNodeWf,
@@ -208,7 +202,7 @@ export const appendNode = (
   nodeId: NodeId,
   actionIdentifier: ActionSourceIdentifier,
   page: string,
-) => {
+) =>
   run(
     appendNodeWf(
       {
@@ -246,13 +240,12 @@ export const appendNode = (
       page,
     ),
   )
-}
 
 export const appendIncludeNode = (
   nodeId: NodeId,
   routeId: RouteId,
   page: string,
-) => {
+) =>
   run(
     appendNodeWf(
       {
@@ -287,7 +280,6 @@ export const appendIncludeNode = (
       page,
     ),
   )
-}
 
 export const insertNode = (
   fromNodeId: NodeId,
@@ -674,6 +666,8 @@ export const updateActionInstance = applyRunner(
 )
 
 export const updateUserDefinedAction = applyRunner(updateUserDefinedActionWf)
+
+export const changeToNewAction = applyRunner(changeToNewActionWf)
 
 export const upsertVariables = applyRunner(upsertVariablesWf)
 

@@ -16,7 +16,7 @@ import {
   type NodeTypes,
   type ReactFlowInstance,
 } from "@xyflow/react"
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+import { Resizable } from "re-resizable"
 
 import { BasicEdge } from "./edges/BasicEdge"
 import { StartNode } from "./nodes/StartNode"
@@ -29,6 +29,8 @@ import { RunButton } from "./components/RunButton"
 import { FlowProvider } from "./FlowProvider"
 import { ListView, ListViewOpenButton, showListViewAtom } from "./ListView"
 import { NodePanel } from "./components/NodePanel/NodePanel"
+import { CreateNode } from "./nodes/CreateNode"
+import { SkleltonEdge } from "./edges/SkeltonEdge"
 
 import type { NodeId } from "@/domain/entity/node/node"
 
@@ -50,10 +52,13 @@ const nodeTypes: NodeTypes = {
   startNode: StartNode,
   // @ts-expect-error よくわからないエラー
   generalNode: ApiCallNode,
+  // @ts-expect-error よくわからないエラー
+  createNode: CreateNode,
 }
 
 const edgeTypes: EdgeTypes = {
   basicEdge: BasicEdge,
+  skeltonEdge: SkleltonEdge,
 }
 
 const initialNodeId = toNodeId("$root")
@@ -89,6 +94,10 @@ export const Flow = () => {
     () => uniq(routes.flatMap((route) => route.path)),
     [routes],
   )
+  const virtualNodeIds = useMemo(
+    () => routes.map((route) => route.path.at(-1)).filter(nonNull),
+    [routes],
+  )
 
   const switchFocusedRouteId = useSwitchFocusedRouteId()
 
@@ -109,9 +118,112 @@ export const Flow = () => {
 
   return (
     <FlowProvider reactFlow={reactFlow} updateNodeSize={updateItem}>
-      <PanelGroup direction="horizontal" className="flex h-full w-full">
-        <Panel id="sidebar" order={1} defaultSize={15} minSize={5}>
-          <div className="z-10 flex h-full w-full shrink-0 flex-col gap-4 border-r border-r-slate-200 bg-white">
+      <div className="absolute inset-0 h-full w-full grow">
+        <ReactFlow
+          className="grow"
+          onInit={setReactFlow}
+          nodes={[
+            {
+              id: initialNodeId,
+              type: "startNode",
+              position: {
+                x: layout?.node.get(initialNodeId)?.x ?? 0,
+                y: layout?.node.get(initialNodeId)?.y ?? 0,
+              },
+              data: {},
+            },
+            ...nodeIds
+              .map((nodeId) => {
+                const position = layout?.node.get(nodeId)
+                if (position == null) {
+                  return null
+                }
+                return {
+                  id: nodeId,
+                  type: "generalNode",
+                  position,
+                  data: {
+                    nodeId,
+                  },
+                }
+              })
+              .filter(nonNull),
+            ...virtualNodeIds
+              .map((originalNodeId) => {
+                const nodeId = `${originalNodeId}_virtual`
+                const position = layout?.node.get(nodeId)
+                if (position == null) {
+                  return null
+                }
+                return {
+                  id: nodeId,
+                  type: "createNode",
+                  position,
+                  data: {
+                    originalNodeId,
+                  },
+                }
+              })
+              .filter(nonNull),
+          ]}
+          edges={useMemo(
+            () =>
+              edges.map((edge) => ({
+                ...edge,
+                data: {
+                  points:
+                    layout?.edge.get(`${edge.source}-${edge.target}`) ?? [],
+                },
+              })),
+            [edges, layout?.edge],
+          )}
+          defaultViewport={{
+            zoom: 1,
+            x: window.innerWidth / 2 - 120,
+            y: 100,
+          }}
+          onConnect={handleConnect}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          snapToGrid
+          snapGrid={[16, 16]}
+          panOnScroll
+          selectionOnDrag
+          panOnDrag={[1, 2]}
+          selectionMode={SelectionMode.Partial}
+          panOnScrollSpeed={1.5}
+          onEdgesChange={(changes) => {
+            const selectChange = changes.findLast(
+              ({ type }) => type === "select",
+            )
+            if (selectChange?.type === "select" && selectChange.selected) {
+              const [source, target] = selectChange.id.split("-")
+              if (source == null || target == null) {
+                return
+              }
+              switchFocusedRouteId(source as NodeId, target as NodeId)
+            }
+          }}
+        >
+          <Controls />
+          <MiniMap />
+          <Background
+            variant={BackgroundVariant.Lines}
+            color="#F7F7F7"
+            gap={12}
+            size={1}
+          />
+          <ErrorBoundary fallback={null}>
+            <div className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2">
+              <RunButton />
+            </div>
+          </ErrorBoundary>
+        </ReactFlow>
+      </div>
+      <div className="absolute inset-y-0 left-0">
+        {/* Left Panel */}
+        <Resizable defaultSize={{ width: 300, height: "100%" }} minWidth={200}>
+          <div className="flex h-full w-full flex-col gap-4 border-r border-r-slate-200 bg-white">
             <ErrorBoundary fallback={<ErrorDisplay />}>
               <PagePanel />
             </ErrorBoundary>
@@ -122,117 +234,41 @@ export const Flow = () => {
               <NodePanel />
             </ErrorBoundary>
           </div>
-        </Panel>
-        <PanelResizeHandle />
-        <Panel id="flowview" order={2} defaultSize={45} minSize={5}>
-          <div className="relative h-full w-full grow">
-            {showListView ? (
-              <div className="absolute inset-y-0 left-0 z-10 h-full w-[500px] max-w-full grow border-r border-r-slate-200 bg-white empty:hidden">
+        </Resizable>
+
+        {/* Left Second Panel */}
+        <div className="absolute inset-y-0 left-full top-0 flex flex-col">
+          {showListView ? (
+            <Resizable
+              defaultSize={{ width: 500, height: "100%" }}
+              minWidth={200}
+            >
+              <div className="h-full w-full border-r border-r-slate-200">
                 <ListView />
               </div>
-            ) : (
-              <div className="absolute left-2 top-2 z-10">
-                <ListViewOpenButton />
+            </Resizable>
+          ) : (
+            <div className="w-[200px] p-2">
+              <ListViewOpenButton />
+            </div>
+          )}
+        </div>
+      </div>
+      {/* Right Panel */}
+      {showDetailPanel && (
+        <div className="absolute inset-y-0 right-0">
+          <Resizable
+            defaultSize={{ width: 400, height: "100%" }}
+            minWidth={350}
+          >
+            <ErrorBoundary fallback={<ErrorDisplay />}>
+              <div className="z-10 h-full w-full shrink-0 overflow-hidden overflow-y-auto border-0 border-l border-l-slate-200 bg-white">
+                <DetailPanel />
               </div>
-            )}
-            <ReactFlow
-              className="grow"
-              onInit={setReactFlow}
-              nodes={[
-                {
-                  id: initialNodeId,
-                  type: "startNode",
-                  position: {
-                    x: layout?.node.get(initialNodeId)?.x ?? 0,
-                    y: layout?.node.get(initialNodeId)?.y ?? 0,
-                  },
-                  data: {},
-                },
-                ...nodeIds
-                  .map((nodeId) => {
-                    const position = layout?.node.get(nodeId)
-                    if (position == null) {
-                      return null
-                    }
-                    return {
-                      id: nodeId,
-                      type: "generalNode",
-                      position,
-                      data: {
-                        nodeId,
-                      },
-                    }
-                  })
-                  .filter(nonNull),
-              ]}
-              edges={useMemo(
-                () =>
-                  edges.map((edge) => ({
-                    ...edge,
-                    data: {
-                      points:
-                        layout?.edge.get(`${edge.source}-${edge.target}`) ?? [],
-                    },
-                  })),
-                [edges, layout?.edge],
-              )}
-              defaultViewport={{
-                zoom: 1,
-                x: window.innerWidth / 2 - 120,
-                y: 100,
-              }}
-              onConnect={handleConnect}
-              nodeTypes={nodeTypes}
-              edgeTypes={edgeTypes}
-              snapToGrid
-              snapGrid={[16, 16]}
-              panOnScroll
-              selectionOnDrag
-              panOnDrag={[1, 2]}
-              selectionMode={SelectionMode.Partial}
-              panOnScrollSpeed={1.5}
-              onEdgesChange={(changes) => {
-                const selectChange = changes.findLast(
-                  ({ type }) => type === "select",
-                )
-                if (selectChange?.type === "select" && selectChange.selected) {
-                  const [source, target] = selectChange.id.split("-")
-                  if (source == null || target == null) {
-                    return
-                  }
-                  switchFocusedRouteId(source as NodeId, target as NodeId)
-                }
-              }}
-            >
-              <Controls />
-              <MiniMap />
-              <Background
-                variant={BackgroundVariant.Lines}
-                color="#F7F7F7"
-                gap={12}
-                size={1}
-              />
-              <ErrorBoundary fallback={null}>
-                <div className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2">
-                  <RunButton />
-                </div>
-              </ErrorBoundary>
-            </ReactFlow>
-          </div>
-        </Panel>
-        {showDetailPanel && (
-          <>
-            <PanelResizeHandle />
-            <Panel defaultSize={25} minSize={5} order={3}>
-              <ErrorBoundary fallback={<ErrorDisplay />}>
-                <div className="z-10 h-full w-full shrink-0 overflow-hidden overflow-y-auto border-0 border-l border-l-slate-200">
-                  <DetailPanel />
-                </div>
-              </ErrorBoundary>
-            </Panel>
-          </>
-        )}
-      </PanelGroup>
+            </ErrorBoundary>
+          </Resizable>
+        </div>
+      )}
     </FlowProvider>
   )
 }

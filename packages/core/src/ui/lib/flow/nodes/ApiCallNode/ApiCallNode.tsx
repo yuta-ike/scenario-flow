@@ -69,36 +69,30 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
 
   const handleCreateNewApiCallNode = useAtomCallback(
     useCallback(
-      (get, _, actionId: ActionSourceIdentifier) => {
-        appendNode(nodeId, actionId, get(currentPageAtom))
-      },
+      (get, _, actionId: ActionSourceIdentifier) =>
+        appendNode(nodeId, actionId, get(currentPageAtom)),
       [nodeId],
     ),
   )
 
   const handleCreateNewIncludeNode = useAtomCallback(
     useCallback(
-      (get, _, routeId: RouteId) => {
-        appendIncludeNode(nodeId, routeId, get(currentPageAtom))
-      },
+      (get, _, routeId: RouteId) =>
+        appendIncludeNode(nodeId, routeId, get(currentPageAtom)),
       [nodeId],
     ),
   )
 
-  const handleInsertUserDefinedApiCallNode = useAtomCallback(
+  const handleCreateUserDefinedApiCallNode = useAtomCallback(
     useCallback(
-      (get, _) => {
-        appendUserDefinedRestCallNode(nodeId, get(currentPageAtom))
-      },
+      (get, _) => appendUserDefinedRestCallNode(nodeId, get(currentPageAtom)),
       [nodeId],
     ),
   )
 
   const handleAppendDbNode = useAtomCallback(
     useCallback(
-      (get, _) => {
-        appendDbNode(nodeId, get(currentPageAtom))
-      },
+      (get, _) => appendDbNode(nodeId, get(currentPageAtom)),
       [nodeId],
     ),
   )
@@ -182,7 +176,7 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
           <OpenCreateDropdown
             mode="append"
             onCreateApiCall={handleCreateNewApiCallNode}
-            onCreateUserDefinedApiCall={handleInsertUserDefinedApiCallNode}
+            onCreateUserDefinedApiCall={handleCreateUserDefinedApiCallNode}
             onCreateIclude={handleCreateNewIncludeNode}
             onCreateDbNode={handleAppendDbNode}
           >

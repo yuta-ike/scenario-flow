@@ -99,7 +99,8 @@ export const ResourceImport = ({ children }: Props) => {
   )
 
   const handleAddResource = async (name: string) => {
-    const fileHandle = await injected.io.selectFile(name, {
+    console.log(name)
+    const fileHandle = await injected.io.selectFile(undefined, {
       cacheKey: context.project.id,
     })
     const success = await importResources(name, fileHandle)
@@ -113,7 +114,7 @@ export const ResourceImport = ({ children }: Props) => {
     if (!executedRef.current && data != null && data.failed.length === 0) {
       executedRef.current = true
       void (async () => {
-        await Promise.all(
+        await Promise.allSettled(
           data.completed.map(({ name, handle }) =>
             importResources(name, handle),
           ),
@@ -124,7 +125,7 @@ export const ResourceImport = ({ children }: Props) => {
     } else if (data != null) {
       setInitialized(true)
     }
-  }, [data, importResources, isLoading])
+  }, [data, importResources])
 
   if (completed) {
     return children

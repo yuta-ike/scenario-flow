@@ -20,6 +20,7 @@ import { atom, useSetAtom } from "jotai"
 import { RunModalContent } from "../components/RunButton/RunModalContent"
 
 import { StepItem } from "./StepItem"
+import { OperationsTile } from "./OperationsTile"
 
 import type { DragEndEvent } from "@dnd-kit/core"
 import type { NodeId } from "@/domain/entity/node/node"
@@ -29,6 +30,7 @@ import { IconButton } from "@/ui/components/common/IconButton"
 import { CustomModal } from "@/ui/components/common/CustomModal"
 import { Button } from "@/ui/components/common/Button"
 import { useFocusedRoute } from "@/ui/state/focusedRouteId"
+import { toNodeId } from "@/domain/entity/node/node.util"
 
 export const showListViewAtom = atom(false)
 
@@ -39,7 +41,7 @@ export const ListView = () => {
   const setShow = useSetAtom(showListViewAtom)
 
   return (
-    <div className="h-full w-full opacity-100">
+    <div className="h-full w-full bg-white opacity-100">
       <ListViewInner onClose={() => setShow(false)} />
     </div>
   )
@@ -116,23 +118,28 @@ const ListViewInner = ({ onClose }: { onClose: () => void }) => {
           </CustomModal>
         </div>
       </section>
-      <DndContext
-        collisionDetection={closestCenter}
-        modifiers={[restrictToVerticalAxis, restrictToParentElement]}
-        onDragEnd={handleDragEnd}
-        sensors={sensors}
-      >
-        <SortableContext
-          items={route.path.map((node) => node.id)}
-          strategy={verticalListSortingStrategy}
+      <section className="flex grow flex-col overflow-y-auto border-y border-y-slate-200 bg-slate-50">
+        <DndContext
+          collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+          onDragEnd={handleDragEnd}
+          sensors={sensors}
         >
-          <section className="flex grow flex-col gap-2 overflow-y-auto border-y border-y-slate-200 bg-slate-50 px-2 py-4">
-            {route.path.map((node, index) => (
-              <StepItem key={node.id} node={node} index={index} />
-            ))}
-          </section>
-        </SortableContext>
-      </DndContext>
+          <SortableContext
+            items={route.path.map((node) => node.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="flex flex-col gap-2 px-2 py-4">
+              {route.path.map((node, index) => (
+                <StepItem key={node.id} node={node} index={index} />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+        <div>
+          <OperationsTile nodeId={route.path.at(-1)?.id ?? toNodeId("$root")} />
+        </div>
+      </section>
     </div>
   )
 }

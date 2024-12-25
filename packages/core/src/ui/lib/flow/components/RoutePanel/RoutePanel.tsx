@@ -17,7 +17,7 @@ export const RoutePanel = () => {
   const routeIds = useAtomValue(currentPageRouteIds)
 
   return (
-    <div className="h-full min-h-[200px] border-t border-t-slate-200">
+    <div className="h-max min-h-[40%] border-t border-t-slate-200">
       <div className="w-full p-2">
         <div className="text-xs text-slate-600">
           {currentPage.length === 0 ? "ルート" : currentPage}
@@ -29,9 +29,9 @@ export const RoutePanel = () => {
         </div>
       )}
       <AccordionRoot>
-        <ol className="w-full">
+        <ol className="h-max w-full">
           {routeIds.map((routeId) => (
-            <li key={routeId} className="w-full px-2 py-0.5">
+            <li key={routeId} className="h-max w-full">
               <RouteTile routeId={routeId} />
             </li>
           ))}

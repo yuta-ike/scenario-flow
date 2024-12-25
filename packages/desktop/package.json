@@ -4,10 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "pnpm run dev:tauri",
-    "dev:tauri": "pnpm run tauri dev",
+    "dev": "pnpm run tauri dev",
+    "build": "pnpm run tauri build",
+    "build:debug": "pnpm run tauri build --debug",
     "dev:vite": "vite",
-    "build": "tsc && vite build",
+    "build:vite": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri"
   },

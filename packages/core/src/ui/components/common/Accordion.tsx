@@ -58,7 +58,7 @@ export const AccordionItem = ({
         title
       )}
       <RadixAccordion.Content
-        className="w-full"
+        className="h-[var(--radix-accordion-content-height)] w-full animate-collapsibleSlideOut overflow-y-hidden transition-[height] data-[state=closed]:animate-accordionHide data-[state=open]:animate-accordionShow"
         style={{
           marginTop: `${gap}px`,
         }}

@@ -37,9 +37,14 @@ export const InsertButton = ({
     useCallback(
       (get, _, actionId: ActionSourceIdentifier) => {
         if (fromNodeId === "$root") {
-          unshiftNode(routeIds[0]!, actionId)
+          return unshiftNode(routeIds[0]!, actionId)
         } else {
-          insertNode(fromNodeId, toNodeId, actionId, get(currentPageAtom))
+          return insertNode(
+            fromNodeId,
+            toNodeId,
+            actionId,
+            get(currentPageAtom),
+          )
         }
       },
       [fromNodeId, routeIds, toNodeId],
@@ -68,9 +73,9 @@ export const InsertButton = ({
     useCallback(
       (get, _) => {
         if (fromNodeId === "$root") {
-          unshiftUserDefinedRestCallNode(routeIds[0]!)
+          return unshiftUserDefinedRestCallNode(routeIds[0]!)
         } else {
-          insertUserDefinedRestCallNode(
+          return insertUserDefinedRestCallNode(
             fromNodeId,
             toNodeId,
             get(currentPageAtom),
@@ -85,9 +90,9 @@ export const InsertButton = ({
     useCallback(
       (get, _) => {
         if (fromNodeId === "$root") {
-          unshiftDbNode(routeIds[0]!)
+          return unshiftDbNode(routeIds[0]!)
         } else {
-          insertDbNode(fromNodeId, toNodeId, get(currentPageAtom))
+          return insertDbNode(fromNodeId, toNodeId, get(currentPageAtom))
         }
       },
       [fromNodeId, routeIds, toNodeId],
