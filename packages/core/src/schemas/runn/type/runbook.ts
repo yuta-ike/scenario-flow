@@ -58,10 +58,12 @@ export type RunBookStepOperationObject = {
 }
 export type RunBookStepMediaTypeObject = Json
 
-export type RunBookStepIncludeObject = {
-  path: string
-  vars?: Record<string, string>
-}
+export type RunBookStepIncludeObject =
+  | string
+  | {
+      path: string
+      vars?: Record<string, string>
+    }
 
 export type RunBookStepDbObject = {
   query: string

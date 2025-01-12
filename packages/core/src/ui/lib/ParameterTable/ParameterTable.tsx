@@ -26,7 +26,7 @@ import {
 } from "@dnd-kit/modifiers"
 import { HiMenuAlt4 } from "react-icons/hi"
 import clsx from "clsx"
-import { TbAlertCircleFilled, TbAsterisk } from "react-icons/tb"
+import { TbAlertCircleFilled } from "react-icons/tb"
 import { FiInfo } from "react-icons/fi"
 
 import { MagicVariableButton } from "../flow/components/DetailPanel/MagicVariableButton"
@@ -197,16 +197,6 @@ export const ParameterTable = ({
                   </button>
                 </Tooltip>
               )}
-              {row.getValue<boolean | undefined>("required") === true && (
-                <Tooltip label="必須のプロパティです">
-                  <button
-                    type="button"
-                    className="shrink-0 cursor-pointer rounded p-[6.5px] text-red-400 hover:bg-slate-200"
-                  >
-                    <TbAsterisk strokeWidth={3} size={9} />
-                  </button>
-                </Tooltip>
-              )}
               {row.getValue<string | undefined>("description") != null && (
                 <Tooltip
                   label={row.getValue<string | undefined>("description")!}
@@ -234,7 +224,20 @@ export const ParameterTable = ({
               <div className="ml-2 grid shrink-0 place-items-center text-slate-600 empty:hidden">
                 <DataTypeIcon
                   type={row.getValue<DataType | undefined>("dataType")}
+                  required={
+                    row.getValue<boolean | undefined>("required") === true
+                  }
                 />
+                {/* {row.getValue<boolean | undefined>("required") === true && (
+                <Tooltip label="必須のプロパティです">
+                  <button
+                    type="button"
+                    className="shrink-0 cursor-pointer rounded p-[6.5px] text-red-400 hover:bg-slate-200"
+                  >
+                    <TbAsterisk strokeWidth={3} size={9} />
+                  </button>
+                </Tooltip>
+              )} */}
               </div>
               <input
                 value={value}

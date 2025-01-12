@@ -27,10 +27,11 @@ import { getEdges } from "./utils/getEdges"
 import { DetailPanel } from "./components/DetailPanel"
 import { RunButton } from "./components/RunButton"
 import { FlowProvider } from "./FlowProvider"
-import { ListView, ListViewOpenButton, showListViewAtom } from "./ListView"
+import { ListViewOpenButton } from "./ListView"
 import { NodePanel } from "./components/NodePanel/NodePanel"
 import { CreateNode } from "./nodes/CreateNode"
 import { SkleltonEdge } from "./edges/SkeltonEdge"
+import { useShowListView } from "./ListView/showListViewAtom"
 
 import type { NodeId } from "@/domain/entity/node/node"
 
@@ -113,7 +114,7 @@ export const Flow = () => {
     }, []),
   )
 
-  const showListView = useAtomValue(showListViewAtom)
+  const showListView = useShowListView()
   const showDetailPanel = useFocusedNodeExists()
 
   return (
@@ -237,21 +238,8 @@ export const Flow = () => {
         </Resizable>
 
         {/* Left Second Panel */}
-        <div className="absolute inset-y-0 left-full top-0 flex flex-col">
-          {showListView ? (
-            <Resizable
-              defaultSize={{ width: 500, height: "100%" }}
-              minWidth={200}
-            >
-              <div className="h-full w-full border-r border-r-slate-200">
-                <ListView />
-              </div>
-            </Resizable>
-          ) : (
-            <div className="w-[200px] p-2">
-              <ListViewOpenButton />
-            </div>
-          )}
+        <div className="absolute left-full top-0 flex h-max flex-col p-2">
+          <ListViewOpenButton />
         </div>
       </div>
       {/* Right Panel */}

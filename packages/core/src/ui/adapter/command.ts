@@ -30,11 +30,13 @@ import {
   updatePageName as updatePageNameWf,
   updateRoute as updateRouteWf,
   swapRoutePath as swapRoutePathWf,
+  updateRouteVariables as updateRouteVariablesWf,
 } from "@/domain/workflow/route"
 import {
   appendNode as appendNodeWf,
   createRootNode as createRootNodeWf,
   updateActionInstancesParameter as updateActionInstancesParameterWf,
+  updateActionAndActionInstance as updateActionAndActionInstanceWf,
   upsertVariables as upsertVariablesWf,
   replaceAction as replaceActionWf,
   updateNode as updateNodeWf,
@@ -51,6 +53,7 @@ import {
   createUserDefinedRestCallRootNode as createUserDefinedRestCallRootNodeWf,
   updateUserDefinedAction as updateUserDefinedActionWf,
   changeToNewAction as changeToNewActionWf,
+  changeAction as changeActionWf,
 } from "@/domain/workflow/node"
 import {
   addGlobalVariable as addGlobalVariableWf,
@@ -576,8 +579,13 @@ export const uploadOpenApiFile = async (
   description: string,
   path: string,
   openApi: Json,
+  readExternalFile: (path: string) => Promise<string>,
 ): Promise<Result<null, JsonParseError>> => {
-  const content = await resolveRefs(openApi as unknown as OpenAPIObject)
+  console.log("PATH", path)
+  const content = await resolveRefs(
+    openApi as unknown as OpenAPIObject,
+    readExternalFile,
+  )
   if (content.result === "error") {
     return content
   }
@@ -610,8 +618,12 @@ export const putOpenApiFile = async (
   description: string,
   path: string,
   openApi: Json,
+  readExternalFile: (path: string) => Promise<string>,
 ): Promise<Result<null, JsonParseError>> => {
-  const content = await resolveRefs(openApi as unknown as OpenAPIObject)
+  const content = await resolveRefs(
+    openApi as unknown as OpenAPIObject,
+    readExternalFile,
+  )
   if (content.result === "error") {
     return content
   }
@@ -651,6 +663,8 @@ export const updatePageName = (args: { prevPage: string; newPage: string }) => {
 
 export const deleteRoute = applyRunner(deleteRouteWf)
 
+export const updateRouteVariables = applyRunner(updateRouteVariablesWf)
+
 export const updateNode = applyRunner(updateNodeWf)
 
 export const disconnectNodes = applyRunner(disconnectNodesWf)
@@ -663,6 +677,10 @@ export const connectNodes = applyRunner(connectNodesWf)
 
 export const updateActionInstance = applyRunner(
   updateActionInstancesParameterWf,
+)
+
+export const updateActionAndActionInstance = applyRunner(
+  updateActionAndActionInstanceWf,
 )
 
 export const updateUserDefinedAction = applyRunner(updateUserDefinedActionWf)
@@ -682,3 +700,5 @@ export const updateGlobalVariableValue = applyRunner(
 )
 
 export const replaceAction = applyRunner(replaceActionWf)
+
+export const changeAction = applyRunner(changeActionWf)

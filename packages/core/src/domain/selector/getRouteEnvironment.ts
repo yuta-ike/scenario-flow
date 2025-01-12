@@ -8,17 +8,21 @@ import {
   type Bind,
   type Environment,
 } from "../entity/environment/environment"
-import { globalVariablesAtom } from "../datasource/globalVariable"
 import { buildLocalVariable } from "../entity/variable/variable"
 import { nonRef } from "../openapi/isNotRef"
 import { getResponseSchema } from "../openapi/response"
+import { primitiveRouteAtom } from "../datasource/route"
+import { variableAtom } from "../datasource/variable"
+import { resolveVariable } from "../entity/environment/variable"
 
 import { getParentByNodeId } from "./getParentByNodeId"
+import { getRouteIdsByNodeId } from "./getRouteIdsByNodeId"
 
 import type { ResolvedEnvironment } from "../entity/environment/environment"
 import type { NodeId } from "../entity/node/node"
 
 import { nonNull } from "@/utils/assert"
+import { dedupe } from "@/lib/array/utils"
 
 const getNodeEnvironment = atomFamily((nodeId: NodeId) => {
   const newAtom = atom<Environment>((get) => {
@@ -102,31 +106,30 @@ const getNodeEnvironment = atomFamily((nodeId: NodeId) => {
 
 export const getResolvedNodeEnvironment = atomFamily((nodeId: NodeId) => {
   const newAtom = atom<ResolvedEnvironment>((get) => {
-    const globalVariables: Environment = get(globalVariablesAtom).map(
-      (variable) => ({
-        namespace: "vars",
-        variable: {
-          ...variable,
-          boundIn: "global",
-        },
-        inherit: false,
+    const routeVariableIds = dedupe(
+      get(getRouteIdsByNodeId(nodeId)).flatMap((routeId) =>
+        get(primitiveRouteAtom(routeId)).variables.map(({ id }) => id),
+      ),
+    )
+
+    const routeVariables = routeVariableIds
+      .map((variableId) => get(variableAtom(variableId)))
+      .map((variable) => ({
+        variable,
+        inherit: true,
+      }))
+
+    const res = [...routeVariables, ...get(getNodeEnvironment(nodeId))].map(
+      ({ variable, ...rest }) => ({
+        variable: resolveVariable(variable, {
+          getRoute: (routeId) => get(primitiveRouteAtom(routeId)),
+          getNode: (nodeId) => get(primitiveNodeAtom(nodeId)),
+        }),
+        ...rest,
       }),
     )
 
-    const variables = [
-      ...globalVariables,
-      ...get(getNodeEnvironment(nodeId)),
-    ].map(({ variable, inherit }) => ({
-      variable: {
-        ...variable,
-        boundIn:
-          variable.boundIn === "global"
-            ? ("global" as const)
-            : get(primitiveNodeAtom(variable.boundIn)),
-      },
-      inherit,
-    }))
-    return variables
+    return res
   })
   newAtom.debugLabel = `getResolvedNodeEnvironment(${nodeId})`
   return newAtom
@@ -134,33 +137,34 @@ export const getResolvedNodeEnvironment = atomFamily((nodeId: NodeId) => {
 
 export const getResolvedParentNodeEnvironment = atomFamily((nodeId: NodeId) => {
   const newAtom = atom<ResolvedEnvironment>((get) => {
-    const globalVariables: Environment = get(globalVariablesAtom).map(
-      (variable) => ({
-        namespace: "vars",
-        variable: {
-          ...variable,
-          boundIn: "global",
-        },
-        inherit: false,
-      }),
+    const routeVariableIds = dedupe(
+      get(getRouteIdsByNodeId(nodeId)).flatMap((routeId) =>
+        get(primitiveRouteAtom(routeId)).variables.map(({ id }) => id),
+      ),
     )
+
+    const routeVariables = routeVariableIds
+      .map((variableId) => get(variableAtom(variableId)))
+      .map((variable) => ({
+        variable,
+        inherit: true,
+      }))
 
     const nodeIds = get(getParentByNodeId(nodeId))
     const environments = nodeIds.map((nodeId) =>
       get(getNodeEnvironment(nodeId)).filter((bind) => bind.inherit),
     )
-    return [...globalVariables, ...intersect(environments)].map(
-      ({ variable, inherit }) => ({
-        inherit,
-        variable: {
-          ...variable,
-          boundIn:
-            variable.boundIn === "global"
-              ? "global"
-              : get(primitiveNodeAtom(variable.boundIn)),
-        },
+
+    const res = [...routeVariables, ...intersect(environments)].map(
+      ({ variable, ...rest }) => ({
+        variable: resolveVariable(variable, {
+          getRoute: (routeId) => get(primitiveRouteAtom(routeId)),
+          getNode: (nodeId) => get(primitiveNodeAtom(nodeId)),
+        }),
+        ...rest,
       }),
     )
+    return res
   })
   newAtom.debugLabel = `getResolvedNodeEnvironment(${nodeId})`
   return newAtom

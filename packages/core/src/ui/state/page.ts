@@ -4,15 +4,15 @@ import { atomFamily, useAtomCallback } from "jotai/utils"
 
 import { useRoutes } from "../adapter/query"
 
-import { primitiveRoutesAtom, routesAtom } from "@/domain/datasource/route"
+import {
+  primitiveRouteAtom,
+  routePageCache,
+  routesAtom,
+} from "@/domain/datasource/route"
 
 export const currentPageAtom = atom("")
 
-export const pagesAtom = atom((get) =>
-  new Set(get(primitiveRoutesAtom).map((route) => route.page))
-    .values()
-    .toArray(),
-)
+export const pagesAtom = atom((get) => get(routePageCache).keys().toArray())
 
 export const usePage = () => {
   const [currentPage, setCurrentPage] = useAtom(currentPageAtom)
@@ -62,3 +62,20 @@ const routesInPageAtom = atomFamily((page: string) => {
 
 export const useRoutesInPage = (page: string) =>
   useAtomValue(routesInPageAtom(page))
+
+export const routeIdsInPageAtom = atomFamily((page: string) => {
+  return atom((get) => get(routePageCache).get(page)?.values().toArray() ?? [])
+})
+
+export const useRouteIdsInPage = (page: string) =>
+  useAtomValue(routeIdsInPageAtom(page))
+
+export const primitiveRoutesInPageAtom = atomFamily((page: string) =>
+  atom((get) => {
+    const routeIds = get(routeIdsInPageAtom(page))
+    return routeIds.map((routeId) => get(primitiveRouteAtom(routeId)))
+  }),
+)
+
+export const usePrimitiveRoutesInPage = (page: string) =>
+  useAtomValue(primitiveRoutesInPageAtom(page))

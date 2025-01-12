@@ -15,8 +15,10 @@ export const CreateNewPageForm = () => {
 
   const onSubmit = handleSubmit((data) => {
     addRoute({
+      description: "",
       path: [],
       page: `/${data.name}`,
+      variables: [],
     })
     close()
   })

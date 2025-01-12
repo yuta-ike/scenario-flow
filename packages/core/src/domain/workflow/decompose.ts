@@ -1,12 +1,10 @@
-import { resolveExpression } from "../entity/value/expression.util"
+import { resolveExpression } from "../entity/value/expression"
 import { display } from "../entity/resource/identifier"
 
 import type { Resource } from "../entity/resource/resource"
 import type { Expression } from "../entity/value/expression"
-import type { TypedValue } from "../entity/value/dataType"
 import type { Meta } from "../entity/meta/meta"
 import type { Decomposed, DecomposedStep } from "../entity/decompose/decomposed"
-import type { GlobalVariable } from "../entity/globalVariable/globalVariable"
 import type { Route } from "../entity/route/route"
 import type { Node } from "../entity/node/node"
 
@@ -34,6 +32,15 @@ const decomposeStepItem = (
               }
             : undefined
 
+        console.log("================")
+        console.log(
+          ai.instanceParameter.path,
+          pathParams,
+          resolveExpression(
+            ai.instanceParameter.path as Expression,
+            pathParams,
+          ),
+        )
         return {
           type: "rest_call" as const,
           description: ai.description,
@@ -97,7 +104,6 @@ const decomposeStepItem = (
 
 const decomposeRoute = (
   route: Route,
-  globalVariables: (GlobalVariable & { value: TypedValue })[],
   resourceMap: Map<string, Resource>,
   meta: Meta,
 ): Decomposed => {
@@ -105,7 +111,10 @@ const decomposeRoute = (
     id: route.id,
     color: route.color,
     title: route.name,
-    globalVariables,
+    variables: route.variables.map(({ variable, value }) => ({
+      variable,
+      value: { type: "any", value },
+    })),
     endpoint: meta.endpoint,
     steps: route.path.map((node) => decomposeStepItem(node, resourceMap)),
     page: route.page,
@@ -114,13 +123,8 @@ const decomposeRoute = (
 
 export const decompose = (
   routes: Route[],
-  globalVariables: (GlobalVariable & {
-    value: TypedValue
-  })[],
   resourceMap: Map<string, Resource>,
   meta: Meta,
 ): Decomposed[] => {
-  return routes.map((route) =>
-    decomposeRoute(route, globalVariables, resourceMap, meta),
-  )
+  return routes.map((route) => decomposeRoute(route, resourceMap, meta))
 }

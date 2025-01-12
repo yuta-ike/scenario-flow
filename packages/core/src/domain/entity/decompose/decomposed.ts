@@ -1,7 +1,6 @@
 import type { Time } from "../value/time"
 import type { RouteId } from "../route/route"
 import type { TypedValue } from "../value/dataType"
-import type { GlobalVariable } from "../globalVariable/globalVariable"
 import type { ContentType, HttpMethod } from "@/utils/http"
 import type { KVItem } from "@/ui/lib/kv"
 import type { Json } from "@/utils/json"
@@ -61,9 +60,11 @@ export type Decomposed = {
   id: RouteId
   color: string
   title: string
-  globalVariables: (GlobalVariable & {
+  description?: string
+  variables: {
+    variable: LocalVariable
     value: TypedValue
-  })[]
+  }[]
   endpoint: string
   steps: DecomposedStep[]
   page: string

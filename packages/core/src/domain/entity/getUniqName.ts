@@ -3,8 +3,9 @@ export const getUniqName = (
   usedNames: string[],
   index = 1,
 ): string => {
-  if (!usedNames.includes(`${candidateName}${index === 1 ? "" : index}`)) {
-    return `${candidateName}${index === 1 ? "" : index}`
+  const suffix = index === 1 ? "" : `_${index}`
+  if (!usedNames.includes(`${candidateName}${suffix}`)) {
+    return `${candidateName}${suffix}`
   }
   return getUniqName(candidateName, usedNames, index + 1)
 }

@@ -299,8 +299,8 @@ export const resolveRestCallActionInstance = (
     ...actionInstance,
     instanceParameter: mergeActionParameter(
       "rest_call",
-      action.schema.base,
       actionInstance.instanceParameter,
+      action.schema.base,
     ),
     action,
   }

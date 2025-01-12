@@ -51,13 +51,6 @@ const convertDecomposedAction = (
         } satisfies RunBookStepPathItemObject,
       } satisfies RunBookStepPathsObject,
     } satisfies RunBookStep
-  } else if (action.type === "validator") {
-    if (action.contents.length === 0) {
-      return {}
-    }
-    return {
-      test: action.contents,
-    }
   } else if (action.type === "binder") {
     if (action.assignments.length === 0) {
       return {}
@@ -81,6 +74,13 @@ const convertDecomposedAction = (
           ]),
         ),
       },
+    }
+  } else if (action.type === "validator") {
+    if (action.contents.length === 0) {
+      return {}
+    }
+    return {
+      test: action.contents,
     }
   } else {
     return {
@@ -149,15 +149,14 @@ const convertDecomposedToRunn = (
     },
     contents: {
       desc: decomposed.title,
-      labels: [] as string[],
-      runners: {
-        req: decomposed.endpoint,
-      },
+      // runners: {
+      //   req: decomposed.endpoint,
+      // },
       vars:
-        decomposed.globalVariables.length === 0
+        decomposed.variables.length === 0
           ? undefined
           : Object.fromEntries(
-              decomposed.globalVariables.map(({ name, value }) => [
+              decomposed.variables.map(({ variable: { name }, value }) => [
                 name,
                 typedValueToValue(value) as string,
               ]),
@@ -179,7 +178,7 @@ export const convertDecomposedListToRunn: EnginePluginSerializer<RunBook> = (
   const routeIdPathMap = new Map(
     decomposedList.map((decomposed) => [
       decomposed.id,
-      `${decomposed.page}/${decomposed.title}.yml`,
+      `${decomposed.page}/${decomposed.title}.yaml`,
     ]),
   )
 

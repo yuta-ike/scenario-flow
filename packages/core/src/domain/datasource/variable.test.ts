@@ -88,7 +88,7 @@ describe("variable > primitiveVariable", () => {
       variableIdsAtom,
       updateSetOp((ids) => ids.filter((id) => id !== toLocalVariableId("v1"))),
     )
-    variableAtom.remove(toLocalVariableId("v1"))
+    store.remove(variableAtom, toLocalVariableId("v1"))
 
     // expect
     expect(store.get(variableIdsAtom)).toEqual(

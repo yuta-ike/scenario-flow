@@ -7,9 +7,10 @@ export const buildPath = (
 }
 
 export const parsePath = (path: string) => {
-  const url = new URL(path, "http://dummy.example.com")
   return {
-    path: url.pathname,
-    queryParams: Object.fromEntries(url.searchParams),
+    path: path.split("?")[0]!,
+    queryParams: Object.fromEntries(
+      new URLSearchParams(path.split("?")[1]).entries(),
+    ),
   }
 }

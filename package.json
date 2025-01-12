@@ -7,7 +7,8 @@
     "dev:web": "pnpm --filter @scenario-flow/web dev",
     "dev:desktop": "pnpm --filter @scenario-flow/desktop dev",
     "build:desktop": "pnpm --filter @scenario-flow/desktop build",
-    "build:debug:desktop": "pnpm --filter @scenario-flow/desktop build:debug"
+    "build:debug:desktop": "pnpm --filter @scenario-flow/desktop build:debug",
+    "test": "pnpm --filter @scenario-flow/core test"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",

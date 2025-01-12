@@ -4,8 +4,13 @@ import { atom, type WritableAtom } from "jotai"
 import type { AtomFamily } from "jotai/vanilla/utils/atomFamily"
 import type { Getter, Setter } from "jotai"
 
-type WrapOption<FamilyId, InputParam extends unknown[]> = {
+type WrapOption<FamilyId, InputParam extends unknown[], AtomType> = {
   write: (id: FamilyId, get: Getter, set: Setter, ...params: InputParam) => void
+  onRemove?: (
+    get: Getter,
+    set: Setter,
+    params: { id: FamilyId; value: AtomType },
+  ) => void
 }
 
 export const wrapAtomFamily = <
@@ -17,12 +22,15 @@ export const wrapAtomFamily = <
   innerAtomFamily: AtomFamily<FamilyId, WritableAtom<AtomType, Param, void>> & {
     clearAll: () => void
   },
-  { write }: WrapOption<FamilyId, InputParam>,
-  onRemoved?: (id: FamilyId) => void,
+  { write, onRemove }: WrapOption<FamilyId, InputParam, AtomType>,
 ): AtomFamily<FamilyId, WritableAtom<AtomType, InputParam, void>> & {
   clearAll: () => void
+  removeAtom: WritableAtom<null, [id: FamilyId], void>
 } => {
-  const wrappedAtom = atomFamily((id: FamilyId) =>
+  const wrappedAtom: AtomFamily<
+    FamilyId,
+    WritableAtom<AtomType, InputParam, void>
+  > = atomFamily((id: FamilyId) =>
     atom(
       (get) => get(innerAtomFamily(id)),
       (get, set, ...params: InputParam) => write(id, get, set, ...params),
@@ -32,10 +40,12 @@ export const wrapAtomFamily = <
   // @ts-expect-error
   wrappedAtom.clearAll = () => innerAtomFamily.clearAll()
 
-  wrappedAtom.remove = (id: FamilyId) => {
+  // @ts-expect-error
+  wrappedAtom.removeAtom = atom(null, (get, set, id: FamilyId) => {
+    const removedAtom = get(wrappedAtom(id))
+    onRemove?.(get, set, { id, value: removedAtom })
     innerAtomFamily.remove(id)
-    onRemoved?.(id)
-  }
+  })
 
   wrappedAtom.getParams = () => innerAtomFamily.getParams()
 
@@ -48,5 +58,6 @@ export const wrapAtomFamily = <
     WritableAtom<AtomType, InputParam, void>
   > & {
     clearAll: () => void
+    removeAtom: WritableAtom<null, [id: FamilyId], void>
   }
 }

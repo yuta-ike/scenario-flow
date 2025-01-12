@@ -13,7 +13,6 @@ export const setUpDirectory = async (
   injected: InjectedContent,
   project: Project,
 ): Promise<ConfigFormat> => {
-  console.log(project)
   const {
     io: { getOrCreateFile, writeFile, readFile },
   } = injected

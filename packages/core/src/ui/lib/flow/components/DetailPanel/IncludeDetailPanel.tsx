@@ -94,7 +94,7 @@ export const IncludeDetailPanel = ({ nodeId, ai }: Props) => {
               variablesMap.get(toLocalVariableId(kv.id)) ??
               buildLocalVariable(kv.id, {
                 namespace: "vars",
-                boundIn: "local",
+                boundIn: nodeId,
                 name: kv.key,
                 description: "",
                 schema: "any",
@@ -118,22 +118,24 @@ export const IncludeDetailPanel = ({ nodeId, ai }: Props) => {
 
   return (
     <div className="flex h-full w-full flex-col bg-white">
-      <Section title="インポート">
+      <Section title="シナリオ呼び出し">
         <div>
           <div className="flex items-center gap-2">
-            <div className="max-w-[160px] grow">
-              <Select
-                prefix={TbFolder}
-                value={selectedPage}
-                items={pages.map((page) => ({
-                  id: fill(page, "/"),
-                  label: fill(page, "/"),
-                }))}
-                onChange={(value) =>
-                  setSelectedPage(value === "/" ? "" : value)
-                }
-              />
-            </div>
+            {1 < pages.length && (
+              <div className="max-w-[160px] grow">
+                <Select
+                  prefix={TbFolder}
+                  value={selectedPage}
+                  items={pages.map((page) => ({
+                    id: fill(page, "/"),
+                    label: fill(page, "/"),
+                  }))}
+                  onChange={(value) =>
+                    setSelectedPage(value === "/" ? "" : value)
+                  }
+                />
+              </div>
+            )}
             <div className="max-w-[320px] grow">
               <Select
                 prefix={TbFlag2}

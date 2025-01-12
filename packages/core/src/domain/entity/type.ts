@@ -68,7 +68,7 @@ export type Builder<
   Rest extends any[] = never[],
 > = (
   id: Model["id"] extends string ? string : never,
-  params: BuilderParams<DistributiveOmit<Model, "id">>,
+  params: BuilderParams<Model>,
   ...rest: Rest
 ) => Model
 
@@ -78,4 +78,7 @@ export type SimpleBuilder<Model, Args extends any[] = any[]> = (
 
 export type Equal<Model> = (a: Model, b: Model) => boolean
 
-export type Receiver<Model, Return> = (model: Model, ...rest: any) => Return
+export type Receiver<Model, Args extends any[], Return> = (
+  model: Model,
+  ...rest: Args
+) => Return

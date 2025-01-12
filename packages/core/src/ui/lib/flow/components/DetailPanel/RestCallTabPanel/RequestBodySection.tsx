@@ -139,7 +139,7 @@ export const RequestBodySection = ({ nodeId, ai }: Props) => {
         <div>
           {contentTypeTab === "application/json" ? (
             <>
-              <div className="relative -mx-3 w-[calc(100%+24px)] overflow-hidden rounded border border-slate-200 text-sm">
+              <div className="relative w-full rounded border border-slate-200 text-sm">
                 <Editor2
                   lang="json"
                   initValue={strigifyJson(

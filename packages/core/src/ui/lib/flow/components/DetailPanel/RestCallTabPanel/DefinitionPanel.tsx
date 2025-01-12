@@ -19,23 +19,25 @@ export const DefinitionPanel = ({ action }: Props) => {
   }
 
   return (
-    <div className="w-full rounded border border-blue-200 bg-blue-100 p-2">
-      <div className="flex items-center gap-1 text-xs">
-        <TbComponents />
-        定義
-      </div>
-      <div className="text-sm">
-        {action.resourceIdentifier.identifier.operationId} in{" "}
-        <Drawer
-          key={resource.id}
-          title={resource.name}
-          description=""
-          modal={<ResourceDetail resourceId={resource.id} />}
-        >
-          <button type="button" className="text-sm underline">
-            {resource.name}
-          </button>
-        </Drawer>
+    <div className="flex w-full items-center rounded border border-blue-200 bg-blue-100 p-2">
+      <div className="grow">
+        <div className="flex items-center gap-1 text-xs">
+          <TbComponents />
+          定義
+        </div>
+        <div className="text-sm">
+          {action.resourceIdentifier.identifier.operationId} in{" "}
+          <Drawer
+            key={resource.id}
+            title={resource.name}
+            description=""
+            modal={<ResourceDetail resourceId={resource.id} />}
+          >
+            <button type="button" className="text-sm underline">
+              {resource.name}
+            </button>
+          </Drawer>
+        </div>
       </div>
     </div>
   )

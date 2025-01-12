@@ -23,8 +23,10 @@ export const Select = <Id extends string | null>({
     // @ts-expect-error
     onValueChange={(value) => onChange(value === "NULL" ? null : (value as Id))}
   >
-    <RxSelect.Trigger className="flex w-full items-center gap-3 rounded border border-slate-200 px-3 py-1 text-sm hover:border-slate-300 data-[state=open]:border-slate-300">
-      {PrefixIcon != null && <PrefixIcon className="shrink-0 text-slate-400" />}
+    <RxSelect.Trigger className="flex w-full items-center gap-3 rounded border border-slate-200 px-3 py-2 text-sm hover:border-slate-300 data-[state=open]:border-slate-300">
+      {PrefixIcon != null && (
+        <PrefixIcon size={18} className="shrink-0 text-slate-400" />
+      )}
       <div className="flex min-h-[1lh] grow truncate">
         <RxSelect.Value
           placeholder={<div className="text-slate-400">{placeholder}</div>}

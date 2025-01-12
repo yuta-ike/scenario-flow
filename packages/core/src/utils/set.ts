@@ -3,8 +3,16 @@ export const updateSetOp =
   (set: Set<Value>) =>
     new Set(updater(set.values()))
 
-export const addSetOp = <Value>(value: Value) =>
-  updateSetOp<Value>((prev) => [...prev, value])
+export const addSetOp = <Value>(value: Value) => batchAddSetOp([value])
+
+export const batchAddSetOp = <Value>(values: Value[]) =>
+  updateSetOp<Value>((prev) => [...prev, ...values])
+
+export const deleteSetOp = <Value>(value: Value) =>
+  updateSetOp<Value>((prev) => prev.filter((v) => v !== value))
+
+export const batchDeleteSetOp = <Value>(values: Value[]) =>
+  updateSetOp<Value>((prev) => prev.filter((v) => !values.includes(v)))
 
 export const associateBy = <
   Item extends Record<string, unknown>,

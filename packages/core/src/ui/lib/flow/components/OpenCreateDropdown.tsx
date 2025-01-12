@@ -1,7 +1,7 @@
 import * as Popover from "@radix-ui/react-popover"
 import clsx from "clsx"
-import { useEffect, useState } from "react"
-import { RxCaretLeft } from "react-icons/rx"
+import { useEffect, useMemo, useState } from "react"
+import { RxCaretLeft, RxPlus } from "react-icons/rx"
 import {
   TbApi,
   TbArrowRightCircle,
@@ -9,7 +9,7 @@ import {
   TbFileImport,
 } from "react-icons/tb"
 import { Handle, Position, useReactFlow } from "@xyflow/react"
-import { FiPlus } from "react-icons/fi"
+import { FiChevronRight, FiPlus } from "react-icons/fi"
 import { flushSync } from "react-dom"
 
 import { Transition } from "../../common/Transition"
@@ -18,9 +18,16 @@ import { IncludeSelectPage } from "./IncludeSelectPage"
 
 import type { RouteId } from "@/domain/entity/route/route"
 import type { NodeId } from "@/domain/entity/node/node"
+import type { HttpMethod } from "@/utils/http"
 
 import { type ActionSourceIdentifier } from "@/domain/entity/action/identifier"
 import { useFocusNode } from "@/ui/state/focusedNodeId"
+import { Button } from "@/ui/components/common/Button"
+import { getIdentifier } from "@/domain/entity/action/action"
+import { ApiCallTile } from "@/ui/page/index/BlockMenu/ApiCallTile"
+import { HTTP_METHODS } from "@/utils/http"
+import { searchFuzzy } from "@/utils/searchFuzzy"
+import { useActions } from "@/ui/adapter/query"
 
 type OpenCreateDropdownProps = {
   children: React.ReactNode
@@ -33,7 +40,7 @@ type OpenCreateDropdownProps = {
 
 export const OpenCreateDropdown = ({
   children,
-  // onCreateApiCall,
+  onCreateApiCall,
   onCreateUserDefinedApiCall,
   onCreateIclude,
   onCreateDbNode,
@@ -85,6 +92,47 @@ export const OpenCreateDropdown = ({
     }
   }, [isOpen])
 
+  const [searchText, setSeachText] = useState("")
+
+  const [filters, setFilters] = useState<HttpMethod[]>([])
+  const toggleFilter = (method: HttpMethod) => {
+    setFilters((prev) =>
+      prev.includes(method)
+        ? prev.filter((m) => m !== method)
+        : [...prev, method],
+    )
+  }
+
+  const actions = useActions()
+
+  const filteredActions = useMemo(() => {
+    const exampleOmitted = actions
+      .filter((action) => action.type === "rest_call")
+      .filter(
+        (action) =>
+          !(
+            action.schema.base.method === "GET" &&
+            action.schema.base.path === "/example"
+          ),
+      )
+
+    if (searchText.length === 0) {
+      return exampleOmitted
+    }
+
+    return searchFuzzy(searchText, exampleOmitted, {
+      keys: [
+        (action) => action.schema.base.method!,
+        (action) => action.schema.base.path!,
+      ],
+    })
+  }, [actions, searchText])
+
+  const handleSelectApiCall = (action: ActionSourceIdentifier) => {
+    onCreateApiCall(action)
+    setIsOpen(false)
+  }
+
   return (
     <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
       <Popover.Trigger asChild>{children}</Popover.Trigger>
@@ -106,13 +154,13 @@ export const OpenCreateDropdown = ({
             >
               <button
                 type="button"
-                onClick={handleCreatNewNode}
+                onClick={() => setPage(2)}
                 data-active={page === 1}
                 className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-4 py-3 text-sm leading-none text-slate-700 data-[active=true]:hover:bg-slate-100 data-[active=true]:hover:text-slate-900 data-[active=true]:hover:outline-none"
               >
                 <TbApi size={24} className="text-red-500" />
                 API呼び出し
-                <FiPlus size={18} className="ml-auto text-slate-500" />
+                <FiChevronRight size={18} className="ml-auto text-slate-500" />
               </button>
               <button
                 type="button"
@@ -125,7 +173,7 @@ export const OpenCreateDropdown = ({
                   className="m-0.5 fill-current text-orange-500"
                 />
                 シナリオ呼び出し
-                <FiPlus size={18} className="ml-auto text-slate-500" />
+                <FiChevronRight size={18} className="ml-auto text-slate-500" />
               </button>
               <button
                 type="button"
@@ -163,7 +211,7 @@ export const OpenCreateDropdown = ({
             </div>
           </Transition>
 
-          {/* {page === 2 && (
+          {page === 2 && (
             <div className="flex w-full animate-slideIn flex-col gap-2 p-2">
               <div className="flex items-center justify-between">
                 <button
@@ -218,10 +266,19 @@ export const OpenCreateDropdown = ({
                       />
                     </button>
                   ))}
+                  <hr />
+                  <Button
+                    theme="secondary"
+                    size="md"
+                    onClick={handleCreatNewNode}
+                    prefix={FiPlus}
+                  >
+                    新規作成
+                  </Button>
                 </div>
               </div>
             </div>
-          )} */}
+          )}
 
           {page === 3 && (
             <div className="flex w-full animate-slideIn flex-col gap-2 p-2">

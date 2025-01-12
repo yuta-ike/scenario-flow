@@ -2,8 +2,9 @@ import { useId, useImperativeHandle, useRef, useState } from "react"
 import { TbEdit, TbFlag2 } from "react-icons/tb"
 import { useForm } from "react-hook-form"
 import { flushSync } from "react-dom"
+import clsx from "clsx"
 
-import { usePage, useRoutesInPage } from "@/ui/state/page"
+import { usePage, usePrimitiveRoutesInPage } from "@/ui/state/page"
 import { updatePageName } from "@/ui/adapter/command"
 
 type FormData = {
@@ -13,11 +14,12 @@ type FormData = {
 type Props = {
   page: string
   frag: string
-  paddingLeft: number
+  isRoot?: boolean
 }
 
-export const PageTitle = ({ page, frag, paddingLeft }: Props) => {
+export const PageTitle = ({ page, frag, isRoot = false }: Props) => {
   const { currentPage, select } = usePage()
+  const routes = usePrimitiveRoutesInPage(page)
 
   const { register, handleSubmit } = useForm<FormData>({
     defaultValues: { name: page },
@@ -34,15 +36,10 @@ export const PageTitle = ({ page, frag, paddingLeft }: Props) => {
   const { ref, ...rest } = register("name", { required: true })
   useImperativeHandle(ref, () => inputRef.current)
 
-  const routes = useRoutesInPage(page)
-
   return (
     <div
       data-selected={page === currentPage}
       className="group relative flex w-full items-center justify-between rounded-l data-[selected=true]:bg-slate-100"
-      style={{
-        paddingLeft: paddingLeft,
-      }}
     >
       <button
         type="button"
@@ -101,7 +98,10 @@ export const PageTitle = ({ page, frag, paddingLeft }: Props) => {
               flushSync(() => setInEdit(true))
               inputRef.current?.focus()
             }}
-            className="z-10 rounded border border-transparent p-1 text-slate-400 opacity-0 transition hover:bg-slate-100 hover:text-slate-800 focus:border-slate-300 focus:bg-slate-100 focus:opacity-100 focus:outline-none group-hover:opacity-100"
+            className={clsx(
+              "z-10 rounded border border-transparent p-1 text-slate-400 opacity-0 transition hover:bg-slate-100 hover:text-slate-800 focus:border-slate-300 focus:bg-slate-100 focus:opacity-100 focus:outline-none group-hover:opacity-100",
+              isRoot && "invisible",
+            )}
           >
             <TbEdit size={16} stroke="currentColor" />
           </button>

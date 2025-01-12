@@ -22,37 +22,6 @@ import type { Resource, ResourceId } from "../entity/resource/resource"
 import { atomWithId } from "@/lib/jotai/atomWithId"
 import { atomSet } from "@/lib/jotai/atomSet"
 
-// cache
-// どのactionIdがどのresourceを参照しているかを保持する
-// const resourceIdActionIdCache = atom(new Map<ActionId, ResourceId>())
-// resourceIdActionIdCache.debugLabel = "resourceIdActionIdCache"
-// const updateCache = (
-//   get: Getter,
-//   set: Setter,
-//   newResourceIds: Set<ResourceId>,
-//   prevResourceIds: Set<ResourceId>,
-// ) => {
-//   // 追加されたものと削除されたものを取得
-//   const addedValues = newResourceIds.difference(prevResourceIds)
-//   const deletedValues = prevResourceIds.difference(newResourceIds)
-//   addedValues.forEach((resourceId) => {
-//     const resource = get(resourceAtom(resourceId))
-//     const actions = retrieveAllActionFromopenapiResource(resource)
-//     actions.forEach((action) => {
-//       get(resourceIdActionIdCache).set(
-//         resourceActionToActionId(action.id, action.resourceId),
-//         resourceId,
-//       )
-//     })
-//   })
-//   deletedValues.forEach((resourceId) => {
-//     set(
-//       resourceIdActionIdCache,
-//       (prev) => new Map(prev.entries().filter(([_, v]) => v !== resourceId)),
-//     )
-//   })
-// }
-
 // atom
 const _resourceIdsAtom = atomSet<ResourceId>([])
 _resourceIdsAtom.debugLabel = "resourceIdsAtom/core"

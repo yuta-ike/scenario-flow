@@ -53,7 +53,6 @@ export const useWriteOutSubscription = () => {
         try {
           console.log("[Write out] Start")
           const decomposedForLib = store.get(decomposedForLibAtom)
-
           const modifiedFiles = new Map<
             string,
             { file: FileHandle; dir: DirHandle }
@@ -136,7 +135,15 @@ export const useWriteOutSubscription = () => {
         }
       }),
     )
-  }, [createDir, createFile, deleteDir, deleteFile, entry, writeFile])
+  }, [
+    createDir,
+    createFile,
+    deleteDir,
+    deleteFile,
+    entry,
+    project.id,
+    writeFile,
+  ])
 
   useEffect(() => {
     const writeOutConfig = async () => {

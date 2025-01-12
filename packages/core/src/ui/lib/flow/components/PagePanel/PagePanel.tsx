@@ -18,23 +18,22 @@ type PageFolder = {
   title: string
   frag: string
   children: PageFolder[]
-  pages: string[]
 }
 
 export const PagePanel = () => {
   const { pages } = usePage()
 
   const rootDir = useMemo(() => {
-    const root: PageFolder = { title: "", frag: "", children: [], pages: [] }
+    const root: PageFolder = { title: "", frag: "", children: [] }
     pages.forEach((page) => {
       normalizePath(page).reduce((current, frag) => {
         let childPage = current.children.find((child) => child.frag === frag)
         if (childPage == null) {
           childPage = {
-            title: `${current.title}/${frag}`,
+            title:
+              current.title.length === 0 ? frag : `${current.title}/${frag}`,
             frag,
             children: [],
-            pages: [],
           }
           current.children.push(childPage)
         }
@@ -64,7 +63,7 @@ export const PagePanel = () => {
             type="multiple"
             defaultValue={[fill(rootDir.frag, "ルート")]}
           >
-            <PageFolder folder={rootDir} />
+            <PageFolder folder={rootDir} isRoot />
           </Accordion.Root>
         </div>
       </div>
@@ -75,9 +74,11 @@ export const PagePanel = () => {
 const PageFolder = ({
   folder,
   depth = 0,
+  isRoot = false,
 }: {
   folder: PageFolder
   depth?: number
+  isRoot?: boolean
 }) => {
   return (
     <Accordion.Item
@@ -103,9 +104,9 @@ const PageFolder = ({
         </Accordion.Trigger>
         <div className="grow">
           <PageTitle
+            isRoot={isRoot}
             page={folder.title}
             frag={fill(folder.frag, "ルート")}
-            paddingLeft={0}
           />
         </div>
       </Accordion.Header>

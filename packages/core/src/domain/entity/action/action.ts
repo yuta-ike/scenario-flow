@@ -1,3 +1,5 @@
+import { parseExpressionInPath } from "../value/expression"
+
 import {
   buildActionSourceIdentifier,
   type ActionSourceIdentifier,
@@ -14,7 +16,8 @@ import type {
 } from "./actionParameter"
 import type { Id } from "@/utils/idType"
 
-import { nonNull } from "@/utils/assert"
+import { genId } from "@/utils/uuid"
+import { dedupe } from "@/ui/lib/kv"
 
 declare const _action: unique symbol
 export type ActionId = Id & { [_action]: never }
@@ -117,7 +120,9 @@ export const updateRestCallActionParameter = (
   base: ResolvedAction<"rest_call">["schema"]["base"],
 ): ResolvedAction => {
   if (action.type === "rest_call") {
-    const path = base.path ?? action.schema.base.path
+    const _path = (base.path ?? action.schema.base.path)!
+
+    const [path, pathParams] = parseExpressionInPath(_path)
 
     return {
       ...action,
@@ -127,16 +132,15 @@ export const updateRestCallActionParameter = (
         base: {
           ...action.schema.base,
           ...base,
-          pathParams: path
-            ?.matchAll(/\{(?<frags>[^}]+)\}/g)
-            .map((match) => match.groups?.["frags"])
-            .filter(nonNull)
-            .map((key) => ({
-              id: key,
-              key,
-              value: "",
-            }))
-            .toArray(),
+          path,
+          pathParams: dedupe([
+            ...pathParams.map(({ name, value }) => ({
+              id: genId(),
+              key: name,
+              value,
+            })),
+            ...(action.schema.base.pathParams ?? []),
+          ]),
         },
       },
     }

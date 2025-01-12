@@ -3,10 +3,13 @@ import { IdCache } from "./helper/idCache"
 
 import type { EnginePluginDeserializer } from "../type"
 import type { DecomposedStep } from "@/domain/entity/decompose/decomposed"
-import type { RunBookStep, RunBookStepPathsObject } from "@/schemas/runn/type"
+import type {
+  RunBook,
+  RunBookStep,
+  RunBookStepPathsObject,
+} from "@/schemas/runn/type"
 import type { Json } from "@/utils/json"
 
-import { buildGlobalVariable } from "@/domain/entity/globalVariable/globalVariable"
 import { genId } from "@/utils/uuid"
 import { parseToTypedValue } from "@/domain/entity/value/dataType"
 import { parseContentType, parseHttpMethod } from "@/utils/http"
@@ -27,8 +30,8 @@ const getFirstEntry = <T>(
 const revertRunnHttpStepToDecomposedAction = (
   req: RunBookStepPathsObject,
 ): DecomposedStep["actions"][number] | null => {
-  const [path, pathItem] = getFirstEntry(req)
-  if (path == null) {
+  const [rawPath, pathItem] = getFirstEntry(req)
+  if (rawPath == null) {
     return null
   }
   const [rawMethod, operation] = getFirstEntry(pathItem)
@@ -49,7 +52,7 @@ const revertRunnHttpStepToDecomposedAction = (
       ? (parseContentType(rawContentType) ?? undefined)
       : undefined
 
-  const res = parsePath(path)
+  const { path, queryParams } = parsePath(rawPath)
 
   const xActionId = operation.meta?.["x-action-id"]
   const meta = xActionId != null ? { "x-action-id": xActionId } : undefined
@@ -57,14 +60,14 @@ const revertRunnHttpStepToDecomposedAction = (
   return {
     type: "rest_call" as const,
     description: "",
-    path: res.path,
+    path,
     method,
     headers: Object.entries(headers).map(([key, value]) => ({
       id: genId(),
       key,
       value,
     })),
-    queryParams: Object.entries(res.queryParams).map(([key, value]) => ({
+    queryParams: Object.entries(queryParams).map(([key, value]) => ({
       id: genId(),
       key,
       value,
@@ -85,8 +88,9 @@ const revertRunnStepToDecomposedStep = (
   step: RunBookStep,
   stepIdStepKeyCache: IdCache,
 ): DecomposedStep => {
+  const nodeId = stepIdStepKeyCache.getOrCreate(key)
   return {
-    id: stepIdStepKeyCache.getOrCreate(key),
+    id: nodeId,
     title: key,
     description: `${step.desc ?? ""}`,
     actions: [
@@ -109,7 +113,7 @@ const revertRunnStepToDecomposedStep = (
             assignments: Object.entries(step.bind).map(([key, value]) => ({
               variable: buildLocalVariable(genId(), {
                 namespace: "vars",
-                boundIn: "local",
+                boundIn: nodeId,
                 name: key,
                 description: "",
                 schema: "any",
@@ -122,19 +126,22 @@ const revertRunnStepToDecomposedStep = (
         : {
             type: "include" as const,
             description: "",
-            ref: step.include.path,
-            parameters: Object.entries(step.include.vars ?? {}).map(
-              ([key, value]) => ({
-                variable: buildLocalVariable(genId(), {
-                  namespace: "vars",
-                  boundIn: "local",
-                  name: key,
-                  description: "",
-                  schema: "any",
-                }),
-                value,
+            ref:
+              typeof step.include === "string"
+                ? step.include
+                : step.include.path,
+            parameters: Object.entries(
+              typeof step.include === "object" ? (step.include.vars ?? {}) : {},
+            ).map(([key, value]) => ({
+              variable: buildLocalVariable(genId(), {
+                namespace: "vars",
+                boundIn: nodeId,
+                name: key,
+                description: "",
+                schema: "any",
               }),
-            ),
+              value,
+            })),
           },
       step.db == null
         ? null
@@ -160,38 +167,43 @@ const revertRunnStepToDecomposedStep = (
   } satisfies DecomposedStep
 }
 
-export const revertRunnToDecomposed: EnginePluginDeserializer = (
-  jsons: Json[],
-) => {
-  const runbooks = jsons.filter((json) => validateRunn(json))
+export const revertRunnToDecomposed: EnginePluginDeserializer = (jsons) => {
+  const runbooks = jsons.filter(
+    (arg): arg is { name: string; json: RunBook; path: string } =>
+      validateRunn(arg),
+  )
 
   const stepIdStepKeyCache = new IdCache()
 
-  return runbooks.map((runbook, i) => {
+  return runbooks.map(({ name, path, json: runbook }, i) => {
     const stepEntries = Array.isArray(runbook.steps)
       ? runbook.steps.map(
           (step, i) => [i, step] satisfies [number, RunBookStep],
         )
       : Object.entries(runbook.steps ?? {})
 
+    const routeId = toRouteId(genId())
+
     return {
-      id: toRouteId(genId()),
+      id: routeId,
       color: COLORS[i % COLORS.length]!,
-      title: runbook.desc,
+      title: name.split(".").slice(0, -1).join("."),
+      description: runbook.desc,
       endpoint: "",
-      page: "",
-      globalVariables: Object.entries(runbook.vars ?? {}).map(
-        ([key, value]) => ({
-          ...buildGlobalVariable(genId(), {
-            namespace: "vars",
-            boundIn: "global",
-            name: key,
-            description: "",
-            schema: "any",
-          }),
-          value: parseToTypedValue(value),
+      page: path,
+      variables: Object.entries(runbook.vars ?? {}).map(([key, value]) => ({
+        variable: buildLocalVariable(genId(), {
+          namespace: "vars",
+          boundIn: {
+            type: "route",
+            routeId,
+          },
+          name: key,
+          description: "",
+          schema: "any",
         }),
-      ),
+        value: parseToTypedValue(value),
+      })),
       steps: stepEntries.map(([key, step]) =>
         revertRunnStepToDecomposedStep(`${key}`, step, stepIdStepKeyCache),
       ),

@@ -1,25 +1,20 @@
 import { useRef, useState } from "react"
-import {
-  TbChevronRight,
-  TbEdit,
-  TbFlag2,
-  TbLayoutSidebarRightCollapse,
-  TbTrash,
-} from "react-icons/tb"
+import { TbChevronRight, TbEdit, TbFlag2, TbTrash } from "react-icons/tb"
 import clsx from "clsx"
 import { flushSync } from "react-dom"
 import * as RadixAccordion from "@radix-ui/react-accordion"
 
-import { useSetShowListView } from "../../ListView"
+import { useSetShowListView } from "../../ListView/showListViewAtom"
 
 import type { FormEvent } from "react"
 import type { RouteId } from "@/domain/entity/route/route"
+import type { NodeId } from "@/domain/entity/node/node"
 
-import { useRoute } from "@/ui/adapter/query"
+import { useNode, usePrimitiveRoute } from "@/ui/adapter/query"
 import { MethodChip } from "@/ui/components/common/MethodChip"
 import { AccordionItem } from "@/ui/components/common/Accordion"
 import { deleteRoute, updteRoute } from "@/ui/adapter/command"
-import { useFocusedNodeId, useFocusNode } from "@/ui/state/focusedNodeId"
+import { useFocusNode, useIsNodeFocused } from "@/ui/state/focusedNodeId"
 import {
   useIsFocusedRouteId,
   useSetFocuseRoute,
@@ -31,9 +26,7 @@ type Props = {
 }
 
 export const RouteTile = ({ routeId }: Props) => {
-  const route = useRoute(routeId)
-  const focusNode = useFocusNode()
-  const focusedNodeId = useFocusedNodeId()
+  const route = usePrimitiveRoute(routeId)
 
   const [editMode, setEditMode] = useState(false)
 
@@ -63,12 +56,15 @@ export const RouteTile = ({ routeId }: Props) => {
       type="custom"
       title={
         <RadixAccordion.Header className="w-full">
-          <RadixAccordion.Trigger className="group/handle w-full">
+          <RadixAccordion.Trigger
+            className="group/handle w-full"
+            onClick={() => focus(route.id)}
+          >
             <div
               className="group relative flex w-full shrink-0 items-center gap-px text-slate-600 transition data-[selected=true]:bg-slate-100"
               data-selected={isFocused}
             >
-              <div className="group/handle z-10 grid h-5 w-5 shrink-0 place-items-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-800">
+              <div className="group/handle z-10 grid h-5 w-5 shrink-0 place-items-center rounded text-slate-400">
                 <TbChevronRight
                   size={12}
                   className="transition group-hover/handle:stroke-[3px] group-data-[state=open]/handle:rotate-90"
@@ -132,17 +128,6 @@ export const RouteTile = ({ routeId }: Props) => {
                         strokeWidth={2.5}
                       />
                     </button>
-                    <button
-                      type="button"
-                      title="リストパネルを開く"
-                      onClick={() => {
-                        focus(route.id)
-                        showListView(true)
-                      }}
-                      className="rounded border border-transparent p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-800 focus:border-slate-300 focus:bg-slate-100 focus:outline-none"
-                    >
-                      <TbLayoutSidebarRightCollapse />
-                    </button>
                   </div>
                 )}
               </div>
@@ -154,46 +139,54 @@ export const RouteTile = ({ routeId }: Props) => {
     >
       {/* ノード一覧 */}
       <ol className="flex flex-col gap-0.5 pl-5">
-        {route.path.map((node) => (
-          <li key={node.id}>
-            <button
-              type="button"
-              aria-pressed={focusedNodeId === node.id}
-              className="group w-full rounded px-2 py-1 hover:bg-slate-50 aria-[pressed=true]:bg-slate-100"
-              onClick={() => focusNode(node.id)}
-            >
-              {node.actionInstances.map((ai) =>
-                "action" in ai && ai.action.type === "rest_call" ? (
-                  <div key={ai.id} className="flex grow items-center gap-2">
-                    <MethodChip truncate={3}>
-                      {ai.instanceParameter.method!}
-                    </MethodChip>
-                    <div className="grow truncate text-start text-sm">
-                      {ai.instanceParameter.path!}
-                    </div>
-                  </div>
-                ) : ai.type === "include" ? (
-                  <div key={ai.id} className="flex grow items-center gap-2">
-                    <div className="text-xs font-bold text-blue-400">
-                      Include
-                    </div>
-                    <div className="line-clamp-1 grow text-start text-sm">
-                      {unwrapNull(ai.instanceParameter.ref)?.name}
-                    </div>
-                  </div>
-                ) : ai.type === "db" ? (
-                  <div key={ai.id} className="flex grow items-center gap-2">
-                    <div className="text-xs font-bold text-blue-400">SQL</div>
-                    <div className="line-clamp-1 grow text-start text-sm">
-                      {ai.instanceParameter.query}
-                    </div>
-                  </div>
-                ) : null,
-              )}
-            </button>
-          </li>
+        {route.path.map((nodeId) => (
+          <ListItem key={nodeId} nodeId={nodeId} />
         ))}
       </ol>
     </AccordionItem>
+  )
+}
+
+const ListItem = ({ nodeId }: { nodeId: NodeId }) => {
+  const node = useNode(nodeId)
+  const isFocused = useIsNodeFocused(nodeId)
+  const focus = useFocusNode()
+
+  return (
+    <li key={node.id}>
+      <button
+        type="button"
+        aria-pressed={isFocused}
+        className="group w-full rounded px-2 py-1 hover:bg-slate-50 aria-[pressed=true]:bg-slate-100"
+        onClick={() => focus(node.id)}
+      >
+        {node.actionInstances.map((ai) =>
+          "action" in ai && ai.action.type === "rest_call" ? (
+            <div key={ai.id} className="flex grow items-center gap-2">
+              <MethodChip truncate={3}>
+                {ai.instanceParameter.method!}
+              </MethodChip>
+              <div className="grow truncate text-start text-sm">
+                {ai.instanceParameter.path!}
+              </div>
+            </div>
+          ) : ai.type === "include" ? (
+            <div key={ai.id} className="flex grow items-center gap-2">
+              <div className="text-xs font-bold text-blue-400">Include</div>
+              <div className="line-clamp-1 grow text-start text-sm">
+                {unwrapNull(ai.instanceParameter.ref)?.name}
+              </div>
+            </div>
+          ) : ai.type === "db" ? (
+            <div key={ai.id} className="flex grow items-center gap-2">
+              <div className="text-xs font-bold text-blue-400">SQL</div>
+              <div className="line-clamp-1 grow text-start text-sm">
+                {ai.instanceParameter.query}
+              </div>
+            </div>
+          ) : null,
+        )}
+      </button>
+    </li>
   )
 }

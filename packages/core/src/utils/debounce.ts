@@ -6,7 +6,7 @@ export const debounce = <Func extends AnyFunc>(
   callback: Func,
   delayMs: number,
 ) => {
-  let timeoutId: number | null = null
+  let timeoutId: NodeJS.Timeout | null = null
 
   const wrapper = (...args: Parameters<Func>) => {
     if (timeoutId != null) {

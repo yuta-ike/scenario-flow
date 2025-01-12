@@ -3,6 +3,7 @@ import { Context, Effect, pipe } from "effect"
 import {
   swapRoutePath as swapRoutePathEntity,
   updateRoute as updateRouteEntity,
+  updateRouteVariables as updateRouteVariablesEntity,
 } from "../entity/route/route"
 import { toRouteId } from "../entity/route/route.util"
 
@@ -15,9 +16,12 @@ import {
   _getRoutesByNodeId,
   _removeRoute,
   _updateRoute,
+  _upsertVariable,
 } from "./node"
 import { _genId } from "./common"
 
+import type { Expression } from "../entity/value/expression"
+import type { LocalVariableId } from "../entity/variable/variable"
 import type { NodeId } from "../entity/node/node"
 import type { StripeSymbol } from "../entity/type"
 import type { RouteId, PrimitiveRoute } from "../entity/route/route"
@@ -96,4 +100,21 @@ export const deleteRoute = (routeId: RouteId) =>
       ),
     ),
     Effect.flatMap((_) => _removeRoute(routeId)),
+  )
+
+export const updateRouteVariables = (
+  routeId: RouteId,
+  variables: { id: LocalVariableId; name: string; value: Expression }[],
+) =>
+  pipe(
+    _getRoute(routeId),
+    Effect.tap(() =>
+      Effect.allSuccesses(
+        variables.map(({ id, name }) =>
+          _upsertVariable(id, name, { type: "route", routeId }),
+        ),
+      ),
+    ),
+    Effect.map((route) => updateRouteVariablesEntity(route, variables)),
+    Effect.tap((route) => _updateRoute(routeId, route)),
   )

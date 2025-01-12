@@ -94,6 +94,10 @@ const mergeRestCallActionParameter = (
     DEFAULT_REST_CALL_ACTION_PARAMETER,
   )
 
+  // const requiredPathParamKeys = merged.path
+  //   .matchAll(/(?<!\{)\{[^({|})]+\}(?!\{)/g)
+  //   .map((m) => m[0].slice(1, -1))
+
   return {
     method: merged.method,
     path: merged.path,
@@ -112,11 +116,7 @@ const mergeRestCallActionParameter = (
         (a, b) => (a.value.length === 0 ? -1 : b.value.length === 0 ? 1 : 0), // 値が入力されていない場合は優先しない
       ),
     ),
-    pathParams: dedupe(
-      merged.pathParams.toSorted(
-        (a, b) => (a.value.length === 0 ? -1 : b.value.length === 0 ? 1 : 0), // 値が入力されていない場合は優先しない
-      ),
-    ),
+    pathParams: dedupe(merged.pathParams),
     body:
       merged.body == null
         ? undefined
@@ -138,8 +138,38 @@ export const mergeActionParameter = (
   ...updateActionInstanceParameters: Partial<RestCallActionParameter>[]
 ): RestCallActionParameter => {
   switch (type) {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     case "rest_call":
       return mergeRestCallActionParameter(...updateActionInstanceParameters)
   }
+}
+
+export const getFilledPath = (
+  parameter: Partial<RestCallActionParameter>,
+): string | null => {
+  const path = parameter.path
+  const pathParams = parameter.pathParams ?? []
+  const queryparams = parameter.queryParams ?? []
+
+  if (path == null) {
+    return null
+  }
+
+  const pathname = pathParams.reduce((acc, cur) => {
+    const value = cur.value
+    return 0 < value.length
+      ? acc.replace(`{${cur.key}}`, encodeURIComponent(value))
+      : acc
+  }, path)
+
+  if (queryparams.length === 0) {
+    return pathname
+  }
+
+  const query = queryparams
+    .map((query) => {
+      return `${encodeURIComponent(query.key)}=${encodeURIComponent(query.value)}`
+    })
+    .join("&")
+
+  return `${pathname}?${query}`
 }

@@ -10,7 +10,6 @@ import jotaiReactRefresh from "jotai/babel/plugin-react-refresh"
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill"
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill"
 
-
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   resolve: {
@@ -34,7 +33,5 @@ export default defineConfig(({ mode }) => ({
     }),
     NodeModulesPolyfillPlugin(),
   ],
-  test: {
-    globals: true,
-  },
+  test: {},
 }))

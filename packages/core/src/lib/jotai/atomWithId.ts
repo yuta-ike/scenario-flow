@@ -15,6 +15,7 @@ type SubscriptionStates<State extends { id: string | number }> = {
 
 export const atomWithId = <State extends { id: string | number }>(
   debug?: string,
+  onRemove?: (params: { id: State["id"]; value: State }) => void,
 ) => {
   type Id = State["id"]
 
@@ -89,6 +90,12 @@ export const atomWithId = <State extends { id: string | number }>(
   createAtom.remove = (id: Id) => {
     map.delete(id)
   }
+
+  createAtom.removeAtom = atom(null, (get, _, id: Id) => {
+    const removedAtom = get(createAtom(id))
+    onRemove?.({ id, value: removedAtom })
+    map.delete(id)
+  })
 
   createAtom.clearAll = () => {
     map.clear()

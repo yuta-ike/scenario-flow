@@ -19,6 +19,7 @@ export const genPrimitiveRoute = (
     name: `route ${id}`,
     color: "#000000",
     page: "0",
+    variables: [],
     ...overrides,
   })
 
@@ -32,5 +33,6 @@ export const genRoute = (
     name: `route ${id}`,
     color: "#000000",
     page: "0",
+    variables: [],
     ...overrides,
   })

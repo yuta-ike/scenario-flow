@@ -83,7 +83,7 @@ describe("resource > resource", () => {
       resourceIdsAtom,
       updateSetOp((ids) => ids.filter((id) => id !== "r1")),
     )
-    resourceAtom.remove(toResourceId("r1"))
+    store.set(resourceAtom.removeAtom, toResourceId("r1"))
 
     // expect
     expect(store.get(resourceIdsAtom)).toEqual(new Set([toResourceId("r2")]))

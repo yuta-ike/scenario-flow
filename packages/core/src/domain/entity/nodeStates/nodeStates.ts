@@ -59,9 +59,11 @@ export const replaceResultToDone: Transition<
   }
 }
 
-export const getRecentlyResult: Receiver<NodeStates, RunResultItem | null> = (
-  entity,
-) => {
+export const getRecentlyResult: Receiver<
+  NodeStates,
+  [],
+  RunResultItem | null
+> = (entity) => {
   return entity.results.at(-1) ?? null
 }
 
@@ -87,6 +89,7 @@ export type ResolvedStepResultItem = {
 }
 export const getRecentlyResolvedResult: Receiver<
   ResolvedNodeStates,
+  [],
   ResolvedStepResultItem | null
 > = (entity) => {
   return entity.results.at(-1) ?? null

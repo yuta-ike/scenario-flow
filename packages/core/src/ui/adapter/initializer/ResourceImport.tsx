@@ -11,6 +11,7 @@ import { Button } from "@/ui/components/common/Button"
 import { parseYaml } from "@/ui/lib/yaml/yamlToJson"
 import { addSetOp } from "@/utils/set"
 import { useAsync } from "@/ui/utils/useAsync"
+import { joinPath } from "@/utils/path"
 
 type Props = {
   children: React.ReactNode
@@ -39,7 +40,7 @@ export const ResourceImport = ({ children }: Props) => {
           cacheKey: context.project.id,
           silent: true,
         })
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+
         if (handle == null) {
           throw new Error("not found")
         }
@@ -88,8 +89,17 @@ export const ResourceImport = ({ children }: Props) => {
         "",
         fileHandle.path,
         json.value,
+        async (path) => {
+          console.log("PATH!!!!!")
+          console.log(joinPath(fileHandle.path, path))
+          const handle = await injected.io.selectFile(
+            joinPath(fileHandle.path, path),
+          )
+          return injected.io.readFile(handle)
+        },
       )
       if (result.result === "error") {
+        console.error(result.error)
         window.alert("OpenAPIファイルの形式が正しくありません")
         return false
       }
@@ -99,7 +109,6 @@ export const ResourceImport = ({ children }: Props) => {
   )
 
   const handleAddResource = async (name: string) => {
-    console.log(name)
     const fileHandle = await injected.io.selectFile(undefined, {
       cacheKey: context.project.id,
     })
@@ -154,13 +163,15 @@ export const ResourceImport = ({ children }: Props) => {
                   OK
                 </div>
               ) : (
-                <Button
-                  size="sm"
-                  theme="primary"
-                  onClick={() => handleAddResource(name)}
-                >
-                  ファイルを選択
-                </Button>
+                <div className="shrink-0">
+                  <Button
+                    size="sm"
+                    theme="primary"
+                    onClick={() => handleAddResource(name)}
+                  >
+                    ファイルを選択
+                  </Button>
+                </div>
               )}
             </div>
           ))}

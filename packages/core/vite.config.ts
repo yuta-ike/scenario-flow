@@ -32,6 +32,6 @@ export default defineConfig(({ mode }) => ({
     NodeModulesPolyfillPlugin(),
   ],
   test: {
-    globals: true,
+    setupFiles: ["./src/vitest.setup.ts"],
   },
 }))

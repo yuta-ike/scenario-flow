@@ -37,14 +37,12 @@ const beforeEachProcess = () => {
   }
 
   store.set(routeIdsAtom, new Set([toRouteId("r1"), toRouteId("r2")]))
-  store.set(
-    primitiveRouteAtom(toRouteId("r1")),
-    genPrimitiveRoute("r1", ["n1", "n2"]),
-  )
-  store.set(
-    primitiveRouteAtom(toRouteId("r2")),
-    genPrimitiveRoute("r2", ["n1", "n3", "n4"]),
-  )
+  store.set(primitiveRouteAtom(toRouteId("r1")), {
+    create: genPrimitiveRoute("r1", ["n1", "n2"]),
+  })
+  store.set(primitiveRouteAtom(toRouteId("r2")), {
+    create: genPrimitiveRoute("r2", ["n1", "n3", "n4"]),
+  })
 }
 
 describe("route > primitiveRoute", () => {
@@ -61,11 +59,11 @@ describe("route > primitiveRoute", () => {
     store.subscribe(primitiveRouteAtom(toRouteId("r1")), subscriber)
 
     // action
-    store.update(primitiveRouteAtom(toRouteId("r1")), () =>
-      genPrimitiveRoute("r1", ["n1", "n2"], {
+    store.update(primitiveRouteAtom(toRouteId("r1")), () => ({
+      update: genPrimitiveRoute("r1", ["n1", "n2"], {
         name: "new",
       }),
-    )
+    }))
 
     expect(subscriber).toHaveBeenCalled()
   })
@@ -75,11 +73,11 @@ describe("route > primitiveRoute", () => {
     store.subscribe(routeIdsAtom, subscriber)
 
     // action
-    store.update(primitiveRouteAtom(toRouteId("r1")), () =>
-      genPrimitiveRoute("r1", ["n1", "n2"], {
+    store.update(primitiveRouteAtom(toRouteId("r1")), () => ({
+      update: genPrimitiveRoute("r1", ["n1", "n2"], {
         name: "new",
       }),
-    )
+    }))
 
     expect(subscriber).not.toHaveBeenCalled()
   })
@@ -93,15 +91,13 @@ describe("route > primitiveRoute", () => {
       routeIdsAtom,
       updateSetOp((ids) => [...ids, toRouteId("r3")]),
     )
-    store.set(
-      primitiveRouteAtom(toRouteId("r3")),
-      genPrimitiveRoute("r2", ["n1", "n2"]),
-    )
+    store.set(primitiveRouteAtom(toRouteId("r3")), {
+      create: genPrimitiveRoute("r2", ["n1", "n2"]),
+    })
 
-    store.set(
-      primitiveRouteAtom(toRouteId("r3")),
-      genPrimitiveRoute("r3", ["n1", "n2"], { name: "new" }),
-    )
+    store.set(primitiveRouteAtom(toRouteId("r3")), {
+      create: genPrimitiveRoute("r3", ["n1", "n2"], { name: "new" }),
+    })
 
     expect(subscriber).not.toHaveBeenCalled()
   })
@@ -112,7 +108,7 @@ describe("route > primitiveRoute", () => {
       routeIdsAtom,
       updateSetOp((ids) => ids.filter((id) => id !== "r1")),
     )
-    primitiveRouteAtom.remove(toRouteId("r1"))
+    store.remove(primitiveRouteAtom, toRouteId("r1"))
 
     // expect
     expect(store.get(routeIdsAtom)).toEqual(new Set([toRouteId("r2")]))

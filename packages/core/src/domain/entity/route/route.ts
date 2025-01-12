@@ -1,15 +1,27 @@
 import { getUniqName } from "../getUniqName"
 
+import type { Expression } from "../value/expression"
+import type { LocalVariable, LocalVariableId } from "../variable/variable"
 import type { Builder, BuilderReturn, Transition } from "../type"
 import type { NodeId, Node } from "../node/node"
 import type { Id } from "@/utils/idType"
-import type { Replace } from "@/utils/typeUtil"
 
 declare const _route: unique symbol
 export type RouteId = Id & { [_route]: never }
 
 export type Color = string
 export type Page = string
+
+export type PrimitiveRoute = {
+  [_route]: never
+  id: RouteId
+  name: string
+  description: string
+  path: NodeId[]
+  color: Color
+  page: Page
+  variables: { id: LocalVariableId; value: Expression }[]
+}
 
 export type Route = {
   [_route]: never
@@ -18,7 +30,9 @@ export type Route = {
   path: Node[]
   color: Color
   page: Page
+  variables: { variable: LocalVariable; value: Expression }[]
 }
+
 export const buildRoute: Builder<Route, [usedNames?: string[]]> = (
   id,
   { name, ...params },
@@ -32,7 +46,6 @@ export const buildRoute: Builder<Route, [usedNames?: string[]]> = (
   } satisfies BuilderReturn<Route> as Route
 }
 
-export type PrimitiveRoute = Replace<Route, "path", NodeId[]>
 export const buildPrimitiveRoute: Builder<PrimitiveRoute> = (id, params) => {
   return {
     id,
@@ -129,5 +142,25 @@ export const sliceRoute: Transition<PrimitiveRoute, [NodeId]> = (
   return {
     ...route,
     path: route.path.slice(0, index),
+  }
+}
+
+export const updateRouteVariables: Transition<
+  PrimitiveRoute,
+  [{ id: LocalVariableId; value: Expression }[]]
+> = (route, variables) => {
+  const newVariables = route.variables.slice()
+  variables.forEach(({ id: variableId, value }) => {
+    const index = newVariables.findIndex((v) => v.id === variableId)
+    if (index === -1) {
+      newVariables.push({ id: variableId, value })
+    } else {
+      newVariables[index] = { id: variableId, value }
+    }
+  })
+
+  return {
+    ...route,
+    variables: newVariables,
   }
 }

@@ -108,7 +108,7 @@ describe("node > primitiveNode", () => {
       nodeIdsAtom,
       updateSetOp((ids) => ids.filter((id) => id !== toNodeId("1"))),
     )
-    primitiveNodeAtom.remove(toNodeId("1"))
+    store.remove(primitiveNodeAtom, toNodeId("1"))
 
     // expect
     expect(store.get(nodeIdsAtom)).toEqual(
@@ -163,6 +163,7 @@ describe("node > node", () => {
       create: {
         id: toNodeId("1"),
         name: "node",
+        description: "",
         actionInstances: [
           {
             id: toActionInstanceId("ai1"),
@@ -194,12 +195,7 @@ describe("node > node", () => {
             },
           },
         ],
-        config: {
-          condition: "true" as Expression,
-          loop: {
-            times: 1,
-          },
-        },
+        config: {},
       },
     })
 
@@ -321,6 +317,7 @@ describe("node > node", () => {
       create: {
         id: toNodeId("1"),
         name: "node",
+        description: "",
         actionInstances: [
           {
             id: toActionInstanceId("ai1"),
@@ -351,12 +348,7 @@ describe("node > node", () => {
             },
           },
         ],
-        config: {
-          condition: "true" as Expression,
-          loop: {
-            times: 1,
-          },
-        },
+        config: {},
       },
     })
 
@@ -434,6 +426,7 @@ describe("node > node", () => {
     store.set(primitiveNodeAtom(toNodeId("1")), {
       create: {
         id: toNodeId("1"),
+        description: "",
         name: "node",
         actionInstances: [
           {
@@ -444,12 +437,7 @@ describe("node > node", () => {
             },
           },
         ],
-        config: {
-          condition: "true" as Expression,
-          loop: {
-            times: 1,
-          },
-        },
+        config: {},
       },
     })
 
@@ -489,12 +477,12 @@ describe("node > node", () => {
       create: {
         id: toNodeId("1"),
         name: "node",
+        description: "",
         actionInstances: [
           {
             id: toActionInstanceId("ai1"),
             type: "binder" as const,
             instanceParameter: {
-              description: "",
               assignments: [
                 {
                   variableId: toLocalVariableId("vr1"),
@@ -504,12 +492,7 @@ describe("node > node", () => {
             },
           },
         ],
-        config: {
-          condition: "true" as Expression,
-          loop: {
-            times: 1,
-          },
-        },
+        config: {},
       },
     })
 

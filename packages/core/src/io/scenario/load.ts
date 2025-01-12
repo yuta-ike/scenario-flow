@@ -18,7 +18,10 @@ export const load = async (
 ) => {
   const files = await loadRec(dirHandle, injected.io.readFile)
 
-  const decomposed = deserializer(files.map(({ file }) => file))
+  const decomposed = deserializer(
+    files.map(({ name, path, file }) => ({ name, path, json: file })),
+  )
+  console.log("[load] decomposed", decomposed)
   const entities = parseToEntities(
     decomposed.map((d, i) => ({
       ...d,
@@ -26,13 +29,15 @@ export const load = async (
     })),
     context,
   )
+  console.log("[load] entities", entities)
+
   return entities
 }
 
 const loadRec = async (
   dirHandle: DirHandle,
   readFile: (entry: FileHandle) => Promise<string>,
-): Promise<{ path: string; file: Json }[]> => {
+): Promise<{ name: string; path: string; file: Json }[]> => {
   const [files, childFiles] = await Promise.all([
     Promise.all(
       dirHandle.files.map(async (fileEntry) => {
@@ -41,7 +46,11 @@ const loadRec = async (
         if (result.result === "error") {
           return null
         }
-        return { path: dirHandle.path, file: result.value }
+        return {
+          path: dirHandle.path,
+          file: result.value,
+          name: fileEntry.name,
+        }
       }),
     ),
     Promise.all(dirHandle.children.map((child) => loadRec(child, readFile))),

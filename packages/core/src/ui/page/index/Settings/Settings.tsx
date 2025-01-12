@@ -1,7 +1,6 @@
 import { ExportSection } from "./ExportSection"
 import { MetaSection } from "./MetaSection"
 import { ResourceSection } from "./ResourceSection"
-import { VariableSection } from "./VariableSection"
 
 export const Settings = () => {
   return (
@@ -13,7 +12,6 @@ export const Settings = () => {
         <MetaSection />
         <ResourceSection />
         <ExportSection />
-        <VariableSection />
       </div>
     </div>
   )

@@ -8,16 +8,25 @@ import {
   type NodeId,
   buildPrimitiveNode,
 } from "../entity/node/node"
+import { getUserDefinedActionIdOrNull } from "../entity/action/identifier"
+
+import {
+  userDefinedActionAtom,
+  userDefinedActionIdsAtom,
+} from "./userDefinedAction"
 
 import type { StripeSymbol } from "../entity/type"
 import type { Atom } from "jotai"
 import type { OmitId } from "@/utils/idType"
 import type { CreateOrUpdate } from "@/lib/jotai/util"
+import type { UserDefinedActionId } from "../entity/userDefinedAction/userDefinedAction"
 
 import { atomWithId } from "@/lib/jotai/atomWithId"
 import { atomSet } from "@/lib/jotai/atomSet"
-import { addSetOp, updateSetOp } from "@/utils/set"
+import { addSetOp, deleteSetOp, updateSetOp } from "@/utils/set"
 import { wrapAtomFamily } from "@/lib/jotai/wrapAtomFamily"
+import { applyDiff, decrement, increment } from "@/utils/counterMap"
+import { nonNull } from "@/utils/assert"
 
 // cache
 export const nodeNameUniqCache = atomSet<string>([])
@@ -27,6 +36,12 @@ export const nodeDefaultNameCal = atom((get) => {
   const nodeCount = get(nodeIdsAtom).size
   return `ブロック ${nodeCount + 1}`
 })
+nodeDefaultNameCal.debugLabel = "nodeDefaultNameCal"
+
+// cache
+export const actionIdCountCache = atom<Map<UserDefinedActionId, number>>(
+  new Map(),
+)
 
 // primitive atom
 const _primitiveNodeAtom = atomWithId<PrimitiveNode>(
@@ -42,7 +57,7 @@ nodeIdsAtom.debugLabel = "nodeIdsAtom"
 export const primitiveNodeAtom = wrapAtomFamily(_primitiveNodeAtom, {
   write: (
     nodeId,
-    get,
+    _,
     set,
     param: CreateOrUpdate<
       StripeSymbol<PrimitiveNode>,
@@ -51,14 +66,8 @@ export const primitiveNodeAtom = wrapAtomFamily(_primitiveNodeAtom, {
   ) => {
     if (param.create != null) {
       // 作成
-      _primitiveNodeAtom(
-        nodeId,
-        buildPrimitiveNode(
-          nodeId,
-          param.create,
-          get(nodeNameUniqCache).values().toArray(),
-        ),
-      )
+      const node = buildPrimitiveNode(nodeId, param.create)
+      _primitiveNodeAtom(nodeId, node)
       set(
         nodeIdsAtom,
         updateSetOp((prev) => [...prev, nodeId]),
@@ -66,9 +75,23 @@ export const primitiveNodeAtom = wrapAtomFamily(_primitiveNodeAtom, {
 
       // cache
       set(nodeNameUniqCache, addSetOp(param.create.name))
+      // cache
+      set(
+        actionIdCountCache,
+        increment(
+          node.actionInstances
+            .map((ai) => getUserDefinedActionIdOrNull(ai.actionIdentifier))
+            .filter(nonNull),
+        ),
+      )
     } else {
       // 更新
       set(_primitiveNodeAtom(nodeId), (prev) => {
+        const node = {
+          ...prev,
+          ...param.update,
+        } as PrimitiveNode
+
         // cache
         if (prev.name !== param.update.name) {
           set(
@@ -81,13 +104,54 @@ export const primitiveNodeAtom = wrapAtomFamily(_primitiveNodeAtom, {
             }),
           )
         }
+        // cache
+        set(
+          actionIdCountCache,
+          applyDiff(
+            prev.actionInstances
+              .map((ai) => getUserDefinedActionIdOrNull(ai.actionIdentifier))
+              .filter(nonNull),
+            node.actionInstances
+              .map((ai) => getUserDefinedActionIdOrNull(ai.actionIdentifier))
+              .filter(nonNull),
+            {
+              whenZero: (key) => {
+                set(userDefinedActionIdsAtom, deleteSetOp(key))
+                set(userDefinedActionAtom.removeAtom, key)
+              },
+            },
+          ),
+        )
 
-        return {
-          ...prev,
-          ...param.update,
-        } as PrimitiveNode
+        return node
       })
     }
+  },
+  onRemove: (_, set, { value: node }) => {
+    // cache
+    set(
+      nodeNameUniqCache,
+      updateSetOp((prevSet) => {
+        const newSet = new Set(prevSet)
+        newSet.delete(node.name)
+        return newSet
+      }),
+    )
+    // cache
+    set(
+      actionIdCountCache,
+      decrement(
+        node.actionInstances
+          .map((ai) => getUserDefinedActionIdOrNull(ai.actionIdentifier))
+          .filter(nonNull),
+        {
+          whenZero: (key) => {
+            set(userDefinedActionIdsAtom, deleteSetOp(key))
+            set(userDefinedActionAtom.removeAtom, key)
+          },
+        },
+      ),
+    )
   },
 })
 

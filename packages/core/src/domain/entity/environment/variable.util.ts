@@ -16,6 +16,7 @@ export type VariableSuggest = {
 
 export const getVariableSuggests: Receiver<
   Variable | ResolvedVariable,
+  [],
   VariableSuggest[]
 > = (variable) => {
   return _getVariableSuggests(

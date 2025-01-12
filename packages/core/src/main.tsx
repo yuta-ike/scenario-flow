@@ -3,6 +3,7 @@ import "./globals.css"
 import "./worker"
 // For safari
 import "core-js/proposals/iterator-helpers-stage-3-2"
+import "core-js/proposals/regexp-escaping"
 
 import { Buffer as BufferPolyfill } from "buffer"
 

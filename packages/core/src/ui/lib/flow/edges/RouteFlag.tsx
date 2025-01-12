@@ -2,7 +2,7 @@ import { TbFlag2 } from "react-icons/tb"
 
 import type { RouteId } from "@/domain/entity/route/route"
 
-import { useRoute } from "@/ui/adapter/query"
+import { usePrimitiveRoute } from "@/ui/adapter/query"
 import { useIsFocusedRouteId } from "@/ui/state/focusedRouteId"
 
 type Props = {
@@ -11,7 +11,7 @@ type Props = {
 }
 
 export const RouteFlag = ({ routeId, expanded }: Props) => {
-  const route = useRoute(routeId)
+  const route = usePrimitiveRoute(routeId)
   const { isFocused, toggle } = useIsFocusedRouteId(routeId)
   return (
     <button

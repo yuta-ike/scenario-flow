@@ -108,14 +108,13 @@ describe("getRouteEnvironment", () => {
     })
 
     // route
-    store.set(
-      primitiveRouteAtom(toRouteId("r1")),
-      genPrimitiveRoute(toRouteId("r1"), [
+    store.set(primitiveRouteAtom(toRouteId("r1")), {
+      create: genPrimitiveRoute(toRouteId("r1"), [
         toNodeId("n1"),
         toNodeId("n2"),
         toNodeId("n3"),
       ]),
-    )
+    })
     store.set(routeIdsAtom, new Set([toRouteId("r1")]))
 
     expect(store.get(getResolvedNodeEnvironment(toNodeId("n3")))).toEqual([
@@ -221,14 +220,13 @@ describe("getRouteEnvironment", () => {
     })
 
     // route
-    store.set(
-      primitiveRouteAtom(toRouteId("r1")),
-      genPrimitiveRoute(toRouteId("r1"), [
+    store.set(primitiveRouteAtom(toRouteId("r1")), {
+      create: genPrimitiveRoute(toRouteId("r1"), [
         toNodeId("n1"),
         toNodeId("n2"),
         toNodeId("n3"),
       ]),
-    )
+    })
     store.set(routeIdsAtom, new Set([toRouteId("r1")]))
 
     expect(store.get(getResolvedNodeEnvironment(toNodeId("n3")))).toEqual([
@@ -286,10 +284,9 @@ describe("getRouteEnvironment", () => {
     store.set(nodeIdsAtom, new Set([toNodeId("n1")]))
 
     // route
-    store.set(
-      primitiveRouteAtom(toRouteId("r1")),
-      genPrimitiveRoute(toRouteId("r1"), [toNodeId("n1")]),
-    )
+    store.set(primitiveRouteAtom(toRouteId("r1")), {
+      create: genPrimitiveRoute(toRouteId("r1"), [toNodeId("n1")]),
+    })
     store.set(routeIdsAtom, new Set([toRouteId("r1")]))
 
     expect(store.get(getResolvedNodeEnvironment(toNodeId("n1")))).toEqual([

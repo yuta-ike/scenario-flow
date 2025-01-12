@@ -35,14 +35,12 @@ describe("getParentByNodeId", () => {
     }
 
     store.set(routeIdsAtom, new Set([toRouteId("r1"), toRouteId("r2")]))
-    store.set(
-      primitiveRouteAtom(toRouteId("r1")),
-      genPrimitiveRoute("r1", ["n1", "n2", "n4"]),
-    )
-    store.set(
-      primitiveRouteAtom(toRouteId("r2")),
-      genPrimitiveRoute("r2", ["n1", "n3", "n4"]),
-    )
+    store.set(primitiveRouteAtom(toRouteId("r1")), {
+      create: genPrimitiveRoute("r1", ["n1", "n2", "n4"]),
+    })
+    store.set(primitiveRouteAtom(toRouteId("r2")), {
+      create: genPrimitiveRoute("r2", ["n1", "n3", "n4"]),
+    })
   })
 
   test("getParentByNodeIdが正しく取得できる", () => {
@@ -58,10 +56,9 @@ describe("getParentByNodeId", () => {
     store.subscribe(getParentByNodeId(toNodeId("n1")), subscriber)
 
     // action
-    store.set(
-      primitiveRouteAtom(toRouteId("r2")),
-      genPrimitiveRoute("r2", ["n1", "n3"]),
-    )
+    store.set(primitiveRouteAtom(toRouteId("r2")), {
+      create: genPrimitiveRoute("r2", ["n1", "n3"]),
+    })
 
     expect(subscriber).not.toHaveBeenCalledOnce()
   })

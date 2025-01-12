@@ -49,7 +49,7 @@ export const CreateNode = memo<ApiCallNodeProps>(
             className="opacity-0"
           />
         )}
-        <div className="group box-content flex w-[240px] flex-col gap-1 rounded-lg border border-dashed border-slate-200 p-1 outline outline-2 outline-offset-2 outline-transparent transition hover:border-solid hover:bg-slate-100">
+        <div className="group box-content hidden w-[240px] flex-col gap-1 rounded-lg border border-dashed border-slate-200 p-1 outline outline-2 outline-offset-2 outline-transparent transition hover:border-solid hover:bg-slate-100">
           <button
             type="button"
             className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white bg-opacity-30 p-1 text-start text-xs transition hover:bg-slate-50 group-hover:bg-opacity-100"

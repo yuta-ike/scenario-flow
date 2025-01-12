@@ -15,6 +15,9 @@ import { readFile } from "@/ui/utils/readFile"
 import { parseYaml } from "@/ui/lib/yaml/yamlToJson"
 import { putOpenApiFile, uploadOpenApiFile } from "@/ui/adapter/command"
 import { fetchJson } from "@/utils/fetchJson"
+import { useInjected } from "@/ui/adapter/container"
+import { useProjectContext } from "@/ui/context/context"
+import { joinPath } from "@/utils/path"
 
 type FormData = {
   name: string
@@ -44,6 +47,8 @@ export const AddOrUpdateResourceForm = ({
   name,
   description,
 }: AddOrUpdateResourceFormProps) => {
+  const context = useProjectContext()
+  const injected = useInjected()
   const closeModal = useCloseModal()
 
   const [method, setMethod] = useState<"file" | "remote">("file")
@@ -87,7 +92,28 @@ export const AddOrUpdateResourceForm = ({
           : await fetchJson<Json>(data.url!)
 
       if (type === "create") {
-        await uploadOpenApiFile(data.name, data.description ?? "", "", json)
+        await uploadOpenApiFile(
+          data.name,
+          data.description ?? "",
+          "",
+          json,
+          async (path) => {
+            try {
+              console.log("PATH ==========")
+              console.log(
+                context.entry.path,
+                joinPath(context.entry.path, path),
+              )
+              const fileHandle = await injected.io.selectFile(
+                joinPath(context.entry.path, path),
+              )
+              return await injected.io.readFile(fileHandle)
+            } catch (e) {
+              console.error(e)
+              throw e
+            }
+          },
+        )
       } else {
         await putOpenApiFile(
           resourceId,
@@ -95,6 +121,10 @@ export const AddOrUpdateResourceForm = ({
           data.description ?? "",
           "",
           json,
+          async (path) => {
+            const fileHandle = await injected.io.selectFile(path)
+            return injected.io.readFile(fileHandle)
+          },
         )
       }
       closeModal()

@@ -4,6 +4,7 @@ import type { SectionComponentInterface } from "./interface"
 
 import { MethodChip } from "@/ui/components/common/MethodChip"
 import { useFocusNode } from "@/ui/state/focusedNodeId"
+import { getFilledPath } from "@/domain/entity/action/actionParameter"
 
 export const ApiCallSection: SectionComponentInterface = ({
   nodeId,
@@ -36,8 +37,8 @@ export const ApiCallSection: SectionComponentInterface = ({
       </div>
 
       {/* Body */}
-      <div className="text-sm leading-none">
-        {actionInstance.instanceParameter.path!}
+      <div className="break-all text-sm leading-none">
+        {getFilledPath(actionInstance.instanceParameter)}
       </div>
       <div className="line-clamp-2 text-xs leading-none">
         {actionInstance.description}

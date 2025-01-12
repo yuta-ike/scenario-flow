@@ -18,6 +18,7 @@ import type { GeneralUiNode } from "../../type"
 import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
 import type { ActionInstance } from "@/domain/entity/node/actionInstance"
 import type { RouteId } from "@/domain/entity/route/route"
+import type { NodeId } from "@/domain/entity/node/node"
 
 import { useNode } from "@/ui/adapter/query"
 import { useIsNodeFocused } from "@/ui/state/focusedNodeId"
@@ -62,7 +63,6 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
     updateNodeSize(nodeId, size),
   )
 
-  const node = useNode(nodeId)
   const isFocused = useIsNodeFocused(nodeId)
   const isHighlighted = useIsNodeHighlighted(nodeId)
   const focusedRoute = useFocusedRouteByNodeId(nodeId)
@@ -97,17 +97,15 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
     ),
   )
 
-  const handleChangePage = useAtomCallback(
-    useCallback((_, set, page: string) => {
-      set(currentPageAtom, page)
-    }, []),
-  )
-
   const keyRef = useHotkey<HTMLButtonElement>("Backspace", {
     meta: false,
     allowedKeyword: "delete",
     enabled: isFocused,
   })
+
+  const handleDelete = useCallback(() => {
+    deleteNode(nodeId)
+  }, [nodeId])
 
   return (
     <>
@@ -125,13 +123,7 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
           size="sm"
           icon={FiTrash}
           ref={keyRef}
-          onClick={() => {
-            try {
-              deleteNode(nodeId)
-            } catch (e) {
-              console.error(e)
-            }
-          }}
+          onClick={handleDelete}
         />
       </NodeToolbar>
       <div
@@ -141,7 +133,7 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
         style={{
           "--focused-route-color": focusedRoute?.color ?? "#93c5fd",
         }}
-        className="group relative flex w-[240px] flex-col gap-2 rounded-lg bg-[#EFF1F7] p-1 pb-6 outline outline-2 outline-offset-2 outline-transparent data-[highlighted=true]:bg-yellow-100 data-[node-focused=true]:bg-blue-100 data-[highlighted=true]:outline-yellow-300 data-[node-focused=true]:outline-blue-300"
+        className="group relative flex w-[240px] flex-col gap-2 rounded-lg bg-slate-100 p-1 pb-6 outline outline-2 outline-offset-2 outline-transparent data-[highlighted=true]:bg-yellow-100 data-[node-focused=true]:bg-blue-100 data-[highlighted=true]:outline-yellow-300 data-[node-focused=true]:outline-blue-300"
         ref={ref}
       >
         {connection.inProgress && (
@@ -151,26 +143,8 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
             className="absolute !inset-0 !z-10 !h-full !w-full !translate-x-0 !translate-y-0 !rounded-lg !bg-red-600/20 transition hover:!bg-red-600/30"
           />
         )}
-        <div className="pointer-events-none flex flex-col">
-          <div className="line-clamp-1 p-1 pb-0 text-[13px] text-slate-800 transition empty:hidden group-hover:line-clamp-none group-hover:whitespace-pre-line group-hover:empty:hidden">
-            {node.name}
-          </div>
-          <div className="z-10 line-clamp-1 max-h-[1.2lh] p-1 pb-0 text-xs text-slate-600 transition empty:hidden group-hover:line-clamp-none group-hover:w-[600px] group-hover:whitespace-pre-line group-hover:empty:hidden">
-            {node.description}
-          </div>
-        </div>
-        {node.actionInstances.map((actionInstance) => {
-          const Component = getComponent(actionInstance.type)
-          return (
-            <div key={actionInstance.id} className="w-full empty:hidden">
-              <Component
-                nodeId={node.id}
-                actionInstance={actionInstance}
-                onChangePage={handleChangePage}
-              />
-            </div>
-          )
-        })}
+        {/* MainBody */}
+        <NodeMainBody nodeId={nodeId} />
         {/* Add Button */}
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[40%]">
           <OpenCreateDropdown
@@ -195,9 +169,44 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
         </div>
         {/* Result */}
         <div className="absolute left-full top-0 ml-2 w-max empty:hidden">
-          <ResultChips nodeId={node.id} />
+          <ResultChips nodeId={nodeId} />
         </div>
       </div>
     </>
   )
 })
+
+const NodeMainBody = ({ nodeId }: { nodeId: NodeId }) => {
+  const node = useNode(nodeId)
+
+  const handleChangePage = useAtomCallback(
+    useCallback((_, set, page: string) => {
+      set(currentPageAtom, page)
+    }, []),
+  )
+
+  return (
+    <>
+      <div className="pointer-events-none flex flex-col">
+        <div className="line-clamp-1 p-1 pb-0 text-[13px] text-slate-800 transition empty:hidden group-hover:line-clamp-none group-hover:whitespace-pre-line group-hover:empty:hidden">
+          {node.name}
+        </div>
+        <div className="z-10 line-clamp-1 max-h-[1.2lh] p-1 pb-0 text-xs text-slate-600 transition empty:hidden group-hover:line-clamp-none group-hover:w-[600px] group-hover:whitespace-pre-line group-hover:empty:hidden">
+          {node.description}
+        </div>
+      </div>
+      {node.actionInstances.map((actionInstance) => {
+        const Component = getComponent(actionInstance.type)
+        return (
+          <div key={actionInstance.id} className="w-full empty:hidden">
+            <Component
+              nodeId={node.id}
+              actionInstance={actionInstance}
+              onChangePage={handleChangePage}
+            />
+          </div>
+        )
+      })}
+    </>
+  )
+}

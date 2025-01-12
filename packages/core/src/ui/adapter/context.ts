@@ -90,12 +90,12 @@ export const buildContext = (store: Store) =>
         store.get(nodeNameUniqCache).values().toArray(),
       ),
       Context.add(DeleteNode, (nodeId) => {
-        console.log("DELETE node: ", nodeId)
         store.update(
           nodeIdsAtom,
           updateSetOp((prev) => prev.filter((id) => id !== nodeId)),
         )
-        primitiveNodeAtom.remove(nodeId)
+        console.log("REMOVE")
+        store.remove(primitiveNodeAtom, nodeId)
       }),
       Context.add(AddAction, (action) => {
         store.set(userDefinedActionAtom(toUserDefinedActionId(action.id)), {
@@ -159,7 +159,7 @@ export const buildContext = (store: Store) =>
       ),
       Context.add(RemoveRoute, (routeId) => {
         console.log("DELETE Route: ", routeId)
-        primitiveRouteAtom.remove(routeId)
+        store.remove(primitiveRouteAtom, routeId)
         store.update(
           routeIdsAtom,
           updateSetOp((prev) => prev.filter((id) => id !== routeId)),

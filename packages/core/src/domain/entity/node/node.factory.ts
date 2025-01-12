@@ -13,6 +13,7 @@ export const genPrimitiveNode = (
 ): PrimitiveNode =>
   buildPrimitiveNode(id, {
     name: "node",
+    description: "",
     actionInstances: [],
     ...params,
     config: {
@@ -23,6 +24,7 @@ export const genPrimitiveNode = (
 export const genNode = (id: string, params?: Partial<Node>): Node =>
   buildNode(id, {
     name: "node",
+    description: "",
     actionInstances: [],
     ...params,
     config: {

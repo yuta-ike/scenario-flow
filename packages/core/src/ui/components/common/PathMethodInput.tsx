@@ -8,13 +8,16 @@ import {
   ComboboxOption,
   ComboboxOptions,
 } from "@headlessui/react"
-import { FiCheck, FiChevronDown, FiPlus } from "react-icons/fi"
+import { FiChevronDown, FiPlus } from "react-icons/fi"
 
 import { MethodChip } from "./MethodChip"
 
-import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
 import type { ResourceId } from "@/domain/entity/resource/resource"
 
+import {
+  display,
+  type ActionSourceIdentifier,
+} from "@/domain/entity/action/identifier"
 import { HTTP_METHODS, type HttpMethod } from "@/utils/http"
 import { useActions, useResource } from "@/ui/adapter/query"
 import { searchFuzzy } from "@/utils/searchFuzzy"
@@ -31,7 +34,7 @@ type Props = {
   path: string
   onChange: (
     data:
-      | { identifier: ActionSourceIdentifier }
+      | { identifier: ActionSourceIdentifier; method: HttpMethod; path: string }
       | { method: HttpMethod; path: string },
   ) => void
 }
@@ -44,10 +47,10 @@ export const PathMethodInput = ({ method, path, onChange }: Props) => {
         .filter((action) => action.type === "rest_call")
         .map((action) => ({
           identifier: action,
-          method: action.schema.base.method ?? method,
-          path: action.schema.base.path ?? path,
+          method: action.schema.base.method!,
+          path: action.schema.base.path!,
         })),
-    [actions, method, path],
+    [actions],
   )
 
   const actionsMap = useMemo(
@@ -74,17 +77,30 @@ export const PathMethodInput = ({ method, path, onChange }: Props) => {
     [actionsMap, method, onChange, path],
   )
 
-  const [query, setQuery] = useState(`${method} ${path}`)
+  const [query, setQuery] = useState(path)
 
   const filteredActions = useMemo(() => {
+    const exampleOmitted = restCallActions.filter(
+      (action) => !(action.method === "GET" && action.path === "/example"),
+    )
+
     if (query.length === 0) {
-      return restCallActions
+      return exampleOmitted
     }
 
-    return searchFuzzy(query, restCallActions, {
+    return searchFuzzy(query, exampleOmitted, {
       keys: ["method", "path"],
     })
   }, [restCallActions, query])
+
+  const shouldShowCreateOption = useMemo(
+    () =>
+      2 <= query.length &&
+      !filteredActions.some(
+        (action) => action.path === query && action.method === method,
+      ),
+    [filteredActions, method, query],
+  )
 
   return (
     <div className="relative flex grow items-stretch overflow-hidden rounded-md border border-slate-200">
@@ -94,6 +110,7 @@ export const PathMethodInput = ({ method, path, onChange }: Props) => {
       />
       <hr className="h-auto self-stretch border-r border-r-slate-200" />
       <Combobox
+        immediate
         value={useMemo(() => ({ method, path }), [method, path])}
         onChange={(value) => {
           if (value != null) {
@@ -103,7 +120,7 @@ export const PathMethodInput = ({ method, path, onChange }: Props) => {
         onClose={() => setQuery("")}
       >
         <ComboboxInput
-          className="text flex grow flex-col items-stretch justify-stretch px-3 text-sm hover:bg-slate-50 focus:bg-slate-50 focus:outline-none data-[dirty=true]:bg-blue-50"
+          className="text flex grow flex-col items-stretch justify-stretch px-3 font-mono text-sm hover:bg-slate-50 focus:bg-slate-50 focus:outline-none data-[dirty=true]:bg-blue-50"
           displayValue={(action: MethodPath) => action.path}
           onChange={(e) => setQuery(e.target.value)}
           onBlur={(e) => handleChange({ path: e.target.value })}
@@ -114,28 +131,33 @@ export const PathMethodInput = ({ method, path, onChange }: Props) => {
         <ComboboxOptions
           anchor="bottom start"
           transition
-          className="min-w-[var(--input-width)] rounded-md border border-slate-200 bg-white p-1 transition duration-100 ease-in [--anchor-gap:var(--spacing-1)] empty:invisible data-[leave]:data-[closed]:opacity-0"
+          className="min-w-[var(--input-width)] rounded-md border border-slate-200 bg-white p-1 transition duration-100 ease-in [--anchor-gap:var(--spacing-1)] data-[leave]:data-[closed]:opacity-0"
         >
-          {2 <= query.length && (
+          {shouldShowCreateOption && (
             <ComboboxOption
               value={{ method, path: query }}
-              className="group flex cursor-pointer select-none items-center gap-1 rounded px-2 py-1.5 text-sm text-slate-600 data-[focus]:bg-blue-50"
+              className="group flex cursor-pointer select-none items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-600 data-[focus]:bg-blue-50"
             >
-              <FiPlus className="shrink-0 text-slate-400" />
-              <MethodChip size="sm">{method}</MethodChip>
-              <div className="text-sm">{query}</div>
+              <MethodChip size="sm" truncate={3}>
+                {method}
+              </MethodChip>
+              <div className="font-mono text-sm">{query}</div>
+              <div className="ml-auto flex shrink-0 items-center rounded text-xs text-slate-400 group-data-[focus]:text-stone-800">
+                <FiPlus className="shrink-0" />
+              </div>
             </ComboboxOption>
           )}
           {filteredActions.map((action) => (
             <ComboboxOption
-              key={`${action.method}_${action.path}`}
+              key={display(action.identifier)}
               value={action}
-              className="group flex cursor-pointer select-none items-center gap-1 rounded px-2 py-1.5 text-sm text-slate-600 data-[focus]:bg-blue-50"
+              className="group flex cursor-pointer select-none items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-600 data-[focus]:bg-blue-50"
             >
-              <FiCheck className="invisible shrink-0 group-data-[selected]:visible" />
-              <MethodChip size="sm">{action.method}</MethodChip>
-              {action.path}
-              <span className="ml-auto text-xs text-slate-400">
+              <MethodChip size="sm" truncate={3}>
+                {action.method}
+              </MethodChip>
+              <div className="font-mono text-sm">{action.path}</div>
+              <span className="ml-auto shrink-0 text-xs text-slate-400 group-data-[focus]:text-stone-800">
                 {action.identifier.resourceType === "user_defined" ? (
                   "ユーザー定義"
                 ) : (
@@ -186,22 +208,20 @@ const HttpMethodSelector = ({
             <TbChevronUp />
           </RxSelect.ScrollUpButton>
           <RxSelect.Viewport className="w-full p-[5px]">
-            {HTTP_METHODS.map((method) => {
-              return (
-                <RxSelect.Item
-                  key={method}
-                  value={method}
-                  className="relative flex cursor-pointer select-none items-center rounded py-2 pl-[25px] pr-[35px] text-sm leading-none data-[highlighted]:bg-slate-50 data-[highlighted]:outline-none"
-                >
-                  <RxSelect.ItemText>
-                    <MethodChip size="lg">{method}</MethodChip>
-                  </RxSelect.ItemText>
-                  <RxSelect.ItemIndicator className="absolute left-0 inline-flex w-[25px] items-center justify-center">
-                    <TbCheck />
-                  </RxSelect.ItemIndicator>
-                </RxSelect.Item>
-              )
-            })}
+            {HTTP_METHODS.map((method) => (
+              <RxSelect.Item
+                key={method}
+                value={method}
+                className="relative flex cursor-pointer select-none items-center rounded py-2 pl-[25px] pr-[35px] text-sm leading-none data-[highlighted]:bg-slate-50 data-[highlighted]:outline-none"
+              >
+                <RxSelect.ItemText>
+                  <MethodChip size="lg">{method}</MethodChip>
+                </RxSelect.ItemText>
+                <RxSelect.ItemIndicator className="absolute left-0 inline-flex w-[25px] items-center justify-center">
+                  <TbCheck />
+                </RxSelect.ItemIndicator>
+              </RxSelect.Item>
+            ))}
           </RxSelect.Viewport>
           <RxSelect.ScrollDownButton className="flex h-[25px] cursor-default items-center justify-center bg-white">
             <TbChevronDown />

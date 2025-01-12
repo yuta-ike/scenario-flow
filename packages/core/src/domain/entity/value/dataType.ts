@@ -57,6 +57,8 @@ export const typedValueToValue = (typedValue: TypedValue): unknown => {
       )
     case "array":
       return typedValue.value.map(typedValueToValue)
+    case "any":
+      return typedValue.value
     case "null":
       return null
   }

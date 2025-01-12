@@ -75,7 +75,17 @@ export const isUserDefinedAction = (
   return identifier.resourceType === "user_defined"
 }
 
-export const display: Receiver<ActionSourceIdentifier, string> = (
+export const getUserDefinedActionIdOrNull = (
+  identifier?: ActionSourceIdentifier,
+) => {
+  if (identifier != null && isUserDefinedAction(identifier)) {
+    return identifier.resourceIdentifier.userDefinedActionId
+  } else {
+    return null
+  }
+}
+
+export const display: Receiver<ActionSourceIdentifier, [], string> = (
   identifier,
 ) => {
   if (identifier.resourceType === "resource") {

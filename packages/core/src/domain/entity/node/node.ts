@@ -1,8 +1,10 @@
 import { display, eq, type ActionSourceIdentifier } from "../action/identifier"
 import { mergeActionParameter } from "../action/actionParameter"
-import { getUniqName } from "../getUniqName"
 
-import { CannotChangeActionTypeError } from "./node.error"
+import {
+  CannnotChangeActionSourceError,
+  CannotChangeActionTypeError,
+} from "./node.error"
 import {
   buildInitialActionInstance,
   type ActionInstance,
@@ -16,6 +18,9 @@ import type { ActionType, ResolvedAction } from "../action/action"
 import type { Expression } from "../value/expression"
 import type { Id, OmitId } from "@/utils/idType"
 import type { DistributiveOmit, Replace } from "@/utils/typeUtil"
+import type { Updater } from "@/ui/utils/applyUpdate"
+
+import { applyUpdate } from "@/ui/utils/applyUpdate"
 
 export type LoopConfig = {
   interval?: Time
@@ -45,12 +50,12 @@ export const buildPrimitiveNode = (
     name,
     ...params
   }: BuilderParams<DistributiveOmit<PrimitiveNode, "name">> & { name?: string },
-  userNames: string[],
+  // userNames: string[],
 ) => {
-  const uniqName = getUniqName(name ?? "シナリオ", userNames)
+  // const uniqName = getUniqName(name ?? "シナリオ", userNames)
   return {
     id,
-    name: uniqName,
+    name,
     ...params,
   } as PrimitiveNode
 }
@@ -72,31 +77,38 @@ export const buildNode = (id: string, params: OmitId<RawNode>) => {
   } as Node
 }
 
-export const applyInitialValue: Transition<PrimitiveNode> = (
-  node: PrimitiveNode,
+const applyActionInstanceInitialValue = (
+  ai: ActionInstance,
   actionMap: Map<string, ResolvedAction>,
 ) => {
+  if (ai.type === "rest_call") {
+    const action = actionMap.get(display(ai.actionIdentifier))
+    if (action == null || action.type !== "rest_call") {
+      return ai
+    }
+
+    const example = action.schema.examples[0]
+    return {
+      ...ai,
+      instanceParameter:
+        example != null
+          ? mergeActionParameter("rest_call", action.schema.base, example)
+          : ai.instanceParameter,
+    }
+  } else {
+    return ai
+  }
+}
+
+export const applyInitialValue: Transition<
+  PrimitiveNode,
+  [Map<string, ResolvedAction>]
+> = (node, actionMap) => {
   return {
     ...node,
-    actionInstances: node.actionInstances.map((ai) => {
-      if (ai.type === "rest_call") {
-        const action = actionMap.get(display(ai.actionIdentifier))
-        if (action == null || action.type !== "rest_call") {
-          return ai
-        }
-
-        const example = action.schema.examples[0]
-        return {
-          ...ai,
-          instanceParameter:
-            example != null
-              ? mergeActionParameter("rest_call", action.schema.base, example)
-              : ai.instanceParameter,
-        }
-      } else {
-        return ai
-      }
-    }),
+    actionInstances: node.actionInstances.map((ai) =>
+      applyActionInstanceInitialValue(ai, actionMap),
+    ),
   }
 }
 
@@ -114,14 +126,17 @@ export const updateNodeConfig: Transition<PrimitiveNode> = (
 // NodeConfigが初期状態か判定する
 export const isNodeConfigConditionSet: Receiver<
   PrimitiveNode | Node,
+  [],
   boolean
 > = (node) => {
   return node.config.condition != null && node.config.condition !== ""
 }
 
-export const isNodeConfigLoopSet: Receiver<PrimitiveNode | Node, boolean> = (
-  node,
-) => {
+export const isNodeConfigLoopSet: Receiver<
+  PrimitiveNode | Node,
+  [],
+  boolean
+> = (node) => {
   return (
     (node.config.loop?.interval != null &&
       0 < node.config.loop.interval.value) ||
@@ -146,20 +161,30 @@ export const appendActionInstance: Transition<
 }
 
 // action instance parameterを更新する
-export const updateActionInstanceParameter: Transition<PrimitiveNode> = (
-  node: PrimitiveNode,
-  actionInstanceId: ActionInstanceId,
-  actionInstance: ActionInstance,
-) => {
+export const updateActionInstanceParameter: Transition<
+  PrimitiveNode,
+  [ActionInstanceId, Updater<ActionInstance>]
+> = (node, actionInstanceId, actionInstance) => {
+  console.log(node, actionInstanceId, actionInstance)
   return {
     ...node,
     actionInstances: node.actionInstances.map((ai) => {
       if (ai.id === actionInstanceId) {
-        if (ai.type !== actionInstance.type) {
+        const newAi = applyUpdate(actionInstance, ai)
+        if (ai.type !== newAi.type) {
           // Typeの変更は許可しない
           throw new CannotChangeActionTypeError()
         }
-        return actionInstance
+        if (
+          ai.actionIdentifier != null &&
+          newAi.actionIdentifier != null &&
+          !eq(ai.actionIdentifier, newAi.actionIdentifier)
+        ) {
+          // Actionの変更は許可しない
+          throw new CannnotChangeActionSourceError()
+        }
+
+        return newAi
       } else {
         return ai
       }
@@ -168,11 +193,10 @@ export const updateActionInstanceParameter: Transition<PrimitiveNode> = (
 }
 
 // actionを入れ替える
-export const replaceAction: Transition<PrimitiveNode> = (
-  node: PrimitiveNode,
-  oldActionIdentifier: ActionSourceIdentifier,
-  newActionIdentifier: ActionSourceIdentifier,
-) => {
+export const replaceAction: Transition<
+  PrimitiveNode,
+  [ActionSourceIdentifier, ActionSourceIdentifier]
+> = (node, oldActionIdentifier, newActionIdentifier) => {
   return {
     ...node,
     actionInstances: node.actionInstances.map((ai) => {
@@ -189,4 +213,47 @@ export const replaceAction: Transition<PrimitiveNode> = (
       }
     }),
   }
+}
+
+// actionを入れ替える
+export const replaceActionById: Transition<
+  PrimitiveNode,
+  [ActionInstanceId, ActionSourceIdentifier]
+> = (node, actionId, actionIdentifier) => {
+  return {
+    ...node,
+    actionInstances: node.actionInstances.map((ai) => {
+      if (ai.actionIdentifier != null && ai.id === actionId) {
+        return {
+          ...ai,
+          actionIdentifier,
+        }
+      } else {
+        return ai
+      }
+    }),
+  }
+}
+
+export const changeAction: Transition<
+  PrimitiveNode,
+  [ActionInstanceId, ActionSourceIdentifier, Map<string, ResolvedAction>]
+> = (node, actionInstanceId, actionIdentifier, actionMap) => {
+  const newNode: PrimitiveNode = {
+    ...node,
+    actionInstances: node.actionInstances.map((ai) => {
+      if (ai.id === actionInstanceId && ai.type === "rest_call") {
+        const newAi = {
+          ...ai,
+          actionIdentifier,
+        }
+        const filledAi = applyActionInstanceInitialValue(newAi, actionMap)
+        return filledAi
+      } else {
+        return ai
+      }
+    }),
+  }
+  applyInitialValue(newNode, new Map())
+  return newNode
 }

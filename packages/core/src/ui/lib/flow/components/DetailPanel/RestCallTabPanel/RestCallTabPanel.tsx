@@ -9,6 +9,7 @@ import type { SetStateAction } from "react"
 import type { NodeId } from "@/domain/entity/node/node"
 import type { ResolvedRestCallActionInstance } from "@/domain/entity/node/actionInstance"
 import type { KVItem } from "@/ui/lib/kv"
+import type { Updater } from "@/ui/utils/applyUpdate"
 
 import { ParameterTable } from "@/ui/lib/ParameterTable"
 import { updateActionInstance } from "@/ui/adapter/command"
@@ -25,7 +26,7 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
   // instance parameter
   const handleUpdateInstanceParameter = useCallback(
     (
-      update: SetStateAction<KVItem[]>,
+      update: Updater<KVItem[]>,
       key: "headers" | "cookies" | "pathParams" | "queryParams",
     ) => {
       updateActionInstance(nodeId, ai.id, {
@@ -79,11 +80,11 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
                   ...kv,
                   description: keyStatus?.pathParams.get(kv.key)?.description,
                   defined:
-                    keyStatus == null
+                    keyStatus == null || kv.key.length === 0
                       ? undefined
                       : keyStatus.pathParams.get(kv.key) != null,
                   required:
-                    keyStatus == null
+                    keyStatus == null || kv.key.length === 0
                       ? undefined
                       : keyStatus.pathParams.get(kv.key)?.required === true,
                   dataType:
@@ -136,11 +137,11 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
               ai.instanceParameter.headers?.map((kv) => ({
                 ...kv,
                 defined:
-                  keyStatus == null
+                  keyStatus == null || kv.key.length === 0
                     ? undefined
                     : keyStatus.headers.get(kv.key) != null,
                 required:
-                  keyStatus == null
+                  keyStatus == null || kv.key.length === 0
                     ? undefined
                     : keyStatus.headers.get(kv.key)?.required === true,
                 dataType:
@@ -164,11 +165,11 @@ export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
               ai.instanceParameter.cookies?.map((kv) => ({
                 ...kv,
                 defined:
-                  keyStatus == null
+                  keyStatus == null || kv.key.length === 0
                     ? undefined
                     : keyStatus.cookies.get(kv.key) != null,
                 required:
-                  keyStatus == null
+                  keyStatus == null || kv.key.length === 0
                     ? undefined
                     : keyStatus.cookies.get(kv.key)?.required === true,
                 dataType:

@@ -1,10 +1,6 @@
 import { TbComponents, TbExternalLink } from "react-icons/tb"
-import { useSortable } from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
-import { HiMenuAlt4 } from "react-icons/hi"
-import clsx from "clsx"
 
-import type { Node } from "@/domain/entity/node/node"
+import type { NodeId } from "@/domain/entity/node/node"
 import type { ResourceActionIdentifier } from "@/domain/entity/action/identifier"
 import type { ResolvedAction } from "@/domain/entity/action/action"
 
@@ -13,61 +9,36 @@ import { useFocusNode, useIsNodeFocused } from "@/ui/state/focusedNodeId"
 import { unwrapNull } from "@/utils/result"
 import { updateNode } from "@/ui/adapter/command"
 import { isResourceAction } from "@/domain/entity/action/identifier"
-import { useResource } from "@/ui/adapter/query"
+import { useNode, useResource } from "@/ui/adapter/query"
 import { Drawer } from "@/ui/components/common/Drawer"
 import { ResourceDetail } from "@/ui/page/index/Settings/ResourceDetail"
+import { getFilledPath } from "@/domain/entity/action/actionParameter"
 
 type Props = {
-  node: Node
+  nodeId: NodeId
   index: number
 }
 
-export const StepItem = ({ node, index }: Props) => {
+export const StepItem = ({ nodeId, index }: Props) => {
   const focus = useFocusNode()
-  const isFocused = useIsNodeFocused(node.id)
+  const isFocused = useIsNodeFocused(nodeId)
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: node.id })
+  const node = useNode(nodeId)
 
   const updateNodeName = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateNode(node.id, { name: e.target.value })
+    updateNode(nodeId, { name: e.target.value })
   }
 
   return (
-    <div
-      ref={setNodeRef}
-      className="flex items-center gap-2"
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        zIndex: isDragging ? 1 : 0,
-      }}
-    >
-      <div className="shrink-0">
-        <button type="button" {...attributes} {...listeners}>
-          <HiMenuAlt4
-            size={14}
-            className="text-slate-400 transition hover:text-slate-600"
-          />
-        </button>
-      </div>
+    <div className="flex items-center gap-2">
       <div
         data-selected={isFocused}
-        className={clsx(
-          "outline-transparen group relative w-full grow overflow-hidden rounded-lg border border-slate-200 bg-white outline outline-2 outline-offset-2 outline-transparent transition",
-          isDragging ? "shadow-lg" : "data-[selected=true]:outline-blue-300",
-        )}
+        className="outline-transparen group relative w-full grow overflow-hidden rounded-lg border border-slate-200 bg-white outline outline-2 outline-offset-2 outline-transparent transition"
       >
         <button
           className="absolute inset-0"
           type="button"
-          onClick={() => focus(node.id)}
+          onClick={() => focus(nodeId)}
         />
         <div className="flex gap-2 border-b border-b-slate-200 px-2 py-1">
           <div className="my-0.5 shrink-0">
@@ -88,13 +59,13 @@ export const StepItem = ({ node, index }: Props) => {
           </div>
         </div>
         <div className="flex w-full">
-          <div className="w-[40px] shrink-0" />
+          <div className="w-[32px] shrink-0" />
           <div className="flex grow flex-col">
             {node.actionInstances.map((ai) => (
               <button
                 key={ai.id}
                 type="button"
-                className="relative border-t border-t-slate-200 p-2 first:border-t-0 empty:hidden hover:bg-slate-50"
+                className="relative border-t border-t-slate-200 p-2 text-start first:border-t-0 empty:hidden hover:bg-slate-50"
                 onClick={() => focus(node.id)}
               >
                 {ai.type === "rest_call" ? (
@@ -103,7 +74,9 @@ export const StepItem = ({ node, index }: Props) => {
                       <MethodChip>
                         {ai.instanceParameter.method ?? "GET"}
                       </MethodChip>
-                      <div className="text-sm">{ai.instanceParameter.path}</div>
+                      <div className="text-start text-sm">
+                        {getFilledPath(ai.instanceParameter)}
+                      </div>
                     </div>
                     {isResourceAction(ai.action) && (
                       <DefinitionPanel action={ai.action} />

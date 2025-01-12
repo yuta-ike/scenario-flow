@@ -14,18 +14,10 @@ import {
 } from "@/domain/datasource/plugin"
 import { load } from "@/io/scenario/load"
 import { userDefinedActionAtom } from "@/domain/datasource/userDefinedAction"
-import {
-  DEFAULT_PATTERN_ID,
-  globalVariableAtom,
-  globalVariableIdsAtom,
-  globalVariableValueAtom,
-} from "@/domain/datasource/globalVariable"
-import { toGlobalVariableValueId } from "@/domain/entity/globalVariable/globalVariable.util"
-import { genId } from "@/utils/uuid"
-import { buildGlobalVariableBind } from "@/domain/entity/globalVariable/globalVariable"
 import { primitiveNodeAtom } from "@/domain/datasource/node"
 import { primitiveRouteAtom } from "@/domain/datasource/route"
 import { resourceActionAtom, resourcesAtom } from "@/domain/datasource/resource"
+import { variableAtom } from "@/domain/datasource/variable"
 
 const useInitializer = () => {
   const [initialized, setInitialized] = useState<Map<DirHandle, true>>(
@@ -70,22 +62,9 @@ const useInitializer = () => {
         store.set(userDefinedActionAtom(action.id), { create: action })
       })
 
-      // global variable
-      const globalVariableIds = entities.globalVariables.map(
-        (variable) => variable.id,
-      )
-      store.set(globalVariableIdsAtom, new Set(globalVariableIds))
-      entities.globalVariables.map((variable) => {
-        globalVariableAtom(variable.id, variable)
-        const id = toGlobalVariableValueId(genId())
-        globalVariableValueAtom(
-          id,
-          buildGlobalVariableBind(id, {
-            globalVariableId: variable.id,
-            value: variable.value,
-            patternId: DEFAULT_PATTERN_ID,
-          }),
-        )
+      // variables
+      entities.variables.map((variable) => {
+        store.set(variableAtom(variable.id), { create: variable })
       })
 
       // primitive node

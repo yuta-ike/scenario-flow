@@ -8,10 +8,13 @@ import type { ResolvedAction } from "@/domain/entity/action/action"
 import type { NodeId } from "@/domain/entity/node/node"
 import type { ResourceId } from "@/domain/entity/resource/resource"
 import type { RouteId } from "@/domain/entity/route/route"
-import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
-import type { HttpMethod } from "@/utils/http"
 
 import {
+  getUserDefinedActionIdOrNull,
+  type ActionSourceIdentifier,
+} from "@/domain/entity/action/identifier"
+import {
+  actionIdCountCache,
   nodeAtom,
   nodeIdsAtom,
   primitiveNodeAtom,
@@ -51,10 +54,7 @@ import {
   latestResolvedNodeRunResultAtom,
   nodeStatesAtom,
 } from "@/domain/datasource/nodeStates"
-import {
-  userDefinedActionCacheAtom,
-  userDefinedActionIdsAtom,
-} from "@/domain/datasource/userDefinedAction"
+import { userDefinedActionIdsAtom } from "@/domain/datasource/userDefinedAction"
 
 const nullAtom = atom(null)
 
@@ -95,12 +95,16 @@ export const useResourceIds = () =>
 export const useUserDefinedActionIds = () =>
   useAtomValue(userDefinedActionIdsAtom).values().toArray()
 
-export const useUserDefinedActionCount = (method: HttpMethod, path: string) =>
-  useAtomValue(
-    userDefinedActionCacheAtom(
-      useMemo(() => ({ method, path }), [method, path]),
-    ),
-  )
+export const userDefinedActionByIdCountAtom = atomFamily(
+  (identifier: ActionSourceIdentifier) =>
+    atom((get) => {
+      const id = getUserDefinedActionIdOrNull(identifier)
+      return id == null ? 0 : (get(actionIdCountCache).get(id) ?? 0)
+    }),
+)
+export const useUserDefinedActionRefCount = (
+  identifier: ActionSourceIdentifier,
+) => useAtomValue(userDefinedActionByIdCountAtom(identifier))
 
 export const useResources = () => useAtomValue(resourcesAtom)
 

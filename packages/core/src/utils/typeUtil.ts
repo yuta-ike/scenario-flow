@@ -29,3 +29,7 @@ export type PartialPartial<T, RequiredKey extends keyof T> = {
 export type DistributiveOmit<T, K extends keyof any> = T extends any
   ? Omit<T, K>
   : never
+
+export type DistributivePartial<T, K extends keyof any> =
+  | DistributiveOmit<T, K>
+  | T

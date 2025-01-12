@@ -1,4 +1,6 @@
-import { useCallback } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { TbEdit } from "react-icons/tb"
+import { useAtomCallback } from "jotai/utils"
 
 import { Section } from "../Section"
 
@@ -11,15 +13,24 @@ import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
 import { type HttpMethod } from "@/utils/http"
 import { TextareaAutosize } from "@/ui/components/common/TextareaAutosize"
 import {
+  changeAction,
   changeToNewAction,
+  updateActionAndActionInstance,
   updateActionInstance,
   updateUserDefinedAction,
 } from "@/ui/adapter/command"
 import { applyUpdate } from "@/ui/utils/applyUpdate"
-import { isResourceAction } from "@/domain/entity/action/identifier"
+import {
+  isResourceAction,
+  isUserDefinedAction,
+} from "@/domain/entity/action/identifier"
 import { PathMethodInput } from "@/ui/components/common/PathMethodInput"
 import { MethodChip } from "@/ui/components/common/MethodChip"
-import { useUserDefinedActionCount } from "@/ui/adapter/query"
+import { IconButton } from "@/ui/components/common/IconButton"
+import {
+  userDefinedActionByIdCountAtom,
+  useUserDefinedActionRefCount,
+} from "@/ui/adapter/query"
 import { Button } from "@/ui/components/common/Button"
 
 type Props = {
@@ -28,6 +39,12 @@ type Props = {
 }
 
 export const HeaderSection = ({ nodeId, ai }: Props) => {
+  const [editMode, setEditMode] = useState(false)
+
+  useEffect(() => {
+    setEditMode(false)
+  }, [ai.actionIdentifier])
+
   // description
   const handleUpdateDescription = useCallback(
     (update: string) => {
@@ -42,38 +59,46 @@ export const HeaderSection = ({ nodeId, ai }: Props) => {
     [ai, nodeId],
   )
 
-  const handleChangeMethodPath = useCallback(
-    (
-      data:
-        | {
-            method: HttpMethod
-            path: string
+  const handleChangeMethodPath = useAtomCallback(
+    useCallback(
+      (
+        get,
+        _,
+        data:
+          | {
+              method: HttpMethod
+              path: string
+            }
+          | {
+              identifier: ActionSourceIdentifier
+              method: HttpMethod
+              path: string
+            },
+      ) => {
+        if ("identifier" in data) {
+          changeAction(nodeId, ai.id, data.identifier)
+        } else {
+          const actionRefCount = get(
+            userDefinedActionByIdCountAtom(ai.actionIdentifier),
+          )
+          if (actionRefCount == 1 && isUserDefinedAction(ai.actionIdentifier)) {
+            updateActionAndActionInstance(nodeId, ai.id, ai.actionIdentifier, {
+              method: data.method,
+              path: data.path,
+            })
+          } else {
+            updateActionInstance(nodeId, ai.id, {
+              ...ai,
+              instanceParameter: {
+                method: data.method,
+                path: data.path,
+              },
+            })
           }
-        | {
-            identifier: ActionSourceIdentifier
-          },
-    ) => {
-      if ("identifier" in data) {
-        updateActionInstance(nodeId, ai.id, {
-          ...ai,
-          instanceParameter: {
-            method: undefined,
-            path: undefined,
-          },
-          actionIdentifier: data.identifier,
-        })
-      } else {
-        updateActionInstance(nodeId, ai.id, {
-          ...ai,
-          instanceParameter: {
-            ...ai.instanceParameter,
-            path: data.path,
-            method: data.method,
-          },
-        })
-      }
-    },
-    [ai, nodeId],
+        }
+      },
+      [ai, nodeId],
+    ),
   )
 
   const handleApplyInstanceParameterToAction = () => {
@@ -105,16 +130,14 @@ export const HeaderSection = ({ nodeId, ai }: Props) => {
     ("path" in ai.action.schema.base &&
       ai.action.schema.base.path !== ai.instanceParameter.path)
 
-  const refCount = useUserDefinedActionCount(
-    ai.instanceParameter.method!,
-    ai.instanceParameter.path!,
-  )
+  const refCount = useUserDefinedActionRefCount(ai.actionIdentifier)
 
   return (
     <Section>
       <div className="flex flex-col gap-2">
-        <div className="flex items-center">
-          {ai.actionIdentifier.resourceType === "user_defined" ? (
+        {/* メソッド + パス */}
+        <div className="flex items-center justify-between">
+          {ai.actionIdentifier.resourceType === "user_defined" || editMode ? (
             <PathMethodInput
               method={ai.instanceParameter.method!}
               path={ai.instanceParameter.path!}
@@ -128,7 +151,31 @@ export const HeaderSection = ({ nodeId, ai }: Props) => {
               <div>{ai.instanceParameter.path}</div>
             </div>
           )}
+          {!editMode && (
+            <div className="shrink-0">
+              <IconButton
+                icon={TbEdit}
+                size="sm"
+                label="編集"
+                variant="segmented"
+                onClick={() => setEditMode(true)}
+              />
+            </div>
+          )}
         </div>
+
+        {/* 説明 */}
+        <div className="relative">
+          <TextareaAutosize
+            className="resize-none rounded border border-transparent px-[7px] py-1 text-sm transition hover:border-slate-200 focus:border-slate-200 focus:outline-none"
+            value={
+              0 < ai.description.length ? ai.description : ai.action.description
+            }
+            onChange={(e) => handleUpdateDescription(e.target.value)}
+            placeholder="説明を追加"
+          />
+        </div>
+
         {1 < refCount && conflictedParameter && (
           <div>
             <div className="rounded border border-blue-100 bg-blue-50 p-2 text-[13px] text-slate-600">
@@ -155,16 +202,7 @@ export const HeaderSection = ({ nodeId, ai }: Props) => {
             </div>
           </div>
         )}
-        <div className="relative">
-          <TextareaAutosize
-            className="resize-none rounded border border-transparent px-[7px] py-1 text-sm transition hover:border-slate-200 focus:border-slate-200 focus:outline-none"
-            value={
-              0 < ai.description.length ? ai.description : ai.action.description
-            }
-            onChange={(e) => handleUpdateDescription(e.target.value)}
-            placeholder="説明を追加"
-          />
-        </div>
+        {/* 定義 */}
         {isResourceAction(ai.action) && <DefinitionPanel action={ai.action} />}
       </div>
     </Section>

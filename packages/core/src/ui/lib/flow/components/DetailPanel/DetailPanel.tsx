@@ -69,7 +69,7 @@ const DetailPanelInner = ({ nodeId }: DetailPanelInnerProps) => {
               : ai.type === "validator"
                 ? "テスト"
                 : ai.type === "include"
-                  ? "インポート"
+                  ? "シナリオ呼び出し"
                   : ai.type === "db"
                     ? "クエリ"
                     : "変数"}

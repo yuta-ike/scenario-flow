@@ -35,6 +35,9 @@ export const kvFromRecordBy = <Value>(
   }))
 }
 
+/**
+ * 同一キーでは、後ろにあるものが優先される
+ */
 export const dedupe = (kvs: KVItem[] | undefined): KVItem[] => {
   if (kvs == null) {
     return []

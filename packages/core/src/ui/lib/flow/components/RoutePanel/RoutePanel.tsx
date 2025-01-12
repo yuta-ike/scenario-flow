@@ -3,14 +3,14 @@ import { atom, useAtomValue } from "jotai"
 import { RouteTile } from "./RouteTile"
 
 import { AccordionRoot } from "@/ui/components/common/Accordion"
-import { routesAtom } from "@/domain/datasource/route"
+import { routePageCache } from "@/domain/datasource/route"
 import { currentPageAtom, usePage } from "@/ui/state/page"
 
-const currentPageRouteIds = atom((get) => {
-  const page = get(currentPageAtom)
-  const routes = get(routesAtom)
-  return routes.filter((route) => route.page === page).map((route) => route.id)
-})
+const currentPageRouteIds = atom((get) =>
+  (get(routePageCache).get(get(currentPageAtom)) ?? new Set())
+    .values()
+    .toArray(),
+)
 
 export const RoutePanel = () => {
   const { currentPage } = usePage()
@@ -29,7 +29,7 @@ export const RoutePanel = () => {
         </div>
       )}
       <AccordionRoot>
-        <ol className="h-max w-full">
+        <ol className="flex h-max w-full flex-col gap-1">
           {routeIds.map((routeId) => (
             <li key={routeId} className="h-max w-full">
               <RouteTile routeId={routeId} />

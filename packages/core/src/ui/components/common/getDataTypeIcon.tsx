@@ -1,4 +1,4 @@
-import { TbQuestionMark, TbHash, TbTextSize } from "react-icons/tb"
+import { TbQuestionMark, TbHash, TbTextSize, TbAsterisk } from "react-icons/tb"
 
 import { ArrayIcon } from "../icons/ArrayIcon"
 
@@ -41,12 +41,23 @@ const getLabel = (type: DataType | undefined) => {
   }
 }
 
-export const DataTypeIcon = ({ type }: { type: DataType | undefined }) => {
+export const DataTypeIcon = ({
+  type,
+  required = false,
+}: {
+  type: DataType | undefined
+  required?: boolean
+}) => {
   const Icon = getDataTypeIcon(type)
   return Icon != null ? (
-    <Tooltip label={getLabel(type)}>
-      <button type="button">
+    <Tooltip label={required ? `${getLabel(type)}（必須）` : getLabel(type)}>
+      <button type="button" className="relative rounded p-1 hover:bg-slate-200">
         <Icon />
+        {required && (
+          <div className="absolute right-0 top-0 rounded-full p-px text-red-400">
+            <TbAsterisk strokeWidth={3} size={9} />
+          </div>
+        )}
       </button>
     </Tooltip>
   ) : null

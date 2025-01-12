@@ -1,7 +1,7 @@
-import type { SetStateAction } from "jotai"
+export type Updater<State> = State | ((prevState: State) => State)
 
 export const applyUpdate = <State>(
-  update: SetStateAction<State>,
+  update: Updater<State>,
   prevState: State,
 ): State => {
   if (typeof update === "function") {

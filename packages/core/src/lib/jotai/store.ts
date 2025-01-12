@@ -11,7 +11,7 @@ export class Store {
 
   #store: JotaiStore
 
-  public get store() {
+  public get store(): JotaiStore {
     return this.#store
   }
 
@@ -32,6 +32,15 @@ export class Store {
   ) {
     const newValue = updater(this.#store.get(atom))
     this.#store.set(atom, newValue)
+  }
+
+  public remove<Id>(
+    atom: {
+      removeAtom: WritableAtom<null, [id: Id], void>
+    },
+    id: Id,
+  ) {
+    this.#store.set(atom.removeAtom, id)
   }
 
   public subscribe<Value>(atom: Atom<Value>, callback: () => void) {

@@ -11,6 +11,8 @@ import { Popover } from "@/ui/components/common/Popover"
 import { associateWithList } from "@/utils/set"
 import { useSetHighlightedNodeId } from "@/ui/state/highlightedNodeId"
 import { getVariableName } from "@/domain/entity/environment/variable"
+import { getBoundIn } from "@/domain/entity/variable/variable"
+import { nonNull } from "@/utils/assert"
 
 type MagicVariableButtonProps = {
   onInsert?: (value: string) => void
@@ -28,7 +30,11 @@ export const MagicVariableButton = ({
   const environmentMap = associateWithList(
     environment,
     ({ variable: { boundIn } }) =>
-      boundIn === "global" ? "global" : boundIn.name,
+      boundIn === "global"
+        ? "global"
+        : boundIn.type === "node"
+          ? boundIn.node.name
+          : boundIn.route.name,
   )
   const bindMap = associateWithList(environment, ({ variable: { id } }) => id)
 
@@ -49,11 +55,12 @@ export const MagicVariableButton = ({
         .entries()
         .map(([boundInName, binds]) => {
           const { variable } = binds[0]
+          const boundIn = getBoundIn(variable)
           const isThisNode =
             typeof variable.boundIn === "object" &&
-            variable.boundIn.id === currentNodeId
+            boundIn?.nodeId === currentNodeId
           return {
-            id: variable.boundIn === "global" ? "global" : variable.boundIn.id,
+            id: boundIn?.nodeId ?? boundIn?.routeId ?? "global",
             title: (
               <div className="flex border-t border-t-slate-200 bg-slate-100 px-2 py-2 text-xs text-slate-600 first:border-t-transparent">
                 <div className="grow">
@@ -66,12 +73,12 @@ export const MagicVariableButton = ({
                       if (variable.boundIn === "global") {
                         return
                       }
-                      highlight(variable.boundIn.id)
-                      void focusOn(
-                        currentNodeId == null
-                          ? [variable.boundIn.id]
-                          : [currentNodeId, variable.boundIn.id],
-                      )
+                      if (boundIn?.nodeId != null) {
+                        highlight(boundIn.nodeId)
+                        void focusOn(
+                          [currentNodeId, boundIn.nodeId].filter(nonNull),
+                        )
+                      }
                       e.stopPropagation()
                     }}
                     className="group rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
@@ -93,12 +100,9 @@ export const MagicVariableButton = ({
                     if (variable.boundIn === "global") {
                       return
                     }
-                    highlight(variable.boundIn.id)
-                    void focusOn(
-                      currentNodeId == null
-                        ? [variable.boundIn.id]
-                        : [currentNodeId, variable.boundIn.id],
-                    )
+                    if (typeof variable.boundIn === "string") {
+                      highlight(variable.boundIn)
+                    }
                   }}
                   onMouseLeave={() => {
                     if (variable.boundIn === "global") {

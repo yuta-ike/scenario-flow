@@ -68,6 +68,7 @@ export default tseslint.config(
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-unnecessary-type-parameters": "off",
       "@typescript-eslint/unbound-method": "off",
+      "@typescript-eslint/no-unnecessary-condition": "off",
     }
   },
   {

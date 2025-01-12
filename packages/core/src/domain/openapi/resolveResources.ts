@@ -21,11 +21,12 @@ import { toLowerCase } from "@/utils/string"
 
 const lowerHttpMethods = HTTP_METHODS.map(toLowerCase)
 
-/**
- * openapiのpathをExpressionに変換する
- */
-export const parsePathToExpression = (path: string): Expression => {
-  return path as Expression
+const OPENAPI_PLACEHLDER_REGEXP = /\{(?<variable>[^}]+)\}/g
+export const parseOpenApiPathToExpression = (path: string): Expression => {
+  return path.replaceAll(
+    OPENAPI_PLACEHLDER_REGEXP,
+    "{{ $<variable> }}",
+  ) as Expression
 }
 
 // Open Api
@@ -59,7 +60,7 @@ export const resolveOpenApiResource = (
           },
           parameter: {
             method: method.toUpperCase() as HttpMethod,
-            path: parsePathToExpression(path),
+            path: parseOpenApiPathToExpression(path),
             baseUrl: "https://example.com",
           },
         }
@@ -75,7 +76,6 @@ export const retrieveAllActionFromOpenApiResource = (
 ): (RestCallActionParameterSchema & {
   identifier: OpenApiResourceLocalIdentifier
 })[] => {
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (resource.content == null) {
     return []
   }
@@ -113,7 +113,7 @@ export const retrieveAllActionFromOpenApiResource = (
               ),
         base: {
           method: toUpperCase(method),
-          path: parsePathToExpression(path),
+          path: parseOpenApiPathToExpression(path),
           baseUrl,
         },
         examples: [example],
