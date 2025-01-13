@@ -1,25 +1,11 @@
-import type { InjectedContent } from "./injector"
-
 type Listener = () => void
 
-class ContainerCls<
-  FileEntryAdditional extends Record<string, unknown> = Record<string, unknown>,
-  DirEntryAdditional extends Record<string, unknown> = FileEntryAdditional,
-> {
+export class ContainerCls<ContainerContent> {
   #listeners: Listener[] = []
 
-  #injectedContent: InjectedContent<
-    FileEntryAdditional,
-    DirEntryAdditional
-  > | null = null
+  #injectedContent: ContainerContent | null = null
 
-  public isInitialized() {
-    return this.#injectedContent != null
-  }
-
-  public setContent(
-    newContent: InjectedContent<FileEntryAdditional, DirEntryAdditional>,
-  ) {
+  public setContent(newContent: ContainerContent) {
     console.log("[Log] Set content (Container)")
     this.#injectedContent = newContent
     this.#emit()
@@ -44,5 +30,3 @@ class ContainerCls<
 }
 
 export type Container = typeof ContainerCls
-
-export const container = new ContainerCls()

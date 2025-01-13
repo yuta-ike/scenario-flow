@@ -7,8 +7,8 @@ import type { DirHandle } from "@/injector/parts/io"
 import { FormModalContent } from "@/ui/lib/common/FormModal"
 import { TextInput } from "@/ui/components/common/TextInput"
 import { FormItem } from "@/ui/components/FormItem"
-import { useInjected } from "@/ui/adapter/container"
 import { nonNull } from "@/utils/assert"
+import { useInjected } from "@/container"
 
 type FormData = {
   name: string

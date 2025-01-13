@@ -2,8 +2,8 @@ import { TbFile, TbFileImport } from "react-icons/tb"
 
 import type { FileContent } from "@/utils/file"
 
-import { useInjected } from "@/ui/adapter/container"
 import { useProjectContext } from "@/ui/context/context"
+import { useInjected } from "@/container"
 
 type FileImportProps = {
   value: FileContent | null

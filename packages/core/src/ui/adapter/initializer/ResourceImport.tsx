@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { TbCheck } from "react-icons/tb"
 
 import { useProjectContext } from "../ProjectContext"
-import { useInjected } from "../container"
 import { uploadOpenApiFile } from "../command"
 
 import type { FileHandle } from "@/injector/parts/io"
@@ -12,6 +11,7 @@ import { parseYaml } from "@/ui/lib/yaml/yamlToJson"
 import { addSetOp } from "@/utils/set"
 import { useAsync } from "@/ui/utils/useAsync"
 import { joinPath } from "@/utils/path"
+import { useInjected } from "@/container"
 
 type Props = {
   children: React.ReactNode

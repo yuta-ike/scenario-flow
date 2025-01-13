@@ -1,7 +1,6 @@
 import { useEffect } from "react"
 
 import { store } from "./store"
-import { useInjected } from "./container"
 import { useProjectContext } from "./ProjectContext"
 
 import type { Json } from "@/utils/json"
@@ -14,6 +13,7 @@ import { debouncedLock } from "@/utils/lock"
 import { resourcesAtom } from "@/domain/datasource/resource"
 import { associateWithList } from "@/utils/set"
 import { nonNull } from "@/utils/assert"
+import { useInjected } from "@/container"
 
 const getOrCreateEntryRec = async (
   entry: DirHandle,

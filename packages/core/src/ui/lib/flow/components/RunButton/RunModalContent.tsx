@@ -18,7 +18,7 @@ import {
   currentEnginePluginIdAtom,
   enginePluginAtom,
 } from "@/domain/datasource/plugin"
-import { useInjected } from "@/ui/adapter/container"
+import { useInjected } from "@/container"
 
 type Props = {
   initialSelected?: RouteId[]

@@ -7,11 +7,12 @@ import "core-js/proposals/regexp-escaping"
 
 import { Buffer as BufferPolyfill } from "buffer"
 
-import { StrictMode, useEffect } from "react"
+import { StrictMode } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import { IndexPage } from "./ui/page/index"
-import { useContainerReady, useContainer } from "./ui/adapter/container"
+import { ContainerInitializer } from "./lib/container/initializer"
+import { useContainer } from "./container"
 
 import type { InjectedContent } from "./injector/injector"
 
@@ -21,10 +22,10 @@ import { success, error } from "@/utils/result"
 
 export { success, error }
 
-const queryClient = new QueryClient()
-
 // NOTE: polyfill https://github.com/vitejs/vite/discussions/2785
 globalThis.Buffer = BufferPolyfill
+
+const queryClient = new QueryClient()
 
 type Props = {
   injected: InjectedContent
@@ -32,19 +33,16 @@ type Props = {
 
 const Core = ({ injected }: Props) => {
   const container = useContainer()
-  useEffect(() => {
-    container.setContent(injected)
-  }, [container, injected])
-
-  const ready = useContainerReady()
-  if (!ready) {
-    return null
-  }
 
   return (
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <IndexPage />
+        <ContainerInitializer<InjectedContent>
+          container={container}
+          injected={injected}
+        >
+          <IndexPage />
+        </ContainerInitializer>
       </QueryClientProvider>
     </StrictMode>
   )

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 
 import { useProjectContext } from "../ProjectContext"
-import { useInjected } from "../container"
 import { store } from "../store"
 
 import type { DirHandle } from "@/injector/parts/io"
@@ -18,6 +17,7 @@ import { primitiveNodeAtom } from "@/domain/datasource/node"
 import { primitiveRouteAtom } from "@/domain/datasource/route"
 import { resourceActionAtom, resourcesAtom } from "@/domain/datasource/resource"
 import { variableAtom } from "@/domain/datasource/variable"
+import { useInjected } from "@/container"
 
 const useInitializer = () => {
   const [initialized, setInitialized] = useState<Map<DirHandle, true>>(

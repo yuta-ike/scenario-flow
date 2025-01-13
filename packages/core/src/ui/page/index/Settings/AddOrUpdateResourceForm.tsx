@@ -15,9 +15,9 @@ import { readFile } from "@/ui/utils/readFile"
 import { parseYaml } from "@/ui/lib/yaml/yamlToJson"
 import { putOpenApiFile, uploadOpenApiFile } from "@/ui/adapter/command"
 import { fetchJson } from "@/utils/fetchJson"
-import { useInjected } from "@/ui/adapter/container"
 import { useProjectContext } from "@/ui/context/context"
 import { joinPath } from "@/utils/path"
+import { useInjected } from "@/container"
 
 type FormData = {
   name: string

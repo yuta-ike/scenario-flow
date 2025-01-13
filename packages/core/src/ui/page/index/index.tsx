@@ -14,7 +14,6 @@ import { Button } from "@/ui/components/common/Button"
 import { useWriteOutSubscription } from "@/ui/adapter/subscribe"
 import { setUpDirectory } from "@/io/setUpDirectory"
 import { ProjectContextProvider } from "@/ui/adapter/ProjectContext"
-import { useInjected } from "@/ui/adapter/container"
 import { Initializer, ResourceImport } from "@/ui/adapter/initializer"
 import { store } from "@/ui/adapter/store"
 import { useAsync } from "@/ui/utils/useAsync"
@@ -23,6 +22,7 @@ import { FormModal } from "@/ui/lib/common/FormModal"
 import { dedupeArrayByKey } from "@/utils/array"
 import { Project, updateLastModified } from "@/ui/domain/project"
 import { genId } from "@/utils/uuid"
+import { useInjected } from "@/container"
 
 export const IndexPage = () => {
   const [projectContext, setProjectContext] = useState<ProjectContext | null>()
