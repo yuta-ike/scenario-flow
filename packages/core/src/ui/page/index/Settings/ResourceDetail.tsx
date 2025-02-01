@@ -5,15 +5,11 @@ import { ApiCallTile } from "../BlockMenu/ApiCallTile"
 
 import { AddOrUpdateResourceForm } from "./AddOrUpdateResourceForm"
 
-import type { ResourceId } from "@/domain/entity/resource/resource"
-import type { Json } from "@/utils/json"
-
-import { useActions, useResource } from "@/ui/adapter/query"
-import { Editor2 } from "@/ui/lib/editor/Editor2"
-import { jsonToYaml } from "@/utils/yaml"
-import { Button } from "@/ui/components/common/Button"
-import { FormModal } from "@/ui/lib/common/FormModal"
-import { getIdentifier } from "@/domain/entity/action/action"
+import { Button, FormModal } from "@scenario-flow/ui"
+import { jsonToYaml, Json } from "@scenario-flow/util"
+import { ResourceId, getIdentifier } from "../../../../domain/entity"
+import { useResource, useActions } from "../../../adapter/query"
+import { Editor2 } from "../../../lib/editor/Editor2"
 
 type SectionProps = {
   title?: string

@@ -1,4 +1,4 @@
-import { parseNumber } from "@/utils/number"
+import { parseNumber } from "@scenario-flow/util"
 
 export type TimeUnits = "ms" | "s" | "m" | "h" | "d" | "w" | "M" | "y"
 

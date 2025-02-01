@@ -22,8 +22,8 @@ import {
   globalVariableMatrixAtom,
 } from "./globalVariable"
 
-import { createStore } from "@/lib/jotai/store"
-import { updateSetOp } from "@/utils/set"
+import { updateSetOp } from "@scenario-flow/util"
+import { createStore } from "@scenario-flow/util/lib"
 
 const store = createStore()
 

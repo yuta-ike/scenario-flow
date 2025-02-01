@@ -3,10 +3,8 @@ import { TbFlag2 } from "react-icons/tb"
 
 import { Editor2 } from "../editor/Editor2"
 
-import type { Json } from "@/utils/json"
-
-import { useDecomposedForLib } from "@/ui/adapter/query"
-import { jsonToYaml } from "@/utils/yaml"
+import { Json, jsonToYaml } from "@scenario-flow/util"
+import { useDecomposedForLib } from "../../adapter/query"
 
 export const Code = () => {
   const libFormats = useDecomposedForLib()

@@ -1,6 +1,5 @@
 import { TbCircleCheck, TbCircleMinus, TbCircleX } from "react-icons/tb"
-
-import type { Result } from "@/domain/entity/value/result"
+import { Result } from "../../../domain/entity"
 
 const STYLES = {
   success: {

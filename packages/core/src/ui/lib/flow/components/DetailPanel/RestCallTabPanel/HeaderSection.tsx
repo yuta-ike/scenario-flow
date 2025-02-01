@@ -6,32 +6,29 @@ import { Section } from "../Section"
 
 import { DefinitionPanel } from "./DefinitionPanel"
 
-import type { ResolvedRestCallActionInstance } from "@/domain/entity/node/actionInstance"
-import type { NodeId } from "@/domain/entity/node/node"
-import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
-
-import { type HttpMethod } from "@/utils/http"
-import { TextareaAutosize } from "@/ui/components/common/TextareaAutosize"
+import { IconButton, TextareaAutosize, Button } from "@scenario-flow/ui"
+import { applyUpdate, HttpMethod } from "@scenario-flow/util"
 import {
-  changeAction,
-  changeToNewAction,
-  updateActionAndActionInstance,
   updateActionInstance,
+  changeAction,
+  updateActionAndActionInstance,
   updateUserDefinedAction,
-} from "@/ui/adapter/command"
-import { applyUpdate } from "@/ui/utils/applyUpdate"
-import {
-  isResourceAction,
-  isUserDefinedAction,
-} from "@/domain/entity/action/identifier"
-import { PathMethodInput } from "@/ui/components/common/PathMethodInput"
-import { MethodChip } from "@/ui/components/common/MethodChip"
-import { IconButton } from "@/ui/components/common/IconButton"
+  changeToNewAction,
+} from "../../../../../adapter/command"
 import {
   userDefinedActionByIdCountAtom,
   useUserDefinedActionRefCount,
-} from "@/ui/adapter/query"
-import { Button } from "@/ui/components/common/Button"
+} from "../../../../../adapter/query"
+import { MethodChip } from "../../../../../components/common/MethodChip"
+import { PathMethodInput } from "../../../../../components/common/PathMethodInput"
+import { useStore } from "../../../../provider"
+import {
+  NodeId,
+  ResolvedRestCallActionInstance,
+  ActionSourceIdentifier,
+  isUserDefinedAction,
+  isResourceAction,
+} from "../../../../../../domain/entity"
 
 type Props = {
   nodeId: NodeId
@@ -39,6 +36,7 @@ type Props = {
 }
 
 export const HeaderSection = ({ nodeId, ai }: Props) => {
+  const store = useStore()
   const [editMode, setEditMode] = useState(false)
 
   useEffect(() => {
@@ -48,7 +46,7 @@ export const HeaderSection = ({ nodeId, ai }: Props) => {
   // description
   const handleUpdateDescription = useCallback(
     (update: string) => {
-      updateActionInstance(nodeId, ai.id, {
+      updateActionInstance(store, nodeId, ai.id, {
         ...ai,
         description: applyUpdate(update, ai.description),
         instanceParameter: {
@@ -76,18 +74,24 @@ export const HeaderSection = ({ nodeId, ai }: Props) => {
             },
       ) => {
         if ("identifier" in data) {
-          changeAction(nodeId, ai.id, data.identifier)
+          changeAction(store, nodeId, ai.id, data.identifier)
         } else {
           const actionRefCount = get(
             userDefinedActionByIdCountAtom(ai.actionIdentifier),
           )
           if (actionRefCount == 1 && isUserDefinedAction(ai.actionIdentifier)) {
-            updateActionAndActionInstance(nodeId, ai.id, ai.actionIdentifier, {
-              method: data.method,
-              path: data.path,
-            })
+            updateActionAndActionInstance(
+              store,
+              nodeId,
+              ai.id,
+              ai.actionIdentifier,
+              {
+                method: data.method,
+                path: data.path,
+              },
+            )
           } else {
-            updateActionInstance(nodeId, ai.id, {
+            updateActionInstance(store, nodeId, ai.id, {
               ...ai,
               instanceParameter: {
                 method: data.method,
@@ -99,11 +103,12 @@ export const HeaderSection = ({ nodeId, ai }: Props) => {
       },
       [ai, nodeId],
     ),
+    { store: store.store },
   )
 
   const handleApplyInstanceParameterToAction = () => {
     if (ai.actionIdentifier.resourceType === "user_defined") {
-      updateUserDefinedAction(ai.actionIdentifier, {
+      updateUserDefinedAction(store, ai.actionIdentifier, {
         method: ai.instanceParameter.method,
         path: ai.instanceParameter.path,
       })
@@ -112,7 +117,7 @@ export const HeaderSection = ({ nodeId, ai }: Props) => {
 
   const handleChangeToNewAction = () => {
     if (ai.actionIdentifier.resourceType === "user_defined") {
-      changeToNewAction(nodeId, ai.id, {
+      changeToNewAction(store, nodeId, ai.id, {
         method: ai.instanceParameter.method ?? "GET",
         path: ai.instanceParameter.path ?? "",
         headers: [],

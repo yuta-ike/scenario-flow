@@ -1,10 +1,9 @@
 import { TbComponents } from "react-icons/tb"
 
 import type { SectionComponentInterface } from "./interface"
-
-import { MethodChip } from "@/ui/components/common/MethodChip"
-import { useFocusNode } from "@/ui/state/focusedNodeId"
-import { getFilledPath } from "@/domain/entity/action/actionParameter"
+import { getFilledPath } from "../../../../../domain/entity"
+import { MethodChip } from "../../../../components/common/MethodChip"
+import { useFocusNode } from "../../../../state/focusedNodeId"
 
 export const ApiCallSection: SectionComponentInterface = ({
   nodeId,

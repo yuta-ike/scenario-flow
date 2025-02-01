@@ -1,32 +1,34 @@
-import type {
-  Decomposed,
-  DecomposedStep,
-} from "@/domain/entity/decompose/decomposed"
-import type { ActionInstance } from "@/domain/entity/node/actionInstance"
-import type { Expression } from "@/domain/entity/value/expression"
-import type { Resource } from "@/domain/entity/resource/resource"
-import type { ResourceActionIdentifierParam } from "@/domain/entity/action/identifier"
-import type { ResolvedAction } from "@/domain/entity/action/action"
-import type { MethodAndPath } from "@/domain/entity/resource/identifier"
-
+import { parseHttpMethod, genId } from "@scenario-flow/util"
+import { dedupe } from "@scenario-flow/util/lib"
+import { ResolvedAction } from "../../domain/entity/action/action"
 import {
-  buildBinderActionInstance,
+  ResourceActionIdentifierParam,
+  buildActionSourceIdentifier,
+} from "../../domain/entity/action/identifier"
+import {
+  DecomposedStep,
+  Decomposed,
+} from "../../domain/entity/decompose/decomposed"
+import {
+  ActionInstance,
+  buildRestCallActionInstance,
   buildDbActionInstance,
   buildIncludeActionInstance,
-  buildRestCallActionInstance,
+  buildBinderActionInstance,
   buildValidatorActionInstance,
-} from "@/domain/entity/node/actionInstance"
-import { buildPrimitiveRoute } from "@/domain/entity/route/route"
-import { toNodeId } from "@/domain/entity/node/node.util"
-import { genId } from "@/utils/uuid"
-import { buildPrimitiveNode } from "@/domain/entity/node/node"
-import { buildActionSourceIdentifier } from "@/domain/entity/action/identifier"
-import { buildUserDefinedAction } from "@/domain/entity/userDefinedAction/userDefinedAction"
-import { parseHttpMethod } from "@/utils/http"
-import { dedupe } from "@/lib/array/utils"
-import { toMethodAndPath } from "@/domain/entity/resource/identifier.utli"
-import { buildOpenApiResourceIdentifierWithOperationId } from "@/domain/entity/resource/identifier"
-import { typedValueToValue } from "@/domain/entity/value/dataType"
+} from "../../domain/entity/node/actionInstance"
+import { buildPrimitiveNode } from "../../domain/entity/node/node"
+import { toNodeId } from "../../domain/entity/node/node.util"
+import {
+  buildOpenApiResourceIdentifierWithOperationId,
+  MethodAndPath,
+} from "../../domain/entity/resource/identifier"
+import { toMethodAndPath } from "../../domain/entity/resource/identifier.utli"
+import { buildPrimitiveRoute } from "../../domain/entity/route/route"
+import { buildUserDefinedAction } from "../../domain/entity/userDefinedAction/userDefinedAction"
+import { typedValueToValue } from "../../domain/entity/value/dataType"
+import { Expression } from "../../domain/entity/value/expression"
+import { Resource } from "../../domain/entity/resource/resource"
 
 export type ResourceContext = {
   resourceNameMap: Map<string, Resource>
@@ -52,7 +54,7 @@ const parseXActionId = (
   return null
 }
 
-const parseDecomposedActionToActionInstance = (
+export const parseDecomposedActionToActionInstance = (
   action: DecomposedStep["actions"][number],
   page: string,
   pathRouteIdMap: Map<string, string>,
@@ -66,20 +68,6 @@ const parseDecomposedActionToActionInstance = (
       action.meta?.["x-action-id"],
       context.resourceNameMap,
     )
-
-    // NOTE: パスパラーメータの解決
-    // let pathParams: KVItem[] = []
-    // let path: string | undefined = action.path
-    // if (resourceIdentifier != null) {
-    //   const resourceAction = context.getResourceAction(resourceIdentifier)
-    //   path =
-    //     "path" in resourceAction.schema.base
-    //       ? resourceAction.schema.base.path
-    //       : undefined
-    //   if (path != null) {
-    //     pathParams = getPathParams(path, action.path)
-    //   }
-    // }
 
     return buildRestCallActionInstance(genId(), {
       type: "rest_call",

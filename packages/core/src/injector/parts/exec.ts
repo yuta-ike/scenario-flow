@@ -1,4 +1,4 @@
-import type { Result } from "@/utils/result"
+import { Result } from "@scenario-flow/util"
 
 export type InjectedContentExecRunner = (
   paths: string[],

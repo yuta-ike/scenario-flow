@@ -25,8 +25,7 @@ import type { LocalVariableId } from "../entity/variable/variable"
 import type { NodeId } from "../entity/node/node"
 import type { StripeSymbol } from "../entity/type"
 import type { RouteId, PrimitiveRoute } from "../entity/route/route"
-import type { OmitId } from "@/utils/idType"
-import type { PartialDict } from "@/utils/typeUtil"
+import { OmitId, PartialDict } from "@scenario-flow/util"
 
 export type GetUsedRouteNames = () => string[]
 export const GetUsedRouteNames =

@@ -1,8 +1,5 @@
+import { Button, FormModal, Section } from "@scenario-flow/ui"
 import { ExportForm } from "./ExportForm"
-
-import { Section } from "@/ui/components/Section"
-import { Button } from "@/ui/components/common/Button"
-import { FormModal } from "@/ui/lib/common/FormModal"
 
 export const ExportSection = () => {
   const footer = [

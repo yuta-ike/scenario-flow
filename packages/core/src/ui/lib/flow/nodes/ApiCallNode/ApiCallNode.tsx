@@ -15,26 +15,27 @@ import { ResultChips } from "./ResultChips"
 
 import type { NodeProps } from "@xyflow/react"
 import type { GeneralUiNode } from "../../type"
-import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
-import type { ActionInstance } from "@/domain/entity/node/actionInstance"
-import type { RouteId } from "@/domain/entity/route/route"
-import type { NodeId } from "@/domain/entity/node/node"
-
-import { useNode } from "@/ui/adapter/query"
-import { useIsNodeFocused } from "@/ui/state/focusedNodeId"
-import { useFocusedRouteByNodeId } from "@/ui/state/focusedRouteId"
+import { IconButton } from "@scenario-flow/ui"
+import { useObserveElementSize, useHotkey } from "@scenario-flow/util"
 import {
-  appendDbNode,
-  appendIncludeNode,
+  ActionInstance,
+  ActionSourceIdentifier,
+  RouteId,
+  NodeId,
+} from "../../../../../domain/entity"
+import {
   appendNode,
+  appendIncludeNode,
   appendUserDefinedRestCallNode,
+  appendDbNode,
   deleteNode,
-} from "@/ui/adapter/command"
-import { useIsNodeHighlighted } from "@/ui/state/highlightedNodeId"
-import { useHotkey } from "@/ui/lib/hotkey"
-import { IconButton } from "@/ui/components/common/IconButton"
-import { useObserveElementSize } from "@/ui/utils/useObserveElementSize"
-import { currentPageAtom } from "@/ui/state/page"
+} from "../../../../adapter/command"
+import { useNode } from "../../../../adapter/query"
+import { useIsNodeFocused } from "../../../../state/focusedNodeId"
+import { useFocusedRouteByNodeId } from "../../../../state/focusedRouteId"
+import { useIsNodeHighlighted } from "../../../../state/highlightedNodeId"
+import { currentPageAtom } from "../../../../state/page"
+import { useStore } from "../../../provider"
 
 type ApiCallNodeProps = NodeProps<GeneralUiNode>
 
@@ -56,6 +57,7 @@ const getComponent = (type: ActionInstance["type"]) => {
 }
 
 export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
+  const store = useStore()
   const connection = useConnection()
 
   const updateNodeSize = useUpdateNodeSize()
@@ -70,31 +72,36 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
   const handleCreateNewApiCallNode = useAtomCallback(
     useCallback(
       (get, _, actionId: ActionSourceIdentifier) =>
-        appendNode(nodeId, actionId, get(currentPageAtom)),
+        appendNode(store, nodeId, actionId, get(currentPageAtom)),
       [nodeId],
     ),
+    { store: store.store },
   )
 
   const handleCreateNewIncludeNode = useAtomCallback(
     useCallback(
       (get, _, routeId: RouteId) =>
-        appendIncludeNode(nodeId, routeId, get(currentPageAtom)),
+        appendIncludeNode(store, nodeId, routeId, get(currentPageAtom)),
       [nodeId],
     ),
+    { store: store.store },
   )
 
   const handleCreateUserDefinedApiCallNode = useAtomCallback(
     useCallback(
-      (get, _) => appendUserDefinedRestCallNode(nodeId, get(currentPageAtom)),
+      (get, _) =>
+        appendUserDefinedRestCallNode(store, nodeId, get(currentPageAtom)),
       [nodeId],
     ),
+    { store: store.store },
   )
 
   const handleAppendDbNode = useAtomCallback(
     useCallback(
-      (get, _) => appendDbNode(nodeId, get(currentPageAtom)),
+      (get, _) => appendDbNode(store, nodeId, get(currentPageAtom)),
       [nodeId],
     ),
+    { store: store.store },
   )
 
   const keyRef = useHotkey<HTMLButtonElement>("Backspace", {
@@ -104,7 +111,7 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
   })
 
   const handleDelete = useCallback(() => {
-    deleteNode(nodeId)
+    deleteNode(store, nodeId)
   }, [nodeId])
 
   return (
@@ -167,22 +174,26 @@ export const ApiCallNode = memo<ApiCallNodeProps>(({ data: { nodeId } }) => {
             </button>
           </OpenCreateDropdown>
         </div>
+      </div>
+      <NodeToolbar isVisible position={Position.Right} align="start">
         {/* Result */}
-        <div className="absolute left-full top-0 ml-2 w-max empty:hidden">
+        <div className="w-max empty:hidden">
           <ResultChips nodeId={nodeId} />
         </div>
-      </div>
+      </NodeToolbar>
     </>
   )
 })
 
 const NodeMainBody = ({ nodeId }: { nodeId: NodeId }) => {
   const node = useNode(nodeId)
+  const store = useStore()
 
   const handleChangePage = useAtomCallback(
     useCallback((_, set, page: string) => {
       set(currentPageAtom, page)
     }, []),
+    { store: store.store },
   )
 
   return (

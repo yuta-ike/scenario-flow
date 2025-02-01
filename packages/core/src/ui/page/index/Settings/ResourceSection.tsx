@@ -1,12 +1,9 @@
+import { LOCATION_TYPE_MAP } from "../../../../domain/entity"
+import { useResources } from "../../../adapter/query"
 import { AddOrUpdateResourceForm } from "./AddOrUpdateResourceForm"
 import { ResourceDetail } from "./ResourceDetail"
 
-import { Section } from "@/ui/components/Section"
-import { useResources } from "@/ui/adapter/query"
-import { Button } from "@/ui/components/common/Button"
-import { FormModal } from "@/ui/lib/common/FormModal"
-import { LOCATION_TYPE_MAP } from "@/domain/entity/resource/locationType"
-import { Drawer } from "@/ui/components/common/Drawer"
+import { Button, Section, Drawer, FormModal } from "@scenario-flow/ui"
 
 export const ResourceSection = () => {
   const resources = useResources()

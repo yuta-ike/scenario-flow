@@ -3,24 +3,22 @@ import { Fragment, useState } from "react"
 import { ApiCallTile } from "./ApiCallTile"
 import { ResourceTile } from "./ResourceTile"
 
-import type { FileContent } from "@/utils/file"
-import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
-import type { ResourceId } from "@/domain/entity/resource/resource"
-
+import { FileContent, associateWithList } from "@scenario-flow/util"
+import { parseYaml } from "@scenario-flow/util/lib"
+import { useStore } from "../../../lib/provider"
+import { FormModal, FormModalContent } from "@scenario-flow/ui"
 import {
-  useActionIds,
-  useResourceIds,
-  useUserDefinedActionIds,
-} from "@/ui/adapter/query"
-import { FormModal, FormModalContent } from "@/ui/lib/common/FormModal"
-import { uploadOpenApiFile } from "@/ui/adapter/command"
-import { parseYaml } from "@/ui/lib/yaml/yamlToJson"
-import { FileInput } from "@/ui/components/common/FileInput"
-import {
+  ResourceId,
+  ActionSourceIdentifier,
   buildActionSourceIdentifier,
   display,
-} from "@/domain/entity/action/identifier"
-import { associateWithList } from "@/utils/set"
+} from "../../../../domain/entity"
+import {
+  useResourceIds,
+  useUserDefinedActionIds,
+  useActionIds,
+} from "../../../adapter/query"
+import { FileInput } from "../../../components/common/FileInput"
 
 type FormItemProps = {
   id: string
@@ -42,6 +40,7 @@ const FormItem = ({ id, label, children }: FormItemProps) => {
 const stripExtension = (name: string) => name.replace(/\.[^.]*$/, "")
 
 export const BlockMenu = () => {
+  const store = useStore()
   const resourceIds = useResourceIds()
   const userDefinedActionIds = useUserDefinedActionIds()
 
@@ -73,7 +72,9 @@ export const BlockMenu = () => {
       window.alert("ファイルの読み込みに失敗しました")
       return
     }
+    // @ts-expect-error
     const result = await uploadOpenApiFile(
+      store,
       name,
       description,
       file.path,

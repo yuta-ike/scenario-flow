@@ -7,12 +7,10 @@ import clsx from "clsx"
 import { CreateNewPageForm } from "./CreateNewPageForm"
 import { PageTitle } from "./PageTitle"
 
-import { AccordionRoot } from "@/ui/components/common/Accordion"
-import { IconButton } from "@/ui/components/common/IconButton"
-import { usePage } from "@/ui/state/page"
-import { FormModal } from "@/ui/lib/common/FormModal"
-import { normalizePath } from "@/io/scenario/resolvePath"
-import { fill } from "@/utils/placeholder"
+import { AccordionRoot, FormModal, IconButton } from "@scenario-flow/ui"
+import { fill } from "@scenario-flow/util"
+import { usePage } from "../../../../state/page"
+import { normalizePath } from "../../../../../io/scenario/resolvePath"
 
 type PageFolder = {
   title: string

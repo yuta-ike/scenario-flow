@@ -7,15 +7,12 @@ import { ValidatorTabPanel } from "./ValidatorTabPanel"
 import { NodeTitleSection } from "./NodeTitleSection"
 import { IncludeDetailPanel } from "./IncludeDetailPanel"
 import { DbDetailPanel } from "./DbDetailPanel"
-
-import type { NodeId } from "@/domain/entity/node/node"
-import type { ActionInstanceId } from "@/domain/entity/node/actionInstance"
-
-import { useFocusedNodeId } from "@/ui/state/focusedNodeId"
-import { useNode } from "@/ui/adapter/query"
-import { ErrorBoundary } from "@/ui/components/ErrorBoundary"
-import { ErrorDisplay } from "@/ui/components/ErrorDisplay"
-import { appendActionInstance } from "@/ui/adapter/command"
+import { ErrorBoundary, ErrorDisplay } from "@scenario-flow/ui"
+import { appendActionInstance } from "../../../../adapter/command"
+import { useNode } from "../../../../adapter/query"
+import { useFocusedNodeId } from "../../../../state/focusedNodeId"
+import { useStore } from "../../../provider"
+import { ActionInstanceId, NodeId } from "../../../../../domain/entity"
 
 export const DetailPanel = () => {
   const focusedNodeId = useFocusedNodeId()
@@ -42,6 +39,7 @@ type DetailPanelInnerProps = {
   nodeId: NodeId
 }
 const DetailPanelInner = ({ nodeId }: DetailPanelInnerProps) => {
+  const store = useStore()
   const node = useNode(nodeId)
 
   const actionInstances = node.actionInstances
@@ -81,7 +79,11 @@ const DetailPanelInner = ({ nodeId }: DetailPanelInnerProps) => {
             type="button"
             className="flex items-center gap-0.5 rounded-full py-1.5 pl-2 pr-3 text-xs text-slate-400 hover:bg-slate-100 hover:text-slate-600"
             onClick={() => {
-              const actionInstanceId = appendActionInstance(nodeId, "validator")
+              const actionInstanceId = appendActionInstance(
+                store,
+                nodeId,
+                "validator",
+              )
               setSelectedInstanceId(actionInstanceId)
             }}
           >
@@ -94,7 +96,11 @@ const DetailPanelInner = ({ nodeId }: DetailPanelInnerProps) => {
             type="button"
             className="flex items-center gap-0.5 rounded-full py-1.5 pl-2 pr-3 text-xs text-slate-400 hover:bg-slate-100 hover:text-slate-600"
             onClick={() => {
-              const actionInstanceId = appendActionInstance(nodeId, "binder")
+              const actionInstanceId = appendActionInstance(
+                store,
+                nodeId,
+                "binder",
+              )
               setSelectedInstanceId(actionInstanceId)
             }}
           >
@@ -103,20 +109,22 @@ const DetailPanelInner = ({ nodeId }: DetailPanelInnerProps) => {
           </button>
         )}
       </div>
-      {targetActionInstance != null &&
-        (targetActionInstance.type === "rest_call" ? (
-          <RestCallTabPanel nodeId={nodeId} ai={targetActionInstance} />
-        ) : targetActionInstance.type === "validator" ? (
-          <ValidatorTabPanel nodeId={nodeId} ai={targetActionInstance} />
-        ) : targetActionInstance.type === "binder" ? (
-          <BinderTabPanel nodeId={nodeId} ai={targetActionInstance} />
-        ) : targetActionInstance.type === "include" ? (
-          <IncludeDetailPanel nodeId={nodeId} ai={targetActionInstance} />
-        ) : targetActionInstance.type === "db" ? (
-          <DbDetailPanel nodeId={nodeId} ai={targetActionInstance} />
-        ) : (
-          <div>No</div>
-        ))}
+      <ErrorBoundary fallback={<ErrorDisplay />}>
+        {targetActionInstance != null &&
+          (targetActionInstance.type === "rest_call" ? (
+            <RestCallTabPanel nodeId={nodeId} ai={targetActionInstance} />
+          ) : targetActionInstance.type === "validator" ? (
+            <ValidatorTabPanel nodeId={nodeId} ai={targetActionInstance} />
+          ) : targetActionInstance.type === "binder" ? (
+            <BinderTabPanel nodeId={nodeId} ai={targetActionInstance} />
+          ) : targetActionInstance.type === "include" ? (
+            <IncludeDetailPanel nodeId={nodeId} ai={targetActionInstance} />
+          ) : targetActionInstance.type === "db" ? (
+            <DbDetailPanel nodeId={nodeId} ai={targetActionInstance} />
+          ) : (
+            <div>No</div>
+          ))}
+      </ErrorBoundary>
       <div className="ml-auto border-t border-t-slate-200 bg-slate-50 px-4 py-1 text-xs text-slate-400">
         {node.id}
       </div>

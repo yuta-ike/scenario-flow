@@ -1,5 +1,5 @@
 import { resolveExpression } from "../entity/value/expression"
-import { display } from "../entity/resource/identifier"
+import { displayIdentifier } from "../entity/resource/identifier"
 
 import type { Resource } from "../entity/resource/resource"
 import type { Expression } from "../entity/value/expression"
@@ -8,8 +8,8 @@ import type { Decomposed, DecomposedStep } from "../entity/decompose/decomposed"
 import type { Route } from "../entity/route/route"
 import type { Node } from "../entity/node/node"
 
-import { kvToRecordNullable } from "@/ui/lib/kv"
-import { unwrapNull } from "@/utils/result"
+import { kvToRecordNullable } from "@scenario-flow/util"
+import { unwrapNull } from "@scenario-flow/util"
 
 const decomposeStepItem = (
   node: Node,
@@ -28,19 +28,12 @@ const decomposeStepItem = (
         const meta =
           ai.action.resourceType === "resource"
             ? {
-                "x-action-id": `${resourceMap.get(ai.action.resourceIdentifier.resourceId)?.name ?? ""}:${display(ai.action.resourceIdentifier.identifier)}`,
+                "x-action-id": `${resourceMap.get(ai.action.resourceIdentifier.resourceId)?.name ?? ""}:${displayIdentifier(ai.action.resourceIdentifier.identifier)}`,
               }
             : undefined
 
-        console.log("================")
-        console.log(
-          ai.instanceParameter.path,
-          pathParams,
-          resolveExpression(
-            ai.instanceParameter.path as Expression,
-            pathParams,
-          ),
-        )
+        console.log("body", body)
+
         return {
           type: "rest_call" as const,
           description: ai.description,
@@ -115,9 +108,12 @@ const decomposeRoute = (
       variable,
       value: { type: "any", value },
     })),
-    endpoint: meta.endpoint,
+    // endpoint: meta.runners,
     steps: route.path.map((node) => decomposeStepItem(node, resourceMap)),
     page: route.page,
+    runners: Object.fromEntries(
+      meta.runners.map(({ key, value }) => [key, value]),
+    ),
   } satisfies Decomposed
 }
 

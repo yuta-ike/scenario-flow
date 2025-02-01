@@ -1,11 +1,10 @@
 import { TbComponents } from "react-icons/tb"
 
 import type { IconType } from "react-icons"
-import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
-
-import { useAction } from "@/ui/adapter/query"
-import { MethodChip } from "@/ui/components/common/MethodChip"
-import { Tooltip } from "@/ui/components/common/Tooltip"
+import { Tooltip } from "@scenario-flow/ui"
+import { ActionSourceIdentifier } from "../../../../domain/entity"
+import { useAction } from "../../../adapter/query"
+import { MethodChip } from "../../../components/common/MethodChip"
 
 type ApiCallTileProps = {
   actionIdentifier: ActionSourceIdentifier

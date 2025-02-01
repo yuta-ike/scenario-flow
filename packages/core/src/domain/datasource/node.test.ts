@@ -20,9 +20,8 @@ import type { ActionId } from "../entity/action/action"
 import type { Expression } from "../entity/value/expression"
 import type { Path } from "../entity/value/path"
 
-import { AtomNotFoundError } from "@/lib/jotai/atomWithId"
-import { createStore } from "@/lib/jotai/store"
-import { addSetOp, updateSetOp } from "@/utils/set"
+import { addSetOp, updateSetOp } from "@scenario-flow/util"
+import { AtomNotFoundError, createStore } from "@scenario-flow/util/lib"
 
 const store = createStore()
 

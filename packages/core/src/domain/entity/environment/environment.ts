@@ -5,7 +5,7 @@ import {
 } from "./variable"
 
 import type { Transition } from "../type"
-import type { Replace } from "@/utils/typeUtil"
+import { Replace } from "@scenario-flow/util"
 
 export type Bind = {
   variable: Variable

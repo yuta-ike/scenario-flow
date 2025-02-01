@@ -9,13 +9,13 @@ import {
 } from "../entity/userDefinedAction/userDefinedAction"
 
 import type { StripeSymbol } from "../entity/type"
-import type { CreateOrUpdate } from "@/lib/jotai/util"
-import type { OmitId } from "@/utils/idType"
-
-import { atomSet } from "@/lib/jotai/atomSet"
-import { atomWithId } from "@/lib/jotai/atomWithId"
-import { wrapAtomFamily } from "@/lib/jotai/wrapAtomFamily"
-import { updateSetOp } from "@/utils/set"
+import { OmitId, updateSetOp } from "@scenario-flow/util"
+import {
+  atomSet,
+  atomWithId,
+  wrapAtomFamily,
+  CreateOrUpdate,
+} from "@scenario-flow/util/lib"
 
 // atoms
 export const userDefinedActionIdsAtom = atomSet<UserDefinedActionId>([])
@@ -38,10 +38,11 @@ export const userDefinedActionAtom = wrapAtomFamily(_userDefinedActionAtom, {
     if (param.update != null) {
       // 更新
       set(_userDefinedActionAtom(udaId), (prev) => {
-        return {
+        // @ts-expect-error
+        return buildUserDefinedAction(udaId, {
           ...prev,
           ...param.update,
-        } as UserDefinedAction
+        })
       })
     } else {
       // 作成

@@ -1,20 +1,26 @@
 import { useForm } from "react-hook-form"
 
-import { FormModalContent, useCloseModal } from "@/ui/lib/common/FormModal"
-import { TextInput } from "@/ui/components/common/TextInput"
-import { FormItem } from "@/ui/components/FormItem"
-import { addRoute } from "@/ui/adapter/command"
+import {
+  FormItem,
+  FormModalContent,
+  TextInput,
+  useCloseModal,
+} from "@scenario-flow/ui"
+import { useStore } from "../../../provider"
+import { addRoute } from "../../../../adapter/command"
 
 type FormData = {
   name: string
 }
 
 export const CreateNewPageForm = () => {
+  const store = useStore()
+
   const { handleSubmit, register } = useForm<FormData>()
   const close = useCloseModal()
 
   const onSubmit = handleSubmit((data) => {
-    addRoute({
+    addRoute(store, {
       description: "",
       path: [],
       page: `/${data.name}`,

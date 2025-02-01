@@ -7,10 +7,7 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-    "incremental": true,
-    "paths": {
-      "@/*": ["../core/src/*"]
-    }
+    "incremental": true
   },
   "include": ["${configDir}/**/*.ts", "${configDir}/**/*.tsx"]
 }

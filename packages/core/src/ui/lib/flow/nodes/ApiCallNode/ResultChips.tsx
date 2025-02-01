@@ -1,11 +1,9 @@
 import { TbFlag2, TbLoader } from "react-icons/tb"
 import { useMemo } from "react"
-
-import type { NodeId } from "@/domain/entity/node/node"
-
-import { useLatestResolvedRunResult } from "@/ui/adapter/query"
-import { getText, ResultIcon } from "@/ui/components/common/ResultIcon"
-import { useHasFocusedRouteIdsValue } from "@/ui/state/focusedRouteId"
+import { NodeId } from "../../../../../domain/entity"
+import { useLatestResolvedRunResult } from "../../../../adapter/query"
+import { ResultIcon, getText } from "../../../../components/common/ResultIcon"
+import { useHasFocusedRouteIdsValue } from "../../../../state/focusedRouteId"
 
 type Props = {
   nodeId: NodeId
@@ -34,7 +32,7 @@ export const ResultChips = ({ nodeId }: Props) => {
   }
 
   return (
-    <div className="flex flex-col items-start gap-1">
+    <div className="group flex flex-col items-start gap-1">
       {nodeStates.results?.map((result) => {
         return (
           <div
@@ -52,12 +50,14 @@ export const ResultChips = ({ nodeId }: Props) => {
                 stroke={result.route.color}
               />
             </div>
-            <div className="w-[12px] grow translate-y-1/2 border-t border-t-slate-200" />
+            <div className="hidden w-[12px] grow translate-y-1/2 border-t border-t-slate-200 group-hover:block" />
             <div className="flex shrink-0 items-center gap-0.5">
               <div className="">
                 <ResultIcon result={result.result} />
               </div>
-              <div className="text-xs">{getText(result.result)}</div>
+              <div className="hidden text-xs group-hover:block">
+                {getText(result.result)}
+              </div>
             </div>
           </div>
         )

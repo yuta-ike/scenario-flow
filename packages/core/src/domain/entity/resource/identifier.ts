@@ -1,7 +1,7 @@
 import { toMethodAndPath } from "./identifier.utli"
 
 import type { Equal, SimpleBuilder, StripeSymbol } from "../type"
-import type { HttpMethod } from "@/utils/http"
+import { HttpMethod } from "@scenario-flow/util"
 
 declare const _operationId: unique symbol
 export type OperationId = string & {
@@ -47,7 +47,7 @@ export const buildOpenApiResourceIdentifierWithMethodAndPath = (
   } satisfies StripeSymbol<OpenApiResourceLocalIdentifier> as OpenApiResourceLocalIdentifier
 }
 
-export const eq: Equal<OpenApiResourceLocalIdentifier> = (a, b) => {
+export const eqIdentifier: Equal<OpenApiResourceLocalIdentifier> = (a, b) => {
   if (a.operationId != null && b.operationId != null) {
     return a.operationId === b.operationId
   }
@@ -57,6 +57,6 @@ export const eq: Equal<OpenApiResourceLocalIdentifier> = (a, b) => {
   return false
 }
 
-export const display: (identifier: OpenApiResourceLocalIdentifier) => string = (
-  identifier,
-) => identifier.operationId ?? identifier.methodAndPath
+export const displayIdentifier: (
+  identifier: OpenApiResourceLocalIdentifier,
+) => string = (identifier) => identifier.operationId ?? identifier.methodAndPath

@@ -11,10 +11,8 @@ import type {
   StepResultItem,
 } from "../entity/nodeStates/nodeStates"
 import type { RouteId } from "../entity/route/route"
-import type { Id } from "@/utils/idType"
 import type { NodeId } from "../entity/node/node"
-
-import { error, success, type Result } from "@/utils/result"
+import { Id, Result, success, error } from "@scenario-flow/util"
 
 export type GetNodeStates = (nodeId: NodeId) => NodeStates
 export const GetNodeStates = Context.GenericTag<GetNodeStates>("GetNodeStates")
@@ -161,6 +159,7 @@ export const runAndUpdateNodeStates = (
     Effect.bind("result", ({ runId }) =>
       Effect.promise(() => run(runId, routeIds)),
     ),
+    Effect.tap((res) => console.log(res)),
     Effect.flatMap(({ result, runId }) =>
       Match.value(result).pipe(
         Match.when({ result: "success" }, ({ value }) =>

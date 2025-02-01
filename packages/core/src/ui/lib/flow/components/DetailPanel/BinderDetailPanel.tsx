@@ -3,16 +3,21 @@ import { useCallback, useMemo, useState } from "react"
 import { Section } from "./Section"
 
 import type { SetStateAction } from "react"
-import type { NodeId } from "@/domain/entity/node/node"
-import type { ResolvedBinderActionInstance } from "@/domain/entity/node/actionInstance"
-import type { Expression } from "@/domain/entity/value/expression"
-import type { KVItem } from "@/ui/lib/kv"
+import { KVItem, applyUpdate } from "@scenario-flow/util"
 
-import { ParameterTable } from "@/ui/lib/ParameterTable"
-import { updateActionInstance, upsertVariables } from "@/ui/adapter/command"
-import { applyUpdate } from "@/ui/utils/applyUpdate"
-import { toLocalVariableId } from "@/domain/entity/variable/variable.util"
-import { useNodeEnvironment } from "@/ui/adapter/query"
+import {
+  upsertVariables,
+  updateActionInstance,
+} from "../../../../adapter/command"
+import { useNodeEnvironment } from "../../../../adapter/query"
+import { ParameterTable } from "../../../ParameterTable"
+import { useStore } from "../../../provider"
+import {
+  NodeId,
+  ResolvedBinderActionInstance,
+  toLocalVariableId,
+  Expression,
+} from "../../../../../domain/entity"
 
 type BinderTabPanelProps = {
   nodeId: NodeId
@@ -20,6 +25,7 @@ type BinderTabPanelProps = {
 }
 
 export const BinderTabPanel = ({ nodeId, ai }: BinderTabPanelProps) => {
+  const store = useStore()
   const handleUpdateBinder = useCallback(
     (update: SetStateAction<KVItem[]>) => {
       const updatedAssignments = applyUpdate(
@@ -32,6 +38,7 @@ export const BinderTabPanel = ({ nodeId, ai }: BinderTabPanelProps) => {
       )
 
       upsertVariables(
+        store,
         updatedAssignments.map(({ id, key }) => ({
           id: toLocalVariableId(id),
           name: key,
@@ -39,7 +46,7 @@ export const BinderTabPanel = ({ nodeId, ai }: BinderTabPanelProps) => {
         })),
       )
 
-      updateActionInstance(nodeId, ai.id, {
+      updateActionInstance(store, nodeId, ai.id, {
         ...ai,
         instanceParameter: {
           ...ai.instanceParameter,
@@ -75,6 +82,7 @@ export const BinderTabPanel = ({ nodeId, ai }: BinderTabPanelProps) => {
           placeholderValue="abcdef"
           currentNodeId={nodeId}
           environment={environment}
+          lang="expression"
         />
       </Section>
     </div>

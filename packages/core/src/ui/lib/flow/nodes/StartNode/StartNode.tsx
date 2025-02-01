@@ -4,41 +4,49 @@ import { useAtomCallback } from "jotai/utils"
 import { useCallback } from "react"
 
 import { OpenCreateDropdown } from "../../components/OpenCreateDropdown"
-
-import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
-import type { RouteId } from "@/domain/entity/route/route"
-
+import { ActionSourceIdentifier, RouteId } from "../../../../../domain/entity"
 import {
-  createIncludeRootNode,
   createRestCallRootNode,
+  createIncludeRootNode,
   createUserDefinedRestCallRootNode,
   createDbNode,
-} from "@/ui/adapter/command"
-import { currentPageAtom } from "@/ui/state/page"
+} from "../../../../adapter/command"
+import { currentPageAtom } from "../../../../state/page"
+import { useStore } from "../../../provider"
 
 export const StartNode = () => {
+  const store = useStore()
+
   const handleCreateNewApiCallNode = useAtomCallback(
     useCallback((get, __, actionIdentifier: ActionSourceIdentifier) => {
-      return createRestCallRootNode(actionIdentifier, get(currentPageAtom))
+      return createRestCallRootNode(
+        store,
+        actionIdentifier,
+        get(currentPageAtom),
+      )
     }, []),
+    { store: store.store },
   )
 
   const handleCreateNewIncludeNode = useAtomCallback(
     useCallback((get, __, routeId: RouteId) => {
-      return createIncludeRootNode(routeId, get(currentPageAtom))
+      return createIncludeRootNode(store, routeId, get(currentPageAtom))
     }, []),
+    { store: store.store },
   )
 
   const handleInsertUserDefinedApiCallNode = useAtomCallback(
     useCallback((get) => {
-      return createUserDefinedRestCallRootNode(get(currentPageAtom))
+      return createUserDefinedRestCallRootNode(store, get(currentPageAtom))
     }, []),
+    { store: store.store },
   )
 
   const handleCreateDbNode = useAtomCallback(
     useCallback((get) => {
-      return createDbNode(get(currentPageAtom))
+      return createDbNode(store, get(currentPageAtom))
     }, []),
+    { store: store.store },
   )
 
   return (

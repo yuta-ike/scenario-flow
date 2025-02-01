@@ -1,6 +1,5 @@
+import { useFocusNode } from "../../../../state/focusedNodeId"
 import type { SectionComponentInterface } from "./interface"
-
-import { useFocusNode } from "@/ui/state/focusedNodeId"
 
 export const ValidatorSection: SectionComponentInterface = ({
   nodeId,

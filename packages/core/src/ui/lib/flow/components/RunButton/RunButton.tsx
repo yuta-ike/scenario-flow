@@ -1,8 +1,7 @@
 import { TbPlayerPlay } from "react-icons/tb"
 
 import { RunModalContent } from "./RunModalContent"
-
-import { CustomModal } from "@/ui/components/common/CustomModal"
+import { CustomModal } from "@scenario-flow/ui"
 
 export const RunButton = () => {
   return (

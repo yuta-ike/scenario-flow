@@ -1,6 +1,5 @@
+import { Id, Json, JsonPrimitive } from "@scenario-flow/util"
 import type { Decomposed } from "../decompose/decomposed"
-import type { Json, JsonPrimitive } from "@/utils/json"
-import type { Id } from "@/utils/idType"
 
 declare const _enginePlugin: unique symbol
 export type EnginePluginId = Id & {

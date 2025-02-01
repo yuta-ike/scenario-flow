@@ -17,6 +17,7 @@ export const genPrimitiveRoute = (
   buildPrimitiveRoute(id, {
     path: path.map(toNodeId),
     name: `route ${id}`,
+    description: "",
     color: "#000000",
     page: "0",
     variables: [],
@@ -31,6 +32,7 @@ export const genRoute = (
   buildRoute(id, {
     path,
     name: `route ${id}`,
+    description: "",
     color: "#000000",
     page: "0",
     variables: [],

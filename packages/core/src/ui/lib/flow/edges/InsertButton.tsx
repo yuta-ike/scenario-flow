@@ -4,21 +4,23 @@ import { useCallback } from "react"
 
 import { OpenCreateDropdown } from "../components/OpenCreateDropdown"
 
-import type { NodeId } from "@/domain/entity/node/node"
-import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
-import type { RouteId } from "@/domain/entity/route/route"
-
+import { useStore } from "../../provider"
 import {
-  insertDbNode,
-  insertIncludeNode,
+  RouteId,
+  NodeId,
+  ActionSourceIdentifier,
+} from "../../../../domain/entity"
+import {
+  unshiftNode,
   insertNode,
+  unshiftIncludeNode,
+  insertIncludeNode,
+  unshiftUserDefinedRestCallNode,
   insertUserDefinedRestCallNode,
   unshiftDbNode,
-  unshiftIncludeNode,
-  unshiftNode,
-  unshiftUserDefinedRestCallNode,
-} from "@/ui/adapter/command"
-import { currentPageAtom } from "@/ui/state/page"
+  insertDbNode,
+} from "../../../adapter/command"
+import { currentPageAtom } from "../../../state/page"
 
 type Props = {
   routeIds: RouteId[]
@@ -33,13 +35,16 @@ export const InsertButton = ({
   fromNodeId,
   toNodeId,
 }: Props) => {
+  const store = useStore()
+
   const handleInsertApiCallNode = useAtomCallback(
     useCallback(
       (get, _, actionId: ActionSourceIdentifier) => {
         if (fromNodeId === "$root") {
-          return unshiftNode(routeIds[0]!, actionId)
+          return unshiftNode(store, routeIds[0]!, actionId)
         } else {
           return insertNode(
+            store,
             fromNodeId,
             toNodeId,
             actionId,
@@ -49,15 +54,17 @@ export const InsertButton = ({
       },
       [fromNodeId, routeIds, toNodeId],
     ),
+    { store: store.store },
   )
 
   const handleInsertIncludeNode = useAtomCallback(
     useCallback(
       (get, _, routeId: RouteId) => {
         if (fromNodeId === "$root") {
-          return unshiftIncludeNode(routeId)
+          return unshiftIncludeNode(store, routeId)
         } else {
           return insertIncludeNode(
+            store,
             fromNodeId,
             toNodeId,
             routeId,
@@ -67,15 +74,17 @@ export const InsertButton = ({
       },
       [fromNodeId, toNodeId],
     ),
+    { store: store.store },
   )
 
   const handleInsertUserDefinedApiCallNode = useAtomCallback(
     useCallback(
       (get, _) => {
         if (fromNodeId === "$root") {
-          return unshiftUserDefinedRestCallNode(routeIds[0]!)
+          return unshiftUserDefinedRestCallNode(store, routeIds[0]!)
         } else {
           return insertUserDefinedRestCallNode(
+            store,
             fromNodeId,
             toNodeId,
             get(currentPageAtom),
@@ -84,19 +93,21 @@ export const InsertButton = ({
       },
       [fromNodeId, routeIds, toNodeId],
     ),
+    { store: store.store },
   )
 
   const handleCreateDbNode = useAtomCallback(
     useCallback(
       (get, _) => {
         if (fromNodeId === "$root") {
-          return unshiftDbNode(routeIds[0]!)
+          return unshiftDbNode(store, routeIds[0]!)
         } else {
-          return insertDbNode(fromNodeId, toNodeId, get(currentPageAtom))
+          return insertDbNode(store, fromNodeId, toNodeId, get(currentPageAtom))
         }
       },
       [fromNodeId, routeIds, toNodeId],
     ),
+    { store: store.store },
   )
 
   return (

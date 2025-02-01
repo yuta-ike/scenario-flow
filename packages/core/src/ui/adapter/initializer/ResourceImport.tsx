@@ -1,23 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { TbCheck } from "react-icons/tb"
 
-import { useProjectContext } from "../ProjectContext"
 import { uploadOpenApiFile } from "../command"
 
-import type { FileHandle } from "@/injector/parts/io"
-
-import { Button } from "@/ui/components/common/Button"
-import { parseYaml } from "@/ui/lib/yaml/yamlToJson"
-import { addSetOp } from "@/utils/set"
-import { useAsync } from "@/ui/utils/useAsync"
-import { joinPath } from "@/utils/path"
-import { useInjected } from "@/container"
+import { parseYaml } from "@scenario-flow/util/lib"
+import { addSetOp, joinPath, useAsync } from "@scenario-flow/util"
+import { Button } from "@scenario-flow/ui"
+import { useProjectContext, useInjected, useStore } from "../../lib/provider"
+import { FileHandle } from "../../../injector"
 
 type Props = {
   children: React.ReactNode
 }
 
 export const ResourceImport = ({ children }: Props) => {
+  const store = useStore()
   const context = useProjectContext()
   const injected = useInjected()
 
@@ -85,13 +82,12 @@ export const ResourceImport = ({ children }: Props) => {
         return false
       }
       const result = await uploadOpenApiFile(
+        store,
         name,
         "",
         fileHandle.path,
         json.value,
         async (path) => {
-          console.log("PATH!!!!!")
-          console.log(joinPath(fileHandle.path, path))
           const handle = await injected.io.selectFile(
             joinPath(fileHandle.path, path),
           )

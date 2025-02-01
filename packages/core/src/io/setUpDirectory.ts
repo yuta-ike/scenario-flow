@@ -1,12 +1,10 @@
+import { DirHandle, InjectedContent } from "../injector"
+import { validateConfigFormat } from "../schemas/configFormat"
+import { ConfigFormat } from "../schemas/configFormat/type/configFormat"
+import { Project } from "../ui/domain/project"
 import { EMPTY_CONFIG } from "./config/emptyConfig"
 
-import type { ConfigFormat } from "@/schemas/configFormat/type/configFormat"
-import type { DirHandle } from "@/injector/parts/io"
-import type { InjectedContent } from "@/injector/injector"
-import type { Project } from "@/ui/domain/project"
-
-import { safelyParseJson } from "@/utils/json"
-import { validateConfigFormat } from "@/schemas/configFormat"
+import { safelyParseJson } from "@scenario-flow/util"
 
 export const setUpDirectory = async (
   dirHandle: DirHandle,

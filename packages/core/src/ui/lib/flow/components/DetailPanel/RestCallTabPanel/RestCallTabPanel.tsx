@@ -6,16 +6,16 @@ import { HeaderSection } from "./HeaderSection"
 import { RequestBodySection } from "./RequestBodySection"
 
 import type { SetStateAction } from "react"
-import type { NodeId } from "@/domain/entity/node/node"
-import type { ResolvedRestCallActionInstance } from "@/domain/entity/node/actionInstance"
-import type { KVItem } from "@/ui/lib/kv"
-import type { Updater } from "@/ui/utils/applyUpdate"
-
-import { ParameterTable } from "@/ui/lib/ParameterTable"
-import { updateActionInstance } from "@/ui/adapter/command"
-import { applyUpdate } from "@/ui/utils/applyUpdate"
-import { useParentNodeEnvironment } from "@/ui/adapter/query"
-import { getKeyStatus } from "@/domain/openapi/getKeyStatus"
+import { Updater, KVItem, applyUpdate } from "@scenario-flow/util"
+import { getKeyStatus } from "../../../../../../domain/openapi/getKeyStatus"
+import { updateActionInstance } from "../../../../../adapter/command"
+import { useParentNodeEnvironment } from "../../../../../adapter/query"
+import { ParameterTable } from "../../../../ParameterTable"
+import { useStore } from "../../../../provider"
+import {
+  NodeId,
+  ResolvedRestCallActionInstance,
+} from "../../../../../../domain/entity"
 
 type RestCallTabPanelProps = {
   nodeId: NodeId
@@ -23,13 +23,15 @@ type RestCallTabPanelProps = {
 }
 
 export const RestCallTabPanel = ({ nodeId, ai }: RestCallTabPanelProps) => {
+  const store = useStore()
+
   // instance parameter
   const handleUpdateInstanceParameter = useCallback(
     (
       update: Updater<KVItem[]>,
       key: "headers" | "cookies" | "pathParams" | "queryParams",
     ) => {
-      updateActionInstance(nodeId, ai.id, {
+      updateActionInstance(store, nodeId, ai.id, {
         ...ai,
         instanceParameter: {
           ...ai.instanceParameter,

@@ -9,7 +9,7 @@ import {
   buildActionSourceIdentifier,
   type ResourceActionIdentifierParam,
 } from "../entity/action/identifier"
-import { display, eq } from "../entity/resource/identifier"
+import { displayIdentifier, eqIdentifier } from "../entity/resource/identifier"
 import { identifierToActionId } from "../entity/action/action.util"
 import {
   buildResolvedAction,
@@ -18,9 +18,7 @@ import {
 
 import type { Atom, SetStateAction } from "jotai"
 import type { Resource, ResourceId } from "../entity/resource/resource"
-
-import { atomWithId } from "@/lib/jotai/atomWithId"
-import { atomSet } from "@/lib/jotai/atomSet"
+import { atomSet, atomWithId } from "@scenario-flow/util/lib"
 
 // atom
 const _resourceIdsAtom = atomSet<ResourceId>([])
@@ -53,7 +51,7 @@ export const resourceActionAtom = atomFamily<
     const resource = get(resourceAtom(actionIdentifier.resourceId))
     const actions = retrieveAllActionFromOpenApiResource(resource)
     const res = actions.find(({ identifier: _identifier }) =>
-      eq(actionIdentifier.identifier, _identifier),
+      eqIdentifier(actionIdentifier.identifier, _identifier),
     )
     const id = identifierToActionId(
       buildActionSourceIdentifier({
@@ -87,7 +85,7 @@ export const resourceActionAtom = atomFamily<
       resourceIdentifier: actionIdentifier,
     })
   })
-  newAtom.debugLabel = `resourceActionAtom(${display(actionIdentifier.identifier)})`
+  newAtom.debugLabel = `resourceActionAtom(${displayIdentifier(actionIdentifier.identifier)})`
   return newAtom
 })
 

@@ -1,5 +1,4 @@
-import type { ResolvedActionInstance } from "@/domain/entity/node/actionInstance"
-import type { NodeId } from "@/domain/entity/node/node"
+import { NodeId, ResolvedActionInstance } from "../../../../../domain/entity"
 
 export type SectionComponentInterface = (props: {
   actionInstance: ResolvedActionInstance

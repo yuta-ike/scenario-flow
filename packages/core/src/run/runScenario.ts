@@ -1,36 +1,33 @@
-import type { RouteId } from "@/domain/entity/route/route"
-import type { Id } from "@/utils/idType"
-import type { Result } from "@/utils/result"
-import type { RunResultWithNodeId } from "@/domain/workflow/nodeStates"
-import type { EnginePlugin } from "@/plugins/type"
-import type { NodeId } from "@/domain/entity/node/node"
-import type { InjectedContentExecRunner } from "@/injector/parts/exec"
-import type { DirHandle } from "@/injector/parts/io"
-
-import { decomposedForLibAtom } from "@/domain/selector/decomposedForPlugin"
-import { store } from "@/ui/adapter/store"
-import { error, success } from "@/utils/result"
-import { decomposedAtom } from "@/domain/selector/decomposed"
+import { error, Id, Result, success } from "@scenario-flow/util"
+import { Decomposed } from "../domain/entity/decompose/decomposed"
+import { NodeId } from "../domain/entity/node/node"
+import { RouteId } from "../domain/entity/route/route"
+import { RunResultWithNodeId } from "../domain/workflow/nodeStates"
+import { DirHandle, InjectedContentExecRunner } from "../injector"
+import { LibMetaFormat, EnginePlugin } from "../plugins/type"
 
 export const runScenario = async (
   runId: Id,
   dirHandle: DirHandle,
   routeIds: RouteId[],
-  enginePlugin: EnginePlugin,
-  exec: InjectedContentExecRunner,
+  run: InjectedContentExecRunner,
+  {
+    decomposed,
+    decomposedForLib,
+    enginePlugin,
+  }: {
+    decomposed: Decomposed[]
+    decomposedForLib: LibMetaFormat<any>[]
+    enginePlugin: EnginePlugin
+  },
 ): Promise<Result<{ runId: Id; results: RunResultWithNodeId }, string>> => {
   const runner = enginePlugin.runner
 
-  const scenarios = store.get(decomposedAtom)
-
   const nodeTitleIdMap = new Map(
-    scenarios.flatMap((scenario) =>
-      scenario.steps.map((step) => [step.title, step.id]),
-    ),
+    decomposed.flatMap((d) => d.steps.map((step) => [step.title, step.id])),
   )
 
-  const targetScenarios = store
-    .get(decomposedForLibAtom)
+  const targetScenarios = decomposedForLib
     .filter((scenario) => (routeIds as string[]).includes(scenario.meta.id))
     .map((scenario) => ({
       ...scenario,
@@ -39,13 +36,15 @@ export const runScenario = async (
 
   const result = await runner({
     scenarios: targetScenarios,
-    command: exec,
+    command: run,
   })
 
   if (result.result === "error") {
     console.error(result.error)
     return error("実行に失敗しました")
   }
+
+  console.log(result)
 
   return success({
     runId,

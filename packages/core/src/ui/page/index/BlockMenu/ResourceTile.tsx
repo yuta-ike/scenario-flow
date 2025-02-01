@@ -1,6 +1,5 @@
-import type { ResourceId } from "@/domain/entity/resource/resource"
-
-import { useResource } from "@/ui/adapter/query"
+import { ResourceId } from "../../../../domain/entity"
+import { useResource } from "../../../adapter/query"
 
 export const ResourceTile = ({ resourceId }: { resourceId: ResourceId }) => {
   const resource = useResource(resourceId)

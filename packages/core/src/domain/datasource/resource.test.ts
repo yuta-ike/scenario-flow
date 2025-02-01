@@ -5,9 +5,8 @@ import { toResourceId } from "../entity/resource/resource.util"
 
 import { resourceAtom, resourceIdsAtom } from "./resource"
 
-import { createStore } from "@/lib/jotai/store"
-import { updateSetOp } from "@/utils/set"
-import { AtomNotFoundError } from "@/lib/jotai/atomWithId"
+import { updateSetOp } from "@scenario-flow/util"
+import { AtomNotFoundError, createStore } from "@scenario-flow/util/lib"
 
 const store = createStore()
 

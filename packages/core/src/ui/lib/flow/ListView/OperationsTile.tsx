@@ -3,41 +3,46 @@ import { useCallback } from "react"
 import { FiPlus } from "react-icons/fi"
 import { TbApi, TbDatabase, TbFileImport } from "react-icons/tb"
 
-import type { NodeId } from "@/domain/entity/node/node"
-import type { RouteId } from "@/domain/entity/route/route"
-
+import { useStore } from "../../provider"
+import { NodeId, RouteId } from "../../../../domain/entity"
 import {
   appendIncludeNode,
-  appendDbNode,
   appendUserDefinedRestCallNode,
-} from "@/ui/adapter/command"
-import { currentPageAtom } from "@/ui/state/page"
+  appendDbNode,
+} from "../../../adapter/command"
+import { currentPageAtom } from "../../../state/page"
 
 type Props = {
   nodeId: NodeId
 }
 
 export const OperationsTile = ({ nodeId }: Props) => {
+  const store = useStore()
+
   const handleCreateNewIncludeNode = useAtomCallback(
     useCallback(
       (get, _) =>
-        appendIncludeNode(nodeId, "" as RouteId, get(currentPageAtom)),
+        appendIncludeNode(store, nodeId, "" as RouteId, get(currentPageAtom)),
       [nodeId],
     ),
+    { store: store.store },
   )
 
   const handleCreateUserDefinedApiCallNode = useAtomCallback(
     useCallback(
-      (get, _) => appendUserDefinedRestCallNode(nodeId, get(currentPageAtom)),
+      (get, _) =>
+        appendUserDefinedRestCallNode(store, nodeId, get(currentPageAtom)),
       [nodeId],
     ),
+    { store: store.store },
   )
 
   const handleAppendDbNode = useAtomCallback(
     useCallback(
-      (get, _) => appendDbNode(nodeId, get(currentPageAtom)),
+      (get, _) => appendDbNode(store, nodeId, get(currentPageAtom)),
       [nodeId],
     ),
+    { store: store.store },
   )
   return (
     <div

@@ -2,7 +2,7 @@ import { toResourceId } from "../entity/resource/resource.util"
 
 import type { StripeSymbol } from "../entity/type"
 import type { Resource, ResourceId } from "../entity/resource/resource"
-import type { Id, OmitId } from "@/utils/idType"
+import { Id, OmitId } from "@scenario-flow/util"
 
 type AddResourceContext = {
   genId: () => Id

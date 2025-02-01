@@ -1,4 +1,4 @@
-import type { KVItem } from "@/ui/lib/kv"
+import type { KVItem } from "@scenario-flow/util"
 
 export const getPathParams = (templatePath: string, resolvedPath: string) => {
   const pathParams: KVItem[] = []

@@ -3,16 +3,6 @@ packages:
   - engine-plugins/*
 catalog:
   "@apidevtools/json-schema-ref-parser": ^11.7.2
-  "@codemirror/autocomplete": ^6.18.1
-  "@codemirror/commands": ^6.7.0
-  "@codemirror/lang-javascript": ^6.2.2
-  "@codemirror/lang-json": ^6.0.1
-  "@codemirror/lang-yaml": ^6.1.1
-  "@codemirror/language": ^6.10.3
-  "@codemirror/lint": ^6.8.2
-  "@codemirror/search": ^6.5.6
-  "@codemirror/state": ^6.4.1
-  "@codemirror/view": ^6.34.1
   "@dagrejs/dagre": ^1.1.4
   "@dnd-kit/core": ^6.1.0
   "@dnd-kit/modifiers": ^7.0.0
@@ -45,6 +35,7 @@ catalog:
   "@types/js-yaml": ^4.0.9
   "@types/json-schema": ^7.0.15
   "@types/node": ^22.8.1
+  "@types/react": ^18.3.1
   "@types/react-dom": ^18.3.1
   "@types/throttle-debounce": ^5.0.2
   "@types/wicg-file-system-access": ^2023.10.5
@@ -55,7 +46,6 @@ catalog:
   buffer: ^6.0.3
   client-zip: ^2.4.5
   clsx: ^2.1.1
-  codemirror: ^6.0.1
   core-js: ^3.38.1
   effect: ^3.9.2
   elkjs: ^0.9.3
@@ -70,6 +60,7 @@ catalog:
   eslint-plugin-unused-imports: ^4.1.4
   date-fns: ^4.1.0
   fuzzysort: ^3.1.0
+  jotai: ^2.10.1
   jotai-devtools: ^0.10.1
   js-yaml: ^4.1.0
   monaco-editor: ^0.52.0

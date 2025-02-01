@@ -13,9 +13,7 @@ import {
 } from "../entity/globalVariable/globalVariable"
 
 import type { TypedValue } from "../entity/value/dataType"
-
-import { atomWithId } from "@/lib/jotai/atomWithId"
-import { atomSet } from "@/lib/jotai/atomSet"
+import { atomSet, atomWithId } from "@scenario-flow/util/lib"
 
 export const DEFAULT_PATTERN_ID = toPatternId("DEFAULT")
 

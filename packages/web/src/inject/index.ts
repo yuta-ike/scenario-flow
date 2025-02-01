@@ -11,9 +11,9 @@ import {
 } from "./io"
 import { loadStore, saveStore, subscribeStore } from "./store"
 
-import type { InjectedContent } from "@scenario-flow/core"
+import type { InjectedContent } from "@scenario-flow/app"
 
-export const injectedContent: InjectedContent = {
+export const injectedContent = {
   io: {
     createFile,
     deleteFile,
@@ -36,4 +36,4 @@ export const injectedContent: InjectedContent = {
     saveStore,
     subscribeStore,
   },
-}
+} as unknown as InjectedContent

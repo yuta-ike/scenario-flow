@@ -7,11 +7,9 @@ import type {
   ValidatorActionParameterSchema,
 } from "../action/action"
 import type { BuilderParams, BuilderReturn } from "../type"
-import type { Id } from "@/utils/idType"
-import type { DistributivePartial } from "@/utils/typeUtil"
-
-import { genId } from "@/utils/uuid"
-import { dedupe } from "@/ui/lib/kv"
+import { dedupe } from "@scenario-flow/util"
+import { DistributivePartial, genId, Id } from "@scenario-flow/util"
+import { extractPathParameter } from "./helper/extractPathParameter"
 
 declare const _userDefinedAction: unique symbol
 export type UserDefinedActionId = Id & { [_userDefinedAction]: never }
@@ -44,7 +42,7 @@ const modifyUserDefinedAction = (
   params: BuilderParams<DistributivePartial<UserDefinedAction, "name">>,
 ): BuilderParams<UserDefinedAction> => {
   if (params.type === "rest_call") {
-    const path = params.schema.base.path
+    const path = params.schema.base["path"]
     if (path == null) {
       return {
         name: "",
@@ -52,8 +50,9 @@ const modifyUserDefinedAction = (
       }
     }
     const [modifiedPath, pathParams] = parseExpressionInPath(path)
+    const pathParams2 = extractPathParameter(modifiedPath)
     return {
-      name: `${params.schema.base.method} ${modifiedPath}`,
+      name: `${params.schema.base["method"]} ${modifiedPath}`,
       ...params,
       schema: {
         ...params.schema,
@@ -61,13 +60,18 @@ const modifyUserDefinedAction = (
           ...params.schema.base,
           path: modifiedPath,
           pathParams: dedupe([
+            ...pathParams2.map((name) => ({
+              id: genId(),
+              key: name,
+              value: "",
+            })),
             ...pathParams.map(({ name, value }) => ({
               id: genId(),
               key: name,
               value: `{{ ${value} }}`,
             })),
-            ...(params.schema.base.pathParams ?? []),
-          ]),
+            ...(params.schema.base["pathParams"] ?? []),
+          ]).filter((kv) => kv.key !== "" || kv.value !== ""),
         },
       },
     }
@@ -84,8 +88,8 @@ export const buildUserDefinedAction = (
   params: BuilderParams<DistributivePartial<UserDefinedAction, "name">>,
 ): UserDefinedAction => {
   return {
-    id,
     ...modifyUserDefinedAction(params),
+    id,
   } satisfies BuilderReturn<UserDefinedAction> as UserDefinedAction
 }
 
@@ -113,4 +117,18 @@ export const getMethodPath = (action: UserDefinedAction) => {
     return `${method} ${path}`
   }
   return null
+}
+
+export const userDefinedActionEq = (
+  a: UserDefinedAction,
+  b: UserDefinedAction,
+) => {
+  if (a.type === "rest_call" && b.type === "rest_call") {
+    return (
+      a.schema.base.method === b.schema.base.method &&
+      a.schema.base.path === b.schema.base.path
+    )
+  }
+
+  return false
 }

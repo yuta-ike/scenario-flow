@@ -16,10 +16,8 @@ import type { StripeSymbol } from "../entity/type"
 import type { OperationId } from "../entity/resource/identifier"
 import type { Resource } from "../entity/resource/resource"
 import type { Expression } from "../entity/value/expression"
-import type { OmitId } from "@/utils/idType"
-
-import { addSetOp } from "@/utils/set"
-import { createStore } from "@/lib/jotai/store"
+import { addSetOp, OmitId } from "@scenario-flow/util"
+import { createStore } from "@scenario-flow/util/lib"
 
 const store = createStore()
 

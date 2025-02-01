@@ -8,8 +8,7 @@ import { genPrimitiveRoute } from "../entity/route/route.factory"
 import { toRouteId } from "../entity/route/route.util"
 
 import { getRouteIdsByNodeId } from "./getRouteIdsByNodeId"
-
-import { createStore } from "@/lib/jotai/store"
+import { createStore } from "@scenario-flow/util/lib"
 
 const primitiveNodes = new Map([
   ["n1", genPrimitiveNode(toNodeId("n1"))],

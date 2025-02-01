@@ -1,20 +1,20 @@
 import { useMemo, useState } from "react"
 import { TbFileCode2, TbReplace } from "react-icons/tb"
-
-import { getIdentifier, type ActionId } from "@/domain/entity/action/action"
-import { RadioPanel } from "@/ui/components/common/RadioPanel"
-import { FormModalContent } from "@/ui/lib/common/FormModal"
-import { useActions } from "@/ui/adapter/query"
-import { searchFuzzy } from "@/utils/searchFuzzy"
-import { ApiCallTile } from "@/ui/page/index/BlockMenu/ApiCallTile"
-import { FormItem } from "@/ui/components/FormItem"
-import { replaceAction } from "@/ui/adapter/command"
+import { RadioPanel, FormItem, FormModalContent } from "@scenario-flow/ui"
+import { searchFuzzy } from "@scenario-flow/util"
+import { useStore } from "../../../provider"
+import { ActionId, getIdentifier } from "../../../../../domain/entity"
+import { replaceAction } from "../../../../adapter/command"
+import { useActions } from "../../../../adapter/query"
+import { ApiCallTile } from "../../../../page/index/BlockMenu/ApiCallTile"
 
 type Props = {
   actionId: ActionId
 }
 
 export const ResolveMissingAction = ({ actionId }: Props) => {
+  const store = useStore()
+
   const [strategy, setStrategy] = useState<"replace" | "userDefined">("replace")
   const [selectedActionId, setSelectedActionId] = useState<ActionId | null>(
     null,
@@ -44,7 +44,7 @@ export const ResolveMissingAction = ({ actionId }: Props) => {
       if (selectedActionId == null) {
         return
       }
-      replaceAction(actionId, selectedActionId)
+      replaceAction(store, actionId, selectedActionId)
     }
   }
 

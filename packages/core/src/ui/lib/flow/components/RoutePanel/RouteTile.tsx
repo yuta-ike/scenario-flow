@@ -7,25 +7,26 @@ import * as RadixAccordion from "@radix-ui/react-accordion"
 import { useSetShowListView } from "../../ListView/showListViewAtom"
 
 import type { FormEvent } from "react"
-import type { RouteId } from "@/domain/entity/route/route"
-import type { NodeId } from "@/domain/entity/node/node"
-
-import { useNode, usePrimitiveRoute } from "@/ui/adapter/query"
-import { MethodChip } from "@/ui/components/common/MethodChip"
-import { AccordionItem } from "@/ui/components/common/Accordion"
-import { deleteRoute, updteRoute } from "@/ui/adapter/command"
-import { useFocusNode, useIsNodeFocused } from "@/ui/state/focusedNodeId"
+import { unwrapNull } from "@scenario-flow/util"
+import { AccordionItem } from "@scenario-flow/ui"
+import { useStore } from "../../../provider"
+import { RouteId, NodeId } from "../../../../../domain/entity"
+import { updteRoute, deleteRoute } from "../../../../adapter/command"
+import { usePrimitiveRoute, useNode } from "../../../../adapter/query"
+import { MethodChip } from "../../../../components/common/MethodChip"
+import { useIsNodeFocused, useFocusNode } from "../../../../state/focusedNodeId"
 import {
   useIsFocusedRouteId,
   useSetFocuseRoute,
-} from "@/ui/state/focusedRouteId"
-import { unwrapNull } from "@/utils/result"
+} from "../../../../state/focusedRouteId"
 
 type Props = {
   routeId: RouteId
 }
 
 export const RouteTile = ({ routeId }: Props) => {
+  const store = useStore()
+
   const route = usePrimitiveRoute(routeId)
 
   const [editMode, setEditMode] = useState(false)
@@ -40,7 +41,7 @@ export const RouteTile = ({ routeId }: Props) => {
   }
 
   const handleUpdate = (name: string) => {
-    updteRoute(routeId, { name })
+    updteRoute(store, routeId, { name })
     setEditMode(false)
   }
 
@@ -103,7 +104,7 @@ export const RouteTile = ({ routeId }: Props) => {
                     <button
                       type="button"
                       title="シナリオを削除"
-                      onClick={() => deleteRoute(route.id)}
+                      onClick={() => deleteRoute(store, route.id)}
                       className="rounded border border-transparent p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-800 focus:border-slate-300 focus:bg-slate-100 focus:outline-none"
                     >
                       <TbTrash

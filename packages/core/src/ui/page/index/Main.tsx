@@ -3,11 +3,10 @@ import { useState } from "react"
 import { Settings } from "./Settings"
 import { Sidebar } from "./Sidebar"
 
-import { ErrorBoundary } from "@/ui/components/ErrorBoundary"
-import { ErrorDisplay } from "@/ui/components/ErrorDisplay"
-import { Code } from "@/ui/lib/code"
-import { Flow } from "@/ui/lib/flow"
-import { List } from "@/ui/lib/flow/List"
+import { ErrorBoundary, ErrorDisplay } from "@scenario-flow/ui"
+import { Code } from "../../lib/code"
+import { Flow } from "../../lib/flow"
+import { List } from "../../lib/flow/List"
 
 export type PageContent = "flow" | "list" | "code" | "settings"
 

@@ -1,77 +1,80 @@
 import { TbCheck, TbFlag2 } from "react-icons/tb"
-import { useAtomValue } from "jotai"
 
-import type { RouteId } from "@/domain/entity/route/route"
-
-import { useRoutes } from "@/ui/adapter/query"
+import { useSetState } from "@scenario-flow/util"
+import { useAtomCallback } from "jotai/utils"
+import { useCallback } from "react"
 import {
-  CustomModalContent,
   useCustomModal,
-} from "@/ui/components/common/CustomModal"
-import { useSetState } from "@/ui/utils/useSetState"
-import { ErrorDisplay } from "@/ui/components/ErrorDisplay"
-import { runScenario } from "@/run/runScenario"
-import { runAsync } from "@/ui/lib/effect/run"
-import { runAndUpdateNodeStates } from "@/domain/workflow/nodeStates"
-import { useProjectContext } from "@/ui/context/context"
+  CustomModalContent,
+  ErrorDisplay,
+} from "@scenario-flow/ui"
 import {
   currentEnginePluginIdAtom,
   enginePluginAtom,
-} from "@/domain/datasource/plugin"
-import { useInjected } from "@/container"
+} from "../../../../../domain/datasource/plugin"
+import { RouteId } from "../../../../../domain/entity"
+import { decomposedAtom } from "../../../../../domain/selector/decomposed"
+import { decomposedForLibAtom } from "../../../../../domain/selector/decomposedForPlugin"
+import { runAndUpdateNodeStates } from "../../../../../domain/workflow/nodeStates"
+import { runScenario } from "../../../../../run/runScenario"
+import { useRoutes } from "../../../../adapter/query"
+import { runAsync } from "../../../effect/run"
+import { useProjectContext, useInjected, useStore } from "../../../provider"
 
 type Props = {
   initialSelected?: RouteId[]
 }
 export const RunModalContent = ({ initialSelected }: Props) => {
+  const store = useStore()
+
   const routes = useRoutes()
-  const context = useProjectContext()
+  const { entry } = useProjectContext()
   const { onClose } = useCustomModal()
 
   const [selected, { toggle }] = useSetState(
     initialSelected ?? routes.map((route) => route.id),
   )
 
-  const enginePlugin = useAtomValue(enginePluginAtom)
-  const enginePluginId = useAtomValue(currentEnginePluginIdAtom)
   const injected = useInjected()
 
-  const handleSubmit = async () => {
-    onClose()
+  const handleSubmit = useAtomCallback(
+    useCallback(
+      async (get) => {
+        onClose()
 
-    if (enginePluginId == null) {
-      window.alert("実行可能なライブラリが見つかりません")
-      return
-    }
-    const exec = injected.exec.libs?.[enginePluginId]?.run
-    if (exec == null) {
-      window.alert("実行可能なライブラリが見つかりません")
-      return
-    }
+        const enginePluginId = get(currentEnginePluginIdAtom)
 
-    const result = await runAsync(
-      runAndUpdateNodeStates(async (runId, routeIds) => {
-        try {
-          const res = await runScenario(
-            runId,
-            context.entry,
-            routeIds,
-            enginePlugin,
-            exec,
-          )
-          console.log(res)
-          return res
-        } catch (e) {
-          console.log(e)
-          throw e
+        if (enginePluginId == null) {
+          window.alert("実行可能なライブラリが見つかりません")
+          return
         }
-      }, selected),
-    )
+        const run = injected.exec.libs?.[enginePluginId]?.run
+        if (run == null) {
+          window.alert("実行可能なライブラリが見つかりません")
+          return
+        }
 
-    if (result.result === "error") {
-      window.alert(result.error)
-    }
-  }
+        const result = await runAsync(
+          store,
+          runAndUpdateNodeStates(
+            (runId, routeIds) =>
+              runScenario(runId, entry, routeIds, run, {
+                decomposed: get(decomposedAtom),
+                decomposedForLib: get(decomposedForLibAtom),
+                enginePlugin: get(enginePluginAtom),
+              }),
+            selected,
+          ),
+        )
+
+        if (result.result === "error") {
+          window.alert(result.error)
+        }
+      },
+      [entry, injected.exec.libs, onClose, selected],
+    ),
+    { store: store.store },
+  )
   return (
     <CustomModalContent
       title="実行するシナリオを選択"

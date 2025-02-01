@@ -4,8 +4,7 @@ import type { ResolvedVariable, Variable } from "./variable"
 import type { JSONSchema7Definition } from "json-schema"
 import type { DataType } from "../value/dataType"
 import type { Receiver } from "../type"
-
-import { nonNull } from "@/utils/assert"
+import { nonNull } from "@scenario-flow/util"
 
 export type VariableSuggest = {
   name: string

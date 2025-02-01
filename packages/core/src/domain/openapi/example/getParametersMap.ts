@@ -7,7 +7,7 @@ import type {
   ParameterObject,
   ReferenceObject,
 } from "openapi3-ts/oas31"
-import type { KVItem } from "@/ui/lib/kv"
+import type { KVItem } from "@scenario-flow/util"
 
 export const getParametersMap = (
   parameters?: (ParameterObject | ReferenceObject)[],

@@ -10,18 +10,17 @@ import { StepItem } from "./StepItem"
 import { useSetShowListView } from "./showListViewAtom"
 
 import type { Updater } from "@tanstack/react-table"
-import type { RouteId } from "@/domain/entity/route/route"
-import type { KVItem } from "../../kv"
-import type { Expression } from "@/domain/entity/value/expression"
-
-import { updateRouteVariables, updteRoute } from "@/ui/adapter/command"
-import { IconButton } from "@/ui/components/common/IconButton"
-import { CustomModal } from "@/ui/components/common/CustomModal"
-import { Button } from "@/ui/components/common/Button"
-import { useFocusedRoute } from "@/ui/state/focusedRouteId"
-import { useRoute } from "@/ui/adapter/query"
-import { applyUpdate } from "@/ui/utils/applyUpdate"
-import { toLocalVariableId } from "@/domain/entity/variable/variable.util"
+import { useStore } from "../../provider"
+import { IconButton, CustomModal, Button } from "@scenario-flow/ui"
+import { applyUpdate, KVItem } from "@scenario-flow/util"
+import {
+  RouteId,
+  toLocalVariableId,
+  Expression,
+} from "../../../../domain/entity"
+import { updteRoute, updateRouteVariables } from "../../../adapter/command"
+import { useRoute } from "../../../adapter/query"
+import { useFocusedRoute } from "../../../state/focusedRouteId"
 
 const tabAtom = atom<"variables" | "steps">("variables")
 
@@ -38,8 +37,9 @@ export const ListView = () => {
 }
 
 const ListViewInner = ({ onClose }: { onClose: () => void }) => {
+  const store = useStore()
   const route = useFocusedRoute()
-  const [tab, setTab] = useAtom(tabAtom)
+  const [tab, setTab] = useAtom(tabAtom, { store: store.store })
 
   if (route == null) {
     return null
@@ -53,7 +53,7 @@ const ListViewInner = ({ onClose }: { onClose: () => void }) => {
   }
 
   const handleUpdate = (name: string) => {
-    updteRoute(route.id, { name })
+    updteRoute(store, route.id, { name })
   }
 
   return (
@@ -156,24 +156,28 @@ type RouteVariablesParameterTableProps = {
 const RouteVariablesParameterTable = ({
   routeId,
 }: RouteVariablesParameterTableProps) => {
+  const store = useStore()
   const route = useRoute(routeId)
 
   const handleChangeRows = (update: Updater<KVItem[]>) => {
     const updated = applyUpdate(
       update,
-      route.variables.map(({ variable: { id, name }, value }) => ({
+      route.variables.map(({ variable: { id, name, namespace }, value }) => ({
         id,
         key: name,
         value,
+        namespace,
       })),
     )
 
     updateRouteVariables(
+      store,
       routeId,
       updated.map(({ id, key, value }) => ({
         id: toLocalVariableId(id),
         name: key,
         value: value as Expression,
+        namespace: "vars",
       })),
     )
   }

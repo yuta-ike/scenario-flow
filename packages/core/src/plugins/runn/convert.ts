@@ -1,25 +1,26 @@
 import { toLowerCase } from "effect/String"
 
 import type { EnginePluginSerializer } from "../type"
-import type {
+import {
+  buildPath,
+  ContentType,
+  Json,
+  kvToRecordNullable,
+} from "@scenario-flow/util"
+import {
   Decomposed,
   DecomposedStep,
-} from "@/domain/entity/decompose/decomposed"
-import type {
-  RunBookStepLoopConfig,
-  RunBook,
+} from "../../domain/entity/decompose/decomposed"
+import { typedValueToValue } from "../../domain/entity/value/dataType"
+import { formatTime } from "../../domain/entity/value/time"
+import {
   RunBookStep,
   RunBookStepOperationObject,
   RunBookStepPathItemObject,
   RunBookStepPathsObject,
-} from "@/schemas/runn/type"
-import type { Json } from "@/utils/json"
-import type { ContentType } from "@/utils/http"
-
-import { kvToRecordNullable } from "@/ui/lib/kv"
-import { buildPath } from "@/utils/url"
-import { typedValueToValue } from "@/domain/entity/value/dataType"
-import { formatTime } from "@/domain/entity/value/time"
+  RunBookStepLoopConfig,
+  RunBook,
+} from "../../schemas/runn/type"
 
 const convertDecomposedAction = (
   action: DecomposedStep["actions"][number],
@@ -149,9 +150,7 @@ const convertDecomposedToRunn = (
     },
     contents: {
       desc: decomposed.title,
-      // runners: {
-      //   req: decomposed.endpoint,
-      // },
+      runners: decomposed.runners,
       vars:
         decomposed.variables.length === 0
           ? undefined

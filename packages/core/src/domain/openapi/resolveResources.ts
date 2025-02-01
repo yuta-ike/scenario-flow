@@ -1,4 +1,4 @@
-import { toUpperCase } from "effect/String"
+import { toLowerCase, toUpperCase } from "effect/String"
 
 import { toMethodAndPath } from "../entity/resource/identifier.utli"
 import {
@@ -15,9 +15,7 @@ import type { RestCallActionParameterForOpenApi } from "../entity/action/actionP
 import type { OpenAPIObject } from "openapi3-ts/oas31"
 import type { Resource } from "../entity/resource/resource"
 import type { Expression } from "../entity/value/expression"
-
-import { HTTP_METHODS, type HttpMethod } from "@/utils/http"
-import { toLowerCase } from "@/utils/string"
+import { HTTP_METHODS, HttpMethod } from "@scenario-flow/util"
 
 const lowerHttpMethods = HTTP_METHODS.map(toLowerCase)
 

@@ -14,10 +14,8 @@ import type {
   UnknownActionParameter,
   ValidatorActionParameter,
 } from "./actionParameter"
-import type { Id } from "@/utils/idType"
-
-import { genId } from "@/utils/uuid"
-import { dedupe } from "@/ui/lib/kv"
+import { Id, dedupe, genId } from "@scenario-flow/util"
+import { extractPathParameter } from "./helper/extractPathParameter"
 
 declare const _action: unique symbol
 export type ActionId = Id & { [_action]: never }

@@ -4,10 +4,8 @@ import type {
   ResponseObject,
   ResponsesObject,
 } from "openapi3-ts/oas31"
-import type { Json } from "@/utils/json"
-import type { KVItem } from "@/ui/lib/kv"
-
-import { genId } from "@/utils/uuid"
+import type { KVItem } from "@scenario-flow/util"
+import { genId, Json } from "@scenario-flow/util"
 
 export const getExample = <Return = unknown>(
   example?: unknown,

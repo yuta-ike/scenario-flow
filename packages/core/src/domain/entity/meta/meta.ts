@@ -1,10 +1,12 @@
+import { KVItem } from "@scenario-flow/util"
 import type { StripeSymbol, Transition } from "../type"
 
 declare const _meta: unique symbol
 
 export type Meta = {
   [_meta]: never
-  endpoint: string
+  // endpoint: string
+  runners: KVItem[]
 }
 
 export const buildMeta = (params: StripeSymbol<Meta>): Meta => {

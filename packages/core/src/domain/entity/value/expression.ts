@@ -1,4 +1,4 @@
-import { nonNull } from "../../../utils/assert"
+import { nonNull } from "@scenario-flow/util"
 
 export type Expression = string & { __expression: never }
 

@@ -1,7 +1,7 @@
 import { atom } from "jotai"
 
 import type { EnginePluginId } from "../entity/plugin/plugin"
-import type { EnginePlugin } from "@/plugins/type"
+import { EnginePlugin } from "../../plugins/type"
 
 export const currentEnginePluginIdAtom = atom<EnginePluginId | null>(null)
 

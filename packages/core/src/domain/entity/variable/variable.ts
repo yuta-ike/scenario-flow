@@ -3,7 +3,7 @@ import type { RouteId } from "../route/route"
 import type { NodeId } from "../node/node"
 import type { Builder, BuilderReturn, Receiver } from "../type"
 import type { JSONSchema7 } from "json-schema"
-import type { Id } from "@/utils/idType"
+import { Id } from "@scenario-flow/util"
 
 declare const _localVariable: unique symbol
 

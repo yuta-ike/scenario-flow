@@ -2,24 +2,27 @@
 import { IdCache } from "./helper/idCache"
 
 import type { EnginePluginDeserializer } from "../type"
-import type { DecomposedStep } from "@/domain/entity/decompose/decomposed"
-import type {
-  RunBook,
-  RunBookStep,
-  RunBookStepPathsObject,
-} from "@/schemas/runn/type"
-import type { Json } from "@/utils/json"
 
-import { genId } from "@/utils/uuid"
-import { parseToTypedValue } from "@/domain/entity/value/dataType"
-import { parseContentType, parseHttpMethod } from "@/utils/http"
-import { nonNull } from "@/utils/assert"
-import { buildLocalVariable } from "@/domain/entity/variable/variable"
-import { toRouteId } from "@/domain/entity/route/route.util"
-import { COLORS } from "@/utils/pcss"
-import { parsePath } from "@/utils/url"
-import { parseTime } from "@/domain/entity/value/time"
-import { validateRunn } from "@/schemas/runn"
+import {
+  parseHttpMethod,
+  parseContentType,
+  parsePath,
+  Json,
+  nonNull,
+  COLORS,
+  genId,
+} from "@scenario-flow/util"
+import { DecomposedStep } from "../../domain/entity/decompose/decomposed"
+import { toRouteId } from "../../domain/entity/route/route.util"
+import { parseToTypedValue } from "../../domain/entity/value/dataType"
+import { parseTime } from "../../domain/entity/value/time"
+import { buildLocalVariable } from "../../domain/entity/variable/variable"
+import { validateRunn } from "../../schemas/runn"
+import {
+  RunBookStepPathsObject,
+  RunBookStep,
+  RunBook,
+} from "../../schemas/runn/type"
 
 const getFirstEntry = <T>(
   obj: Record<string, T>,
@@ -63,17 +66,17 @@ const revertRunnHttpStepToDecomposedAction = (
     path,
     method,
     headers: Object.entries(headers).map(([key, value]) => ({
-      id: genId(),
+      id: key,
       key,
       value,
     })),
     queryParams: Object.entries(queryParams).map(([key, value]) => ({
-      id: genId(),
+      id: key,
       key,
       value,
     })),
     cookies: Object.entries(cookies).map(([key, value]) => ({
-      id: genId(),
+      id: key,
       key,
       value,
     })),
@@ -111,8 +114,7 @@ const revertRunnStepToDecomposedStep = (
             type: "binder" as const,
             description: "",
             assignments: Object.entries(step.bind).map(([key, value]) => ({
-              variable: buildLocalVariable(genId(), {
-                namespace: "vars",
+              variable: buildLocalVariable(key, {
                 boundIn: nodeId,
                 name: key,
                 description: "",
@@ -133,7 +135,7 @@ const revertRunnStepToDecomposedStep = (
             parameters: Object.entries(
               typeof step.include === "object" ? (step.include.vars ?? {}) : {},
             ).map(([key, value]) => ({
-              variable: buildLocalVariable(genId(), {
+              variable: buildLocalVariable(key, {
                 namespace: "vars",
                 boundIn: nodeId,
                 name: key,
@@ -189,10 +191,10 @@ export const revertRunnToDecomposed: EnginePluginDeserializer = (jsons) => {
       color: COLORS[i % COLORS.length]!,
       title: name.split(".").slice(0, -1).join("."),
       description: runbook.desc,
-      endpoint: "",
       page: path,
+      runners: runbook.runners ?? {},
       variables: Object.entries(runbook.vars ?? {}).map(([key, value]) => ({
-        variable: buildLocalVariable(genId(), {
+        variable: buildLocalVariable(`${path}_${key}`, {
           namespace: "vars",
           boundIn: {
             type: "route",

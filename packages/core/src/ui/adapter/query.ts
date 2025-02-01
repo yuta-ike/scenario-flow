@@ -3,77 +3,81 @@ import { useMemo } from "react"
 import { atomFamily } from "jotai/utils"
 
 import { currentPageAtom } from "../state/page"
-
-import type { ResolvedAction } from "@/domain/entity/action/action"
-import type { NodeId } from "@/domain/entity/node/node"
-import type { ResourceId } from "@/domain/entity/resource/resource"
-import type { RouteId } from "@/domain/entity/route/route"
-
 import {
-  getUserDefinedActionIdOrNull,
-  type ActionSourceIdentifier,
-} from "@/domain/entity/action/identifier"
+  actionIdsAtom,
+  resolvedActionAtom,
+  actionsAtom,
+} from "../../domain/datasource/actions"
 import {
-  actionIdCountCache,
-  nodeAtom,
+  globalVariableMatrixAtom,
+  patternsAtom,
+  globalVariablesAtom,
+} from "../../domain/datasource/globalVariable"
+import { metaAtom } from "../../domain/datasource/meta"
+import {
   nodeIdsAtom,
   primitiveNodeAtom,
-} from "@/domain/datasource/node"
+  nodeAtom,
+  actionIdCountCache,
+} from "../../domain/datasource/node"
+import {
+  nodeStatesAtom,
+  latestResolvedNodeRunResultAtom,
+} from "../../domain/datasource/nodeStates"
 import {
   resourceAtom,
   resourceIdsAtom,
   resourcesAtom,
-} from "@/domain/datasource/resource"
+} from "../../domain/datasource/resource"
 import {
-  primitiveRouteAtom,
-  routeAtom,
   routeIdsAtom,
+  routeAtom,
+  primitiveRouteAtom,
   primitiveRoutesAtom,
-} from "@/domain/datasource/route"
-import {
-  actionIdsAtom,
-  actionsAtom,
-  resolvedActionAtom,
-} from "@/domain/datasource/actions"
-import {
-  getRouteIdsByNodeId,
-  getRoutesByNodeId,
-} from "@/domain/selector/getRouteIdsByNodeId"
+} from "../../domain/datasource/route"
+import { userDefinedActionIdsAtom } from "../../domain/datasource/userDefinedAction"
+import { decomposedForLibAtom } from "../../domain/selector/decomposedForPlugin"
 import {
   getResolvedNodeEnvironment,
   getResolvedParentNodeEnvironment,
-} from "@/domain/selector/getRouteEnvironment"
-import { metaAtom } from "@/domain/datasource/meta"
+} from "../../domain/selector/getRouteEnvironment"
 import {
-  globalVariableMatrixAtom,
-  globalVariablesAtom,
-  patternsAtom,
-} from "@/domain/datasource/globalVariable"
-import { decomposedForLibAtom } from "@/domain/selector/decomposedForPlugin"
+  getRouteIdsByNodeId,
+  getRoutesByNodeId,
+} from "../../domain/selector/getRouteIdsByNodeId"
 import {
-  latestResolvedNodeRunResultAtom,
-  nodeStatesAtom,
-} from "@/domain/datasource/nodeStates"
-import { userDefinedActionIdsAtom } from "@/domain/datasource/userDefinedAction"
+  NodeId,
+  ActionSourceIdentifier,
+  ResolvedAction,
+  ResourceId,
+  getUserDefinedActionIdOrNull,
+  RouteId,
+} from "../../domain/entity"
+import { useStore } from "../lib/provider"
 
 const nullAtom = atom(null)
 
-export const useNodeIds = () => useAtomValue(nodeIdsAtom).values().toArray()
+// STOREの更新！！！！！！！！！
+export const useNodeIds = () =>
+  useAtomValue(nodeIdsAtom, { store: useStore().store }).values().toArray()
 
 export const usePrimitveNode = (id: NodeId) =>
-  useAtomValue(primitiveNodeAtom(id))
+  useAtomValue(primitiveNodeAtom(id), { store: useStore().store })
 
-export const useNode = (id: NodeId) => useAtomValue(nodeAtom(id))
+export const useNode = (id: NodeId) =>
+  useAtomValue(nodeAtom(id), { store: useStore().store })
 
 export const useActionIds = (): ActionSourceIdentifier[] =>
-  useAtomValue(actionIdsAtom).values().toArray()
+  useAtomValue(actionIdsAtom, { store: useStore().store }).values().toArray()
 
 export const useAction = (identifier: ActionSourceIdentifier): ResolvedAction =>
-  useAtomValue(resolvedActionAtom(identifier))
+  useAtomValue(resolvedActionAtom(identifier), { store: useStore().store })
 
-export const useActions = () => useAtomValue(actionsAtom)
+export const useActions = () =>
+  useAtomValue(actionsAtom, { store: useStore().store })
 
-export const useResource = (id: ResourceId) => useAtomValue(resourceAtom(id))
+export const useResource = (id: ResourceId) =>
+  useAtomValue(resourceAtom(id), { store: useStore().store })
 
 const resourceNameAtom = atomFamily((identifier: ActionSourceIdentifier) => {
   const newAtom = atom((get) => {
@@ -87,13 +91,15 @@ const resourceNameAtom = atomFamily((identifier: ActionSourceIdentifier) => {
 })
 
 export const useResourceName = (identifier: ActionSourceIdentifier) =>
-  useAtomValue(resourceNameAtom(identifier))
+  useAtomValue(resourceNameAtom(identifier), { store: useStore().store })
 
 export const useResourceIds = () =>
-  useAtomValue(resourceIdsAtom).values().toArray()
+  useAtomValue(resourceIdsAtom, { store: useStore().store }).values().toArray()
 
 export const useUserDefinedActionIds = () =>
-  useAtomValue(userDefinedActionIdsAtom).values().toArray()
+  useAtomValue(userDefinedActionIdsAtom, { store: useStore().store })
+    .values()
+    .toArray()
 
 export const userDefinedActionByIdCountAtom = atomFamily(
   (identifier: ActionSourceIdentifier) =>
@@ -104,22 +110,30 @@ export const userDefinedActionByIdCountAtom = atomFamily(
 )
 export const useUserDefinedActionRefCount = (
   identifier: ActionSourceIdentifier,
-) => useAtomValue(userDefinedActionByIdCountAtom(identifier))
+) =>
+  useAtomValue(userDefinedActionByIdCountAtom(identifier), {
+    store: useStore().store,
+  })
 
-export const useResources = () => useAtomValue(resourcesAtom)
+export const useResources = () =>
+  useAtomValue(resourcesAtom, { store: useStore().store })
 
-export const useRouteIds = () => useAtomValue(routeIdsAtom).values().toArray()
-export const useRoute = (routeId: RouteId) => useAtomValue(routeAtom(routeId))
+export const useRouteIds = () =>
+  useAtomValue(routeIdsAtom, { store: useStore().store }).values().toArray()
+export const useRoute = (routeId: RouteId) =>
+  useAtomValue(routeAtom(routeId), { store: useStore().store })
 export const usePrimitiveRoute = (routeId: RouteId) =>
-  useAtomValue(primitiveRouteAtom(routeId))
+  useAtomValue(primitiveRouteAtom(routeId), { store: useStore().store })
 export const useNullablePrimitiveRoute = (routeId: RouteId | null) =>
   useAtomValue(
     useMemo(
       () => (routeId == null ? nullAtom : primitiveRouteAtom(routeId)),
       [routeId],
     ),
+    { store: useStore().store },
   )
-export const useRoutes = () => useAtomValue(primitiveRoutesAtom)
+export const useRoutes = () =>
+  useAtomValue(primitiveRoutesAtom, { store: useStore().store })
 
 export const routeIdsBetweenAtom = atomFamily(
   ({ source, target }: { source: NodeId | null; target: NodeId }) => {
@@ -161,32 +175,42 @@ export const useRouteIdsBetween = (source: NodeId, target: NodeId) => {
         }),
       [source, target],
     ),
+    { store: useStore().store },
   )
 }
 
 // environment
 export const useNodeEnvironment = (nodeId: NodeId) =>
-  useAtomValue(getResolvedNodeEnvironment(nodeId))
+  useAtomValue(getResolvedNodeEnvironment(nodeId), { store: useStore().store })
 
 export const useParentNodeEnvironment = (nodeId: NodeId) =>
-  useAtomValue(getResolvedParentNodeEnvironment(nodeId))
+  useAtomValue(getResolvedParentNodeEnvironment(nodeId), {
+    store: useStore().store,
+  })
 
 // global variable
 export const useGlobalVariableMatrix = () => {
-  const globalVariableMatrix = useAtomValue(globalVariableMatrixAtom)
+  const globalVariableMatrix = useAtomValue(globalVariableMatrixAtom, {
+    store: useStore().store,
+  })
   return globalVariableMatrix
 }
-export const usePatterns = () => useAtomValue(patternsAtom)
-export const useGlobalVariables = () => useAtomValue(globalVariablesAtom)
+export const usePatterns = () =>
+  useAtomValue(patternsAtom, { store: useStore().store })
+export const useGlobalVariables = () =>
+  useAtomValue(globalVariablesAtom, { store: useStore().store })
 
 // code export
-export const useDecomposedForLib = () => useAtomValue(decomposedForLibAtom)
+export const useDecomposedForLib = () =>
+  useAtomValue(decomposedForLibAtom, { store: useStore().store })
 
-export const useMeta = () => useAtom(metaAtom)
+export const useMeta = () => useAtom(metaAtom, { store: useStore().store })
 
 // node states
 export const useNodeStates = (nodeId: NodeId) =>
-  useAtomValue(nodeStatesAtom(nodeId))
+  useAtomValue(nodeStatesAtom(nodeId), { store: useStore().store })
 
 export const useLatestResolvedRunResult = (nodeId: NodeId) =>
-  useAtomValue(latestResolvedNodeRunResultAtom(nodeId))
+  useAtomValue(latestResolvedNodeRunResultAtom(nodeId), {
+    store: useStore().store,
+  })

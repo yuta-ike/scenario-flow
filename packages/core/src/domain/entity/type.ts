@@ -1,4 +1,4 @@
-import type { DistributiveOmit } from "@/utils/typeUtil"
+import { DistributiveOmit } from "@scenario-flow/util"
 
 export type Transition<Entity, Args extends any[] = any[], Return = Entity> = (
   entity: Entity,

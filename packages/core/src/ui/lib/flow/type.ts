@@ -1,5 +1,5 @@
-import type { Empty } from "@/utils/typeUtil"
-import type { NodeId } from "@/domain/entity/node/node"
+import { Empty } from "@scenario-flow/util"
+import { NodeId } from "../../../domain/entity"
 
 export type UiNodeType = "generalNode" | "startNode"
 

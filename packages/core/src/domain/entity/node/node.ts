@@ -16,11 +16,14 @@ import type { Time } from "../value/time"
 import type { BuilderParams, Receiver, StripeSymbol, Transition } from "../type"
 import type { ActionType, ResolvedAction } from "../action/action"
 import type { Expression } from "../value/expression"
-import type { Id, OmitId } from "@/utils/idType"
-import type { DistributiveOmit, Replace } from "@/utils/typeUtil"
-import type { Updater } from "@/ui/utils/applyUpdate"
-
-import { applyUpdate } from "@/ui/utils/applyUpdate"
+import {
+  Id,
+  DistributiveOmit,
+  Replace,
+  OmitId,
+  applyUpdate,
+  Updater,
+} from "@scenario-flow/util"
 
 export type LoopConfig = {
   interval?: Time
@@ -88,13 +91,14 @@ const applyActionInstanceInitialValue = (
     }
 
     const example = action.schema.examples[0]
-    return {
+    const res = {
       ...ai,
       instanceParameter:
         example != null
           ? mergeActionParameter("rest_call", action.schema.base, example)
           : ai.instanceParameter,
     }
+    return res
   } else {
     return ai
   }
@@ -165,7 +169,6 @@ export const updateActionInstanceParameter: Transition<
   PrimitiveNode,
   [ActionInstanceId, Updater<ActionInstance>]
 > = (node, actionInstanceId, actionInstance) => {
-  console.log(node, actionInstanceId, actionInstance)
   return {
     ...node,
     actionInstances: node.actionInstances.map((ai) => {

@@ -6,7 +6,7 @@ import type {
   GlobalVariableId,
 } from "../globalVariable/globalVariable"
 import type { LocalVariable, LocalVariableId } from "../variable/variable"
-import type { Replace } from "@/utils/typeUtil"
+import { Replace } from "@scenario-flow/util"
 
 export type Variable = GlobalVariable | LocalVariable
 export type VariableId = GlobalVariableId | LocalVariableId

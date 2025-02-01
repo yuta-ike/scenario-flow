@@ -1,9 +1,7 @@
 import { TbFlag2 } from "react-icons/tb"
-
-import type { RouteId } from "@/domain/entity/route/route"
-
-import { usePrimitiveRoute } from "@/ui/adapter/query"
-import { useIsFocusedRouteId } from "@/ui/state/focusedRouteId"
+import { RouteId } from "../../../../domain/entity"
+import { usePrimitiveRoute } from "../../../adapter/query"
+import { useIsFocusedRouteId } from "../../../state/focusedRouteId"
 
 type Props = {
   routeId: RouteId

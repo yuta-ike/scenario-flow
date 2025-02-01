@@ -8,9 +8,8 @@ import { genPrimitiveRoute, genRoute } from "../entity/route/route.factory"
 import { primitiveRouteAtom, routeAtom, routeIdsAtom } from "./route"
 import { nodeIdsAtom, primitiveNodeAtom } from "./node"
 
-import { createStore } from "@/lib/jotai/store"
-import { updateSetOp } from "@/utils/set"
-import { AtomNotFoundError } from "@/lib/jotai/atomWithId"
+import { updateSetOp } from "@scenario-flow/util"
+import { AtomNotFoundError, createStore } from "@scenario-flow/util/lib"
 
 const primitiveNodes = new Map([
   ["n1", genPrimitiveNode(toNodeId("n1"))],

@@ -1,4 +1,4 @@
-import { display } from "../resource/identifier"
+import { displayIdentifier } from "../resource/identifier"
 
 import type { ActionSourceIdentifier } from "./identifier"
 import type { UserDefinedActionId } from "../userDefinedAction/userDefinedAction"
@@ -18,7 +18,7 @@ export const resourceActionToActionId = (
 export const identifierToActionId = (identifier: ActionSourceIdentifier) => {
   if (identifier.resourceType === "resource") {
     return toActionId(
-      `${identifier.resourceIdentifier.resourceId}-${display(identifier.resourceIdentifier.identifier)}`,
+      `${identifier.resourceIdentifier.resourceId}-${displayIdentifier(identifier.resourceIdentifier.identifier)}`,
     )
   } else {
     return toActionId(identifier.resourceIdentifier.userDefinedActionId)

@@ -2,8 +2,8 @@ import { TbExternalLink } from "react-icons/tb"
 
 import type { SectionComponentInterface } from "./interface"
 
-import { useFocusNode } from "@/ui/state/focusedNodeId"
-import { unwrapNull } from "@/utils/result"
+import { unwrapNull } from "@scenario-flow/util"
+import { useFocusNode } from "../../../../state/focusedNodeId"
 
 export const IncludeSection: SectionComponentInterface = ({
   nodeId,

@@ -7,13 +7,13 @@ import {
 } from "../entity/variable/variable"
 
 import type { StripeSymbol } from "../entity/type"
-import type { CreateOrUpdate } from "@/lib/jotai/util"
-import type { OmitId } from "@/utils/idType"
-
-import { atomSet } from "@/lib/jotai/atomSet"
-import { atomWithId } from "@/lib/jotai/atomWithId"
-import { wrapAtomFamily } from "@/lib/jotai/wrapAtomFamily"
-import { updateSetOp } from "@/utils/set"
+import { OmitId, updateSetOp } from "@scenario-flow/util"
+import {
+  atomSet,
+  atomWithId,
+  wrapAtomFamily,
+  CreateOrUpdate,
+} from "@scenario-flow/util/lib"
 
 export const variableIdsAtom = atomSet<LocalVariableId>([])
 variableIdsAtom.debugLabel = "variableIdsAtom"
@@ -48,6 +48,7 @@ export const variableAtom = wrapAtomFamily(_variableAtom, {
         return {
           ...prev,
           ...param.update,
+          id,
         } as LocalVariable
       })
     } else {
@@ -63,6 +64,6 @@ export const variableAtom = wrapAtomFamily(_variableAtom, {
 
 export const variablesAtom = atom((get) => {
   const ids = get(variableIdsAtom).values()
-  return new Set(ids.map((id) => get(variableAtom(id))))
+  return new Set(ids.map((id) => get(variableAtom(id)))).values().toArray()
 })
 variablesAtom.debugLabel = "variablesAtom"

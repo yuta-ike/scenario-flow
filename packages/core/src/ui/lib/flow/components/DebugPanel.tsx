@@ -1,9 +1,9 @@
 import { useAtomValue } from "jotai"
-
-import { actionIdCountCache } from "@/domain/datasource/node"
+import { actionIdCountCache } from "../../../../domain/datasource/node"
+import { useStore } from "../../provider"
 
 export const DebugPanel = () => {
-  const values = useAtomValue(actionIdCountCache)
+  const values = useAtomValue(actionIdCountCache, { store: useStore().store })
   return (
     <div className="p-2">
       <div className="mb-1 grow text-xs text-slate-600">デバッグ</div>

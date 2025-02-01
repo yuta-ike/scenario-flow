@@ -1,71 +1,71 @@
 import { Context } from "effect"
 
-import type { Store } from "@/lib/jotai/store"
-
-import {
-  AddAction,
-  AddNode,
-  AddRoute,
-  DeleteNode,
-  GetAllRoutes,
-  GetChildrenByNodeId,
-  GetDefaultNodeName,
-  GetNode,
-  GetNodeIds,
-  GetNodes,
-  GetParentNodesById,
-  GetResolvedAction,
-  GetRoutes,
-  GetRoutesByNodeId,
-  GetUsedNodeNames,
-  RemoveRoute,
-  SetNode,
-  UpdateActionParameter as UpdateActionParameter,
-  UpdateRoute,
-  UpsertVariable,
-} from "@/domain/workflow/node"
-import { genId } from "@/utils/uuid"
-import { getChildrenByNodeId } from "@/domain/selector/getChildrenByNodeId"
-import { getRouteIdsByNodeId } from "@/domain/selector/getRouteIdsByNodeId"
-import {
-  primitiveRouteAtom,
-  primitiveRoutesAtom,
-  routeIdsAtom,
-  routeNamesCache,
-} from "@/domain/datasource/route"
-import {
-  nodeDefaultNameCal,
-  nodeIdsAtom,
-  nodeNameUniqCache,
-  nodesAtom,
-  primitiveNodeAtom,
-} from "@/domain/datasource/node"
-import { getParentByNodeId } from "@/domain/selector/getParentByNodeId"
-import { addSetOp, updateSetOp } from "@/utils/set"
-import { variableAtom } from "@/domain/datasource/variable"
-import { resolvedActionAtom } from "@/domain/datasource/actions"
-import { GenId } from "@/domain/workflow/common"
-import {
-  AddGlobalVariable,
-  AddGlobalVariableBind as AddGlobalVariableBind,
-  UpdateGlobalVariable,
-  UpdateGlobalVariableValue,
-} from "@/domain/workflow/globalVariable"
+import { updateSetOp, addSetOp, genId } from "@scenario-flow/util"
+import { Store } from "@scenario-flow/util/lib"
+import { resolvedActionAtom } from "../../domain/datasource/actions"
 import {
   globalVariableAtom,
   globalVariableIdsAtom,
+  patternIdsAtom,
   globalVariableValueAtom,
   globalVariableValueIdsAtom,
-  patternIdsAtom,
-} from "@/domain/datasource/globalVariable"
-import { toGlobalVariableValueId } from "@/domain/entity/globalVariable/globalVariable.util"
-import { buildGlobalVariableBind } from "@/domain/entity/globalVariable/globalVariable"
-import { GetNodeStates, SetNodeStates } from "@/domain/workflow/nodeStates"
-import { nodeStatesAtom } from "@/domain/datasource/nodeStates"
-import { toRouteId } from "@/domain/entity/route/route.util"
-import { GetUsedRouteNames } from "@/domain/workflow/route"
-import { userDefinedActionAtom } from "@/domain/datasource/userDefinedAction"
-import { toUserDefinedActionId } from "@/domain/entity/userDefinedAction/userDefinedAction.util"
+} from "../../domain/datasource/globalVariable"
+import {
+  primitiveNodeAtom,
+  nodeIdsAtom,
+  nodesAtom,
+  nodeDefaultNameCal,
+  nodeNameUniqCache,
+} from "../../domain/datasource/node"
+import { nodeStatesAtom } from "../../domain/datasource/nodeStates"
+import {
+  primitiveRouteAtom,
+  routeIdsAtom,
+  primitiveRoutesAtom,
+  routeNamesCache,
+} from "../../domain/datasource/route"
+import { userDefinedActionAtom } from "../../domain/datasource/userDefinedAction"
+import { variableAtom } from "../../domain/datasource/variable"
+import { getChildrenByNodeId } from "../../domain/selector/getChildrenByNodeId"
+import { getParentByNodeId } from "../../domain/selector/getParentByNodeId"
+import { getRouteIdsByNodeId } from "../../domain/selector/getRouteIdsByNodeId"
+import { GenId } from "../../domain/workflow/common"
+import {
+  AddGlobalVariable,
+  AddGlobalVariableBind,
+  UpdateGlobalVariable,
+  UpdateGlobalVariableValue,
+} from "../../domain/workflow/globalVariable"
+import {
+  AddNode,
+  GetNode,
+  SetNode,
+  GetNodeIds,
+  GetNodes,
+  GetDefaultNodeName,
+  GetUsedNodeNames,
+  DeleteNode,
+  AddAction,
+  GetResolvedAction,
+  AddRoute,
+  UpdateRoute,
+  UpsertVariable,
+  GetRoutes,
+  GetAllRoutes,
+  RemoveRoute,
+  GetChildrenByNodeId,
+  GetRoutesByNodeId,
+  GetParentNodesById,
+  UpdateActionParameter as UpdateActionParameter,
+} from "../../domain/workflow/node"
+import { GetNodeStates, SetNodeStates } from "../../domain/workflow/nodeStates"
+import { GetUsedRouteNames } from "../../domain/workflow/route"
+import {
+  toUserDefinedActionId,
+  toRouteId,
+  toGlobalVariableValueId,
+  buildGlobalVariableBind,
+} from "../../domain/entity"
 
 export type Context =
   ReturnType<typeof buildContext> extends Context.Context<infer T> ? T : never

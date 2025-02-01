@@ -28,7 +28,6 @@ export const actionIdsAtom = atom((get) => {
   )
   return new Set([...resourceActionIds, ...userDefinedActionIds])
 })
-actionIdsAtom.debugLabel = "actionIdsAtom"
 
 export const resolvedActionAtom = atomFamily<
   ActionSourceIdentifier,

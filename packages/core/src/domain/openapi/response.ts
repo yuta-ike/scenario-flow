@@ -1,3 +1,4 @@
+import { nonNull } from "@scenario-flow/util"
 import { nonRef } from "./isNotRef"
 
 import type {
@@ -5,8 +6,6 @@ import type {
   ResponsesObject,
   SchemaObject,
 } from "openapi3-ts/oas31"
-
-import { nonNull } from "@/utils/assert"
 
 export const getResponseSchema = (
   responses: ResponsesObject | null | undefined,

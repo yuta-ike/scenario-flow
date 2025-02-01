@@ -4,6 +4,8 @@
     { "path": "./packages/core/tsconfig.json" },
     { "path": "./packages/web/tsconfig.json" },
     { "path": "./packages/desktop/tsconfig.json" },
+    { "path": "./packages/ui/tsconfig.json" },
+    { "path": "./packages/util/tsconfig.json" },
     { "path": "./engine-plugins/plugin-runn/tsconfig.json" }
   ]
 }

@@ -17,26 +17,32 @@ import {
 
 import type { StripeSymbol } from "../entity/type"
 import type { Atom } from "jotai"
-import type { OmitId } from "@/utils/idType"
-import type { CreateOrUpdate } from "@/lib/jotai/util"
 import type { UserDefinedActionId } from "../entity/userDefinedAction/userDefinedAction"
 
-import { atomWithId } from "@/lib/jotai/atomWithId"
-import { atomSet } from "@/lib/jotai/atomSet"
-import { addSetOp, deleteSetOp, updateSetOp } from "@/utils/set"
-import { wrapAtomFamily } from "@/lib/jotai/wrapAtomFamily"
-import { applyDiff, decrement, increment } from "@/utils/counterMap"
-import { nonNull } from "@/utils/assert"
+import {
+  OmitId,
+  updateSetOp,
+  addSetOp,
+  increment,
+  nonNull,
+  applyDiff,
+  deleteSetOp,
+  decrement,
+} from "@scenario-flow/util"
+import {
+  atomSet,
+  atomWithId,
+  wrapAtomFamily,
+  CreateOrUpdate,
+} from "@scenario-flow/util/lib"
 
 // cache
 export const nodeNameUniqCache = atomSet<string>([])
-nodeNameUniqCache.debugLabel = "nodeNameUniqCache"
 
 export const nodeDefaultNameCal = atom((get) => {
   const nodeCount = get(nodeIdsAtom).size
   return `ブロック ${nodeCount + 1}`
 })
-nodeDefaultNameCal.debugLabel = "nodeDefaultNameCal"
 
 // cache
 export const actionIdCountCache = atom<Map<UserDefinedActionId, number>>(
@@ -90,6 +96,7 @@ export const primitiveNodeAtom = wrapAtomFamily(_primitiveNodeAtom, {
         const node = {
           ...prev,
           ...param.update,
+          id: nodeId,
         } as PrimitiveNode
 
         // cache
@@ -123,11 +130,13 @@ export const primitiveNodeAtom = wrapAtomFamily(_primitiveNodeAtom, {
           ),
         )
 
+        console.log(node)
         return node
       })
     }
   },
   onRemove: (_, set, { value: node }) => {
+    set(nodeIdsAtom, deleteSetOp(node.id))
     // cache
     set(
       nodeNameUniqCache,
@@ -180,6 +189,6 @@ export const nodeAtom = atomFamily<NodeId, Atom<Node>>((id: NodeId) => {
  */
 export const nodesAtom = atom((get) => {
   const ids = get(nodeIdsAtom).values()
-  return new Set(ids.map((id) => get(primitiveNodeAtom(id))))
+  return new Set(ids.map((id) => get(primitiveNodeAtom(id)))).values().toArray()
 })
 nodesAtom.debugLabel = "nodesAtom"

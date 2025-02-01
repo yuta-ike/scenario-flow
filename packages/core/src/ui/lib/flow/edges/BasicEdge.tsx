@@ -9,15 +9,14 @@ import { DeleteButton } from "./DeleteButton"
 import { InsertButton } from "./InsertButton"
 
 import type { Edge, EdgeProps } from "@xyflow/react"
-import type { Replace } from "@/utils/typeUtil"
 
+import { Replace, useToggle } from "@scenario-flow/util"
+import { toNodeId } from "../../../../domain/entity"
 import {
-  useNullablePrimitiveRoute,
   useRouteIdsBetween,
-} from "@/ui/adapter/query"
-import { toNodeId } from "@/domain/entity/node/node.util"
-import { useToggle } from "@/ui/utils/useToggle"
-import { useHasFocusedRouteIdsValue } from "@/ui/state/focusedRouteId"
+  useNullablePrimitiveRoute,
+} from "../../../adapter/query"
+import { useHasFocusedRouteIdsValue } from "../../../state/focusedRouteId"
 
 type EdgeData = {
   points: { x: number; y: number }[]

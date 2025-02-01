@@ -14,19 +14,26 @@ import { variableAtom } from "./variable"
 import type { NodeId } from "../entity/node/node"
 import type { StripeSymbol } from "../entity/type"
 import type { Atom, SetStateAction } from "jotai"
-import type { PartialDict } from "@/utils/typeUtil"
-import type { CreateOrUpdate } from "@/lib/jotai/util"
-import type { OmitId } from "@/utils/idType"
-
-import { atomWithId } from "@/lib/jotai/atomWithId"
-import { atomSet } from "@/lib/jotai/atomSet"
-import { count } from "@/utils/array"
-import { COLORS } from "@/utils/pcss"
-import { wrapAtomFamily } from "@/lib/jotai/wrapAtomFamily"
-import { addSetOp, deleteSetOp } from "@/utils/set"
-import { applyUpdate } from "@/ui/utils/applyUpdate"
-import { applyDiff, decrement, increment } from "@/utils/counterMap"
-import { addListMap, deleteListMap } from "@/utils/listMap"
+import {
+  PartialDict,
+  OmitId,
+  addSetOp,
+  increment,
+  addListMap,
+  applyDiff,
+  deleteSetOp,
+  decrement,
+  deleteListMap,
+  COLORS,
+  count,
+  applyUpdate,
+} from "@scenario-flow/util"
+import {
+  atomSet,
+  atomWithId,
+  wrapAtomFamily,
+  CreateOrUpdate,
+} from "@scenario-flow/util/lib"
 
 type Page = string
 
@@ -38,7 +45,6 @@ export const routePageCache = atom(new Map<Page, Set<RouteId>>())
 
 // atoms
 export const routeIdsAtom = atomSet<RouteId>([])
-routeIdsAtom.debugLabel = "routeIdsAtom"
 
 const _primitiveRouteAtom = atomWithId<PrimitiveRoute>("primitiveRouteAtom")
 export const primitiveRouteAtom = wrapAtomFamily(_primitiveRouteAtom, {
@@ -135,6 +141,7 @@ export const primitiveRouteAtom = wrapAtomFamily(_primitiveRouteAtom, {
   },
   onRemove: (get, set, { id: routeId }) => {
     const route = get(_primitiveRouteAtom(routeId))
+    set(routeIdsAtom, deleteSetOp(routeId))
     // Cache
     set(routeNamesCache, (prev) => {
       const newSet = new Set(prev)
@@ -192,9 +199,9 @@ export const routeAtom = atomFamily<RouteId, Atom<Route>>((id: RouteId) => {
 
 export const primitiveRoutesAtom = atom((get) => {
   const ids = get(routeIdsAtom).values()
-  return ids.map((id) => get(primitiveRouteAtom(id))).toArray()
+  const res = ids.map((id) => get(primitiveRouteAtom(id))).toArray()
+  return res
 })
-primitiveRoutesAtom.debugLabel = "primitiveRoutesAtom"
 
 export const routesAtom = atom((get) => {
   const ids = get(routeIdsAtom).values()

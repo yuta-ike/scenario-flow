@@ -1,6 +1,5 @@
-import type { Json, JsonPrimitive } from "@/utils/json"
-import type { Decomposed } from "@/domain/entity/decompose/decomposed"
-import type { Result } from "@/utils/result"
+import { Json, JsonPrimitive, Result } from "@scenario-flow/util"
+import { Decomposed } from "../domain/entity/decompose/decomposed"
 
 export type LibMetaFormat<T> = {
   meta: {

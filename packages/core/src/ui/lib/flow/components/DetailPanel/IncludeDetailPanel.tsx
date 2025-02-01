@@ -5,26 +5,33 @@ import { useAtomCallback } from "jotai/utils"
 import { Section } from "./Section"
 
 import type { SetStateAction } from "react"
-import type { NodeId } from "@/domain/entity/node/node"
-import type { ResolvedIncludeActionInstance } from "@/domain/entity/node/actionInstance"
-import type { RouteId } from "@/domain/entity/route/route"
-import type { KVItem } from "@/ui/lib/kv"
-import type { Expression } from "@/domain/entity/value/expression"
-
-import { emptyEnvironment } from "@/domain/entity/environment/environment"
-import { useRoutes } from "@/ui/adapter/query"
-import { Select } from "@/ui/components/common/Select"
-import { IconButton } from "@/ui/components/common/IconButton"
-import { useFocusNode } from "@/ui/state/focusedNodeId"
-import { currentPageAtom, usePages, useSetCurrentPage } from "@/ui/state/page"
-import { updateActionInstance } from "@/ui/adapter/command"
-import { unwrapNull } from "@/utils/result"
-import { fill } from "@/utils/placeholder"
-import { ParameterTable } from "@/ui/lib/ParameterTable"
-import { applyUpdate } from "@/ui/utils/applyUpdate"
-import { associateBy } from "@/utils/set"
-import { toLocalVariableId } from "@/domain/entity/variable/variable.util"
-import { buildLocalVariable } from "@/domain/entity/variable/variable"
+import { IconButton, Select } from "@scenario-flow/ui"
+import {
+  unwrapNull,
+  associateBy,
+  fill,
+  applyUpdate,
+  KVItem,
+} from "@scenario-flow/util"
+import { useStore } from "../../../provider"
+import { useRoutes } from "../../../../adapter/query"
+import {
+  currentPageAtom,
+  usePages,
+  useSetCurrentPage,
+} from "../../../../state/page"
+import {
+  NodeId,
+  ResolvedIncludeActionInstance,
+  RouteId,
+  toLocalVariableId,
+  buildLocalVariable,
+  Expression,
+  emptyEnvironment,
+} from "../../../../../domain/entity"
+import { updateActionInstance } from "../../../../adapter/command"
+import { useFocusNode } from "../../../../state/focusedNodeId"
+import { ParameterTable } from "../../../ParameterTable"
 
 type Props = {
   nodeId: NodeId
@@ -32,6 +39,8 @@ type Props = {
 }
 
 export const IncludeDetailPanel = ({ nodeId, ai }: Props) => {
+  const store = useStore()
+
   const routes = useRoutes()
   const refRoute = unwrapNull(ai.instanceParameter.ref)
 
@@ -43,6 +52,7 @@ export const IncludeDetailPanel = ({ nodeId, ai }: Props) => {
         },
         [refRoute?.page],
       ),
+      { store: store.store },
     ),
   )
 
@@ -59,7 +69,7 @@ export const IncludeDetailPanel = ({ nodeId, ai }: Props) => {
     }))
 
   const handleUpdate = (routeId: RouteId) => {
-    updateActionInstance(nodeId, ai.id, {
+    updateActionInstance(store, nodeId, ai.id, {
       ...ai,
       instanceParameter: {
         ...ai.instanceParameter,
@@ -78,7 +88,7 @@ export const IncludeDetailPanel = ({ nodeId, ai }: Props) => {
         ai.instanceParameter.parameters.map((parameter) => parameter.variable),
         "id",
       )
-      updateActionInstance(nodeId, ai.id, {
+      updateActionInstance(store, nodeId, ai.id, {
         ...ai,
         instanceParameter: {
           ref: ai.instanceParameter.ref.value.id,

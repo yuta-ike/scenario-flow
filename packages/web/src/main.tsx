@@ -2,7 +2,7 @@ import "./inject"
 
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
-import Core from "@scenario-flow/core"
+import Core from "@scenario-flow/app"
 
 import { injectedContent } from "./inject"
 

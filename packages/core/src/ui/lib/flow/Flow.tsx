@@ -1,7 +1,7 @@
 import "@xyflow/react/dist/style.css"
 import "./flow.css"
 
-import { useCallback, useMemo, useState } from "react"
+import { memo, useCallback, useMemo, useState } from "react"
 import { atom, useAtomValue } from "jotai"
 import { useAtomCallback } from "jotai/utils"
 import {
@@ -33,21 +33,17 @@ import { CreateNode } from "./nodes/CreateNode"
 import { SkleltonEdge } from "./edges/SkeltonEdge"
 import { useShowListView } from "./ListView/showListViewAtom"
 
-import type { NodeId } from "@/domain/entity/node/node"
-
-import { toNodeId } from "@/domain/entity/node/node.util"
-import { getLayout } from "@/lib/incremental-auto-layout/getLayout"
-import { ErrorBoundary } from "@/ui/components/ErrorBoundary"
-import { ErrorDisplay } from "@/ui/components/ErrorDisplay"
-import { useReleaseHighlight } from "@/ui/state/highlightedNodeId"
-import { connectNodes } from "@/ui/adapter/command"
-import { useMapState } from "@/ui/utils/useMapState"
-import { useSwitchFocusedRouteId } from "@/ui/state/focusedRouteId"
-import { currentPageAtom } from "@/ui/state/page"
-import { primitiveRoutesAtom } from "@/domain/datasource/route"
-import { uniq } from "@/utils/array"
-import { nonNull } from "@/utils/assert"
-import { useFocusedNodeExists } from "@/ui/state/focusedNodeId"
+import { ErrorBoundary, ErrorDisplay } from "@scenario-flow/ui"
+import { uniq, nonNull, useMapState } from "@scenario-flow/util"
+import { useStore } from "../provider"
+import { primitiveRoutesAtom } from "../../../domain/datasource/route"
+import { toNodeId, NodeId } from "../../../domain/entity"
+import { getLayout } from "../../../lib/incremental-auto-layout/getLayout"
+import { connectNodes } from "../../adapter/command"
+import { useFocusedNodeExists } from "../../state/focusedNodeId"
+import { useSwitchFocusedRouteId } from "../../state/focusedRouteId"
+import { useReleaseHighlight } from "../../state/highlightedNodeId"
+import { currentPageAtom } from "../../state/page"
 
 const nodeTypes: NodeTypes = {
   startNode: StartNode,
@@ -68,14 +64,15 @@ const currentPageRoutes = atom((get) => {
   const page = get(currentPageAtom)
   return get(primitiveRoutesAtom).filter((route) => route.page === page)
 })
-export const Flow = () => {
+export const Flow = memo(() => {
+  const store = useStore()
   const [reactFlow, setReactFlow] = useState<ReactFlowInstance | null>(null)
   const [nodeSize, { updateItem }] = useMapState<{
     width: number
     height: number
   }>()
 
-  const routes = useAtomValue(currentPageRoutes)
+  const routes = useAtomValue(currentPageRoutes, { store: store.store })
   const edges = useMemo(() => getEdges(routes, initialNodeId), [routes])
 
   const layout = useMemo(() => {
@@ -107,14 +104,15 @@ export const Flow = () => {
   const handleConnect = useAtomCallback(
     useCallback((get, _, connection: Connection) => {
       connectNodes(
+        store,
         connection.source as NodeId,
         connection.target as NodeId,
         get(currentPageAtom),
       )
     }, []),
+    { store: store.store },
   )
 
-  const showListView = useShowListView()
   const showDetailPanel = useFocusedNodeExists()
 
   return (
@@ -259,4 +257,4 @@ export const Flow = () => {
       )}
     </FlowProvider>
   )
-}
+})

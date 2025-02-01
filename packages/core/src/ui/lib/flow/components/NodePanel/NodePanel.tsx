@@ -1,4 +1,4 @@
-import { BlockMenu } from "@/ui/page/index/BlockMenu"
+import { BlockMenu } from "../../../../page/index/BlockMenu"
 
 export const NodePanel = () => {
   return (

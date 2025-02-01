@@ -1,7 +1,5 @@
-import type { NodeId } from "@/domain/entity/node/node"
-import type { PrimitiveRoute } from "@/domain/entity/route/route"
-
-import { dedupeArrayByKey, uniq } from "@/utils/array"
+import { uniq, dedupeArrayByKey } from "@scenario-flow/util"
+import { PrimitiveRoute, NodeId } from "../../../../domain/entity"
 
 const getRootNodeIds = (routes: PrimitiveRoute[]) =>
   uniq(routes.map((route) => route.path[0]).filter((nodeId) => nodeId != null))

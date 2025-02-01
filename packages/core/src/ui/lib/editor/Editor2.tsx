@@ -15,9 +15,10 @@ import {
 import clsx from "clsx"
 
 import type { SchemaObject } from "openapi3-ts/oas31"
-
-import { type ResolvedEnvironment } from "@/domain/entity/environment/environment"
-import { getVariableSuggests } from "@/domain/entity/environment/variable.util"
+import {
+  ResolvedEnvironment,
+  getVariableSuggests,
+} from "../../../domain/entity"
 
 const highlightVariables = (
   model: monacoEditor.ITextModel,

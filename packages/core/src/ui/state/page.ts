@@ -3,20 +3,23 @@ import { useCallback, useMemo } from "react"
 import { atomFamily, useAtomCallback } from "jotai/utils"
 
 import { useRoutes } from "../adapter/query"
-
 import {
-  primitiveRouteAtom,
   routePageCache,
   routesAtom,
-} from "@/domain/datasource/route"
+  primitiveRouteAtom,
+} from "../../domain/datasource/route"
+import { useStore } from "../lib/provider"
 
 export const currentPageAtom = atom("")
 
 export const pagesAtom = atom((get) => get(routePageCache).keys().toArray())
 
 export const usePage = () => {
-  const [currentPage, setCurrentPage] = useAtom(currentPageAtom)
-  const pages = useAtomValue(pagesAtom)
+  const store = useStore()
+  const [currentPage, setCurrentPage] = useAtom(currentPageAtom, {
+    store: store.store,
+  })
+  const pages = useAtomValue(pagesAtom, { store: store.store })
 
   const select = useCallback(
     (page: string) => {
@@ -40,6 +43,7 @@ export const useSetCurrentPage = () =>
     useCallback((_, set, page: string) => {
       set(currentPageAtom, page)
     }, []),
+    { store: useStore().store },
   )
 
 export const usePages = () => {
@@ -53,7 +57,7 @@ export const usePages = () => {
   return pages
 }
 
-const routesInPageAtom = atomFamily((page: string) => {
+export const routesInPageAtom = atomFamily((page: string) => {
   return atom((get) => {
     const routes = get(routesAtom)
     return routes.filter((route) => route.page === page)
@@ -61,14 +65,14 @@ const routesInPageAtom = atomFamily((page: string) => {
 })
 
 export const useRoutesInPage = (page: string) =>
-  useAtomValue(routesInPageAtom(page))
+  useAtomValue(routesInPageAtom(page), { store: useStore().store })
 
 export const routeIdsInPageAtom = atomFamily((page: string) => {
   return atom((get) => get(routePageCache).get(page)?.values().toArray() ?? [])
 })
 
 export const useRouteIdsInPage = (page: string) =>
-  useAtomValue(routeIdsInPageAtom(page))
+  useAtomValue(routeIdsInPageAtom(page), { store: useStore().store })
 
 export const primitiveRoutesInPageAtom = atomFamily((page: string) =>
   atom((get) => {
@@ -78,4 +82,4 @@ export const primitiveRoutesInPageAtom = atomFamily((page: string) =>
 )
 
 export const usePrimitiveRoutesInPage = (page: string) =>
-  useAtomValue(primitiveRoutesInPageAtom(page))
+  useAtomValue(primitiveRoutesInPageAtom(page), { store: useStore().store })

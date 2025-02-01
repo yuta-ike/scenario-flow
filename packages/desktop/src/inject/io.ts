@@ -10,8 +10,7 @@ import {
   mkdir,
 } from "@tauri-apps/plugin-fs"
 
-import type { InjectedContent } from "@/injector/injector"
-import type { DirHandle } from "@/injector/parts/io"
+import type { DirHandle, InjectedContent } from "@scenario-flow/app"
 
 export const createFile: InjectedContent["io"]["createFile"] = async (
   entry: DirHandle,
@@ -80,7 +79,7 @@ const _getAllFilesRecursively = async (
         (entry.name.endsWith(".yaml") || entry.name.endsWith(".yml")),
     )
     .map((entry) => ({
-      name,
+      name: entry.name,
       path: `${dir}/${entry.name}`,
       entry,
     }))
@@ -134,9 +133,16 @@ export const watchDir: InjectedContent["io"]["watchDir"] = async (
   { path }: DirHandle,
   cb,
 ) => {
-  await watch(path, cb, {
-    delayMs: 1000,
-  })
+  await watch(
+    path,
+    (res) => {
+      console.log(res)
+      cb()
+    },
+    {
+      delayMs: 1000,
+    },
+  )
 }
 
 export const deleteDir: InjectedContent["io"]["deleteDir"] = async (
@@ -151,6 +157,7 @@ const decode = (buffer: ArrayBuffer) => {
   return decoder.decode(buffer)
 }
 
+// @ts-expect-error
 export const readFile: InjectedContent["io"]["readFile"] = async ({
   path,
 }: DirHandle) => {
@@ -158,6 +165,7 @@ export const readFile: InjectedContent["io"]["readFile"] = async ({
   return typeof raw === "string" ? raw : decode(raw)
 }
 
+// @ts-expect-error
 export const writeFile: InjectedContent["io"]["writeFile"] = async (
   { path }: DirHandle,
   content,
@@ -183,6 +191,7 @@ export const getOrCreateFile: InjectedContent["io"]["getOrCreateFile"] = async (
   }
 }
 
+// @ts-expect-error
 export const watchFile: InjectedContent["io"]["watchFile"] = async (
   { path }: DirHandle,
   cb,

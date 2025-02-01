@@ -1,6 +1,5 @@
+import { HttpMethod, HTTP_METHODS_MAP } from "@scenario-flow/util"
 import clsx from "clsx"
-
-import { HTTP_METHODS_MAP, type HttpMethod } from "@/utils/http"
 
 type Props = {
   children: HttpMethod

@@ -1,5 +1,5 @@
+import { Id, OmitId } from "@scenario-flow/util"
 import type { StripeSymbol, Transition } from "../type"
-import type { Id, OmitId } from "@/utils/idType"
 import type { OpenAPIObject } from "openapi3-ts/oas31"
 
 export type TemporalLocation = {

@@ -1,6 +1,6 @@
 import "./globals.css"
 
-import Core from "@scenario-flow/core"
+import Core from "@scenario-flow/app"
 
 import {
   runRunn,
@@ -18,7 +18,7 @@ import {
 } from "./inject"
 import { loadStore, saveStore, subscribeStore } from "./inject/store"
 
-import type { InjectedContent } from "@/injector/injector"
+import type { InjectedContent } from "@scenario-flow/app"
 
 const injected: InjectedContent = {
   io: {

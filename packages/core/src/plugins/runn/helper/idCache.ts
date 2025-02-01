@@ -1,4 +1,4 @@
-import { genId } from "@/utils/uuid"
+import { genId } from "@scenario-flow/util"
 
 export class IdCache {
   #cache = new Map<string, string>()

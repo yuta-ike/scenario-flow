@@ -1,4 +1,3 @@
-import React from "react"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
 import { NodePanel } from "./components/NodePanel/NodePanel"
@@ -6,9 +5,7 @@ import { PagePanel } from "./components/PagePanel"
 import { RoutePanel } from "./components/RoutePanel"
 import { DetailPanel } from "./components/DetailPanel"
 import { ListView } from "./ListView"
-
-import { ErrorDisplay } from "@/ui/components/ErrorDisplay"
-import { ErrorBoundary } from "@/ui/components/ErrorBoundary"
+import { ErrorBoundary, ErrorDisplay } from "@scenario-flow/ui"
 
 export const List = () => {
   return (

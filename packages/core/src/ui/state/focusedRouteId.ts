@@ -5,13 +5,13 @@ import { useCallback, useMemo } from "react"
 import { routeIdsBetweenAtom } from "../adapter/query"
 
 import type { SetStateAction } from "jotai"
-import type { RouteId } from "@/domain/entity/route/route"
-import type { NodeId } from "@/domain/entity/node/node"
-
-import { primitiveRouteAtom } from "@/domain/datasource/route"
+import { primitiveRouteAtom } from "../../domain/datasource/route"
+import { RouteId, NodeId } from "../../domain/entity"
+import { useStore } from "../lib/provider"
 
 const focusedRouteIdAtom = atom<RouteId | null>(null)
-export const useFocusedRouteId = () => useAtomValue(focusedRouteIdAtom)
+export const useFocusedRouteId = () =>
+  useAtomValue(focusedRouteIdAtom, { store: useStore().store })
 const isFocusedRouteAtom = atomFamily((routeId: RouteId) =>
   atom(
     (get) => get(focusedRouteIdAtom) === routeId,
@@ -27,7 +27,9 @@ const isFocusedRouteAtom = atomFamily((routeId: RouteId) =>
   ),
 )
 export const useIsFocusedRouteId = (routeId: RouteId) => {
-  const [isFocused, setState] = useAtom(isFocusedRouteAtom(routeId))
+  const [isFocused, setState] = useAtom(isFocusedRouteAtom(routeId), {
+    store: useStore().store,
+  })
   const toggle = useCallback(() => setState((prev) => !prev), [setState])
   const setTrue = useCallback(() => setState(true), [setState])
   const setFalse = useCallback(() => setState(false), [setState])
@@ -43,6 +45,7 @@ export const useSetFocuseRoute = () => {
       (_, set, routeId: RouteId) => set(focusedRouteIdAtom, routeId),
       [],
     ),
+    { store: useStore().store },
   )
 }
 
@@ -50,7 +53,7 @@ const hasFocusedRouteAtom = atomFamily((routeIds: RouteId[]) =>
   atom((get) => routeIds.find((routeId) => get(isFocusedRouteAtom(routeId)))),
 )
 export const useHasFocusedRouteIdsValue = (routeIds: RouteId[]) =>
-  useAtomValue(hasFocusedRouteAtom(routeIds))
+  useAtomValue(hasFocusedRouteAtom(routeIds), { store: useStore().store })
 
 const isNodeInFocusedRouteAtom = atomFamily((nodeId: NodeId) => {
   const newAtom = atom((get) => {
@@ -71,7 +74,7 @@ const isNodeInFocusedRouteAtom = atomFamily((nodeId: NodeId) => {
 })
 
 export const useFocusedRouteByNodeId = (nodeId: NodeId) =>
-  useAtomValue(isNodeInFocusedRouteAtom(nodeId))
+  useAtomValue(isNodeInFocusedRouteAtom(nodeId), { store: useStore().store })
 
 export const useSwitchFocusedRouteId = () => {
   return useAtomCallback(
@@ -97,6 +100,7 @@ export const useSwitchFocusedRouteId = () => {
         set(focusedRouteIdAtom, nextFocusedRouteID)
       }
     }, []),
+    { store: useStore().store },
   )
 }
 
@@ -109,4 +113,5 @@ const focusedRouteAtom = atom((get) => {
 })
 focusedRouteAtom.debugLabel = "focusedRouteAtom"
 
-export const useFocusedRoute = () => useAtomValue(focusedRouteAtom)
+export const useFocusedRoute = () =>
+  useAtomValue(focusedRouteAtom, { store: useStore().store })

@@ -1,10 +1,9 @@
 import type { Time } from "../value/time"
 import type { RouteId } from "../route/route"
 import type { TypedValue } from "../value/dataType"
-import type { ContentType, HttpMethod } from "@/utils/http"
-import type { KVItem } from "@/ui/lib/kv"
-import type { Json } from "@/utils/json"
+import type { KVItem } from "@scenario-flow/util"
 import type { LocalVariable } from "../variable/variable"
+import { ContentType, HttpMethod, Json } from "@scenario-flow/util"
 
 export type DecomposedStep = {
   id: string | number
@@ -65,7 +64,8 @@ export type Decomposed = {
     variable: LocalVariable
     value: TypedValue
   }[]
-  endpoint: string
+  // endpoint: string
   steps: DecomposedStep[]
   page: string
+  runners: Record<string, string>
 }

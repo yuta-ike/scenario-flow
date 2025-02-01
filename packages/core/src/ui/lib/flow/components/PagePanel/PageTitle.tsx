@@ -3,9 +3,9 @@ import { TbEdit, TbFlag2 } from "react-icons/tb"
 import { useForm } from "react-hook-form"
 import { flushSync } from "react-dom"
 import clsx from "clsx"
-
-import { usePage, usePrimitiveRoutesInPage } from "@/ui/state/page"
-import { updatePageName } from "@/ui/adapter/command"
+import { useStore } from "../../../provider"
+import { updatePageName } from "../../../../adapter/command"
+import { usePage, usePrimitiveRoutesInPage } from "../../../../state/page"
 
 type FormData = {
   name: string
@@ -18,6 +18,7 @@ type Props = {
 }
 
 export const PageTitle = ({ page, frag, isRoot = false }: Props) => {
+  const store = useStore()
   const { currentPage, select } = usePage()
   const routes = usePrimitiveRoutesInPage(page)
 
@@ -30,7 +31,7 @@ export const PageTitle = ({ page, frag, isRoot = false }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const onSubmit = handleSubmit((data) => {
-    updatePageName({ prevPage: page, newPage: data.name })
+    updatePageName(store, { prevPage: page, newPage: data.name })
   })
 
   const { ref, ...rest } = register("name", { required: true })

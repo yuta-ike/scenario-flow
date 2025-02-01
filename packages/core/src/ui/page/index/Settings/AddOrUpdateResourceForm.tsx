@@ -3,21 +3,19 @@ import { TbFile, TbFileImport, TbLink } from "react-icons/tb"
 import { useMutation } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 
-import type { Json } from "@/utils/json"
-import type { ResourceId } from "@/domain/entity/resource/resource"
-
-import { FormItem } from "@/ui/components/FormItem"
-import { RadioPanel } from "@/ui/components/common/RadioPanel"
-import { LoadableButton } from "@/ui/components/common/LoadableButton"
-import { verifyRemoteOpenApi } from "@/lib/fetch/verifyRemoteUrl"
-import { FormModalContent, useCloseModal } from "@/ui/lib/common/FormModal"
-import { readFile } from "@/ui/utils/readFile"
-import { parseYaml } from "@/ui/lib/yaml/yamlToJson"
-import { putOpenApiFile, uploadOpenApiFile } from "@/ui/adapter/command"
-import { fetchJson } from "@/utils/fetchJson"
-import { useProjectContext } from "@/ui/context/context"
-import { joinPath } from "@/utils/path"
-import { useInjected } from "@/container"
+import {
+  FormItem,
+  RadioPanel,
+  LoadableButton,
+  FormModalContent,
+  useCloseModal,
+} from "@scenario-flow/ui"
+import { fetchJson, Json, joinPath, readFile } from "@scenario-flow/util"
+import { parseYaml } from "@scenario-flow/util/lib"
+import { ResourceId } from "../../../../domain/entity"
+import { verifyRemoteOpenApi } from "../../../../lib/fetch/verifyRemoteUrl"
+import { uploadOpenApiFile, putOpenApiFile } from "../../../adapter/command"
+import { useProjectContext, useInjected, useStore } from "../../../lib/provider"
 
 type FormData = {
   name: string
@@ -49,6 +47,7 @@ export const AddOrUpdateResourceForm = ({
 }: AddOrUpdateResourceFormProps) => {
   const context = useProjectContext()
   const injected = useInjected()
+  const store = useStore()
   const closeModal = useCloseModal()
 
   const [method, setMethod] = useState<"file" | "remote">("file")
@@ -93,17 +92,13 @@ export const AddOrUpdateResourceForm = ({
 
       if (type === "create") {
         await uploadOpenApiFile(
+          store,
           data.name,
           data.description ?? "",
           "",
           json,
           async (path) => {
             try {
-              console.log("PATH ==========")
-              console.log(
-                context.entry.path,
-                joinPath(context.entry.path, path),
-              )
               const fileHandle = await injected.io.selectFile(
                 joinPath(context.entry.path, path),
               )
@@ -116,6 +111,7 @@ export const AddOrUpdateResourceForm = ({
         )
       } else {
         await putOpenApiFile(
+          store,
           resourceId,
           data.name,
           data.description ?? "",

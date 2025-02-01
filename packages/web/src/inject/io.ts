@@ -2,11 +2,7 @@ import { readFile as readFileObject } from "../file"
 
 import { db } from "./indexeddb"
 
-import type {
-  DirHandle,
-  FileHandle,
-  InjectedContent,
-} from "@scenario-flow/core"
+import type { DirHandle, FileHandle, InjectedContent } from "@scenario-flow/app"
 
 declare const cacheId: unique symbol
 type CacheId = string & { [cacheId]: never }

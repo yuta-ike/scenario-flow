@@ -1,7 +1,5 @@
 /// <reference types="vitest" />
 
-import path from "node:path"
-
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import { visualizer } from "rollup-plugin-visualizer"
@@ -12,9 +10,6 @@ import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfil
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  resolve: {
-    alias: [{ find: "@/", replacement: path.join(__dirname, "../core/src/") }],
-  },
   plugins: [
     react({
       babel: {

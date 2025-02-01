@@ -12,22 +12,19 @@ import { Handle, Position, useReactFlow } from "@xyflow/react"
 import { FiChevronRight, FiPlus } from "react-icons/fi"
 import { flushSync } from "react-dom"
 
-import { Transition } from "../../common/Transition"
-
 import { IncludeSelectPage } from "./IncludeSelectPage"
 
-import type { RouteId } from "@/domain/entity/route/route"
-import type { NodeId } from "@/domain/entity/node/node"
-import type { HttpMethod } from "@/utils/http"
-
-import { type ActionSourceIdentifier } from "@/domain/entity/action/identifier"
-import { useFocusNode } from "@/ui/state/focusedNodeId"
-import { Button } from "@/ui/components/common/Button"
-import { getIdentifier } from "@/domain/entity/action/action"
-import { ApiCallTile } from "@/ui/page/index/BlockMenu/ApiCallTile"
-import { HTTP_METHODS } from "@/utils/http"
-import { searchFuzzy } from "@/utils/searchFuzzy"
-import { useActions } from "@/ui/adapter/query"
+import { Button, Transition } from "@scenario-flow/ui"
+import { HttpMethod, searchFuzzy, HTTP_METHODS } from "@scenario-flow/util"
+import {
+  ActionSourceIdentifier,
+  NodeId,
+  RouteId,
+  getIdentifier,
+} from "../../../../domain/entity"
+import { useActions } from "../../../adapter/query"
+import { ApiCallTile } from "../../../page/index/BlockMenu/ApiCallTile"
+import { useFocusNode } from "../../../state/focusedNodeId"
 
 type OpenCreateDropdownProps = {
   children: React.ReactNode
@@ -199,7 +196,13 @@ export const OpenCreateDropdown = ({
                       size={24}
                       className="-rotate-45 text-purple-500"
                     />
-                    他のノードに接続する
+                    <span className="text-start">
+                      他のノードに接続する
+                      <br />
+                      <span className="text-[11px] text-slate-600">
+                        ここをクリックしてドラッグ
+                      </span>
+                    </span>
                     <Handle
                       type="source"
                       position={Position.Top}
@@ -221,14 +224,6 @@ export const OpenCreateDropdown = ({
                 >
                   <RxCaretLeft size={18} />
                 </button>
-                <Button
-                  theme="secondary"
-                  size="sm"
-                  onClick={handleCreatNewNode}
-                  prefix={FiPlus}
-                >
-                  新規作成
-                </Button>
               </div>
               <input
                 placeholder="検索"
@@ -266,15 +261,17 @@ export const OpenCreateDropdown = ({
                       />
                     </button>
                   ))}
-                  <hr />
-                  <Button
-                    theme="secondary"
-                    size="md"
-                    onClick={handleCreatNewNode}
-                    prefix={FiPlus}
-                  >
-                    新規作成
-                  </Button>
+                  <div className="sticky bottom-0 flex w-full flex-col gap-2 bg-white">
+                    <hr />
+                    <Button
+                      theme="primary"
+                      size="md"
+                      onClick={handleCreatNewNode}
+                      prefix={FiPlus}
+                    >
+                      新規作成
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

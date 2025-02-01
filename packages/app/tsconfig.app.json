@@ -1,0 +1,7 @@
+{
+  "extends": "@scenario-flow/typescript-config/app.json",
+  "compilerOptions": {
+    "paths": {}
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

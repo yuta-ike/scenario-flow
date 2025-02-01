@@ -1,14 +1,11 @@
-import React, { useId } from "react"
+import { useId } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { TbFolder, TbX } from "react-icons/tb"
 
-import type { DirHandle } from "@/injector/parts/io"
-
-import { FormModalContent } from "@/ui/lib/common/FormModal"
-import { TextInput } from "@/ui/components/common/TextInput"
-import { FormItem } from "@/ui/components/FormItem"
-import { nonNull } from "@/utils/assert"
-import { useInjected } from "@/container"
+import { FormItem, FormModalContent, TextInput } from "@scenario-flow/ui"
+import { nonNull } from "@scenario-flow/util"
+import { DirHandle } from "../../../../injector"
+import { useInjected } from "../../../lib/provider"
 
 type FormData = {
   name: string

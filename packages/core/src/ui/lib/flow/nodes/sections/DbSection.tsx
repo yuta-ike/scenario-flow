@@ -2,8 +2,8 @@ import clsx from "clsx"
 
 import type { SectionComponentInterface } from "./interface"
 
-import { fill } from "@/utils/placeholder"
-import { useFocusNode } from "@/ui/state/focusedNodeId"
+import { fill } from "@scenario-flow/util"
+import { useFocusNode } from "../../../../state/focusedNodeId"
 
 export const DbSection: SectionComponentInterface = ({
   nodeId,

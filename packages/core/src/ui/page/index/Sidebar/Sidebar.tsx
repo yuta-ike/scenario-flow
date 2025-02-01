@@ -1,7 +1,9 @@
 import { TbCode, TbList, TbSettings } from "react-icons/tb"
 
-import { ConnectIcon } from "@/ui/components/icons/ConnectIcon"
-import { useHotkey } from "@/ui/lib/hotkey"
+import { ConnectIcon } from "@scenario-flow/ui"
+import { useHotkey } from "@scenario-flow/util"
+import { FiRotateCw } from "react-icons/fi"
+import { useReloader } from "../../../adapter/initializer"
 
 type Props = {
   current: "flow" | "list" | "code" | "settings"
@@ -10,9 +12,18 @@ type Props = {
 
 export const Sidebar = ({ current, onChangeContent }: Props) => {
   const ref = useHotkey<HTMLButtonElement>("d")
+  const reload = useReloader()
 
   return (
     <div className="flex max-h-full w-full flex-col gap-4 p-1.5">
+      <button
+        type="button"
+        className="grid place-items-center rounded-full p-2 transition hover:bg-slate-100"
+        aria-label="リロード"
+        onClick={() => reload()}
+      >
+        <FiRotateCw size={24} />
+      </button>
       <div className="flex flex-col gap-1 rounded-full bg-slate-200 p-1">
         <button
           type="button"
@@ -47,7 +58,7 @@ export const Sidebar = ({ current, onChangeContent }: Props) => {
       </div>
       <button
         type="button"
-        className="grid aspect-square place-items-center rounded-full p-2 transition hover:bg-slate-100"
+        className="grid place-items-center rounded-full p-2 transition hover:bg-slate-100"
         aria-label="設定"
         onClick={() => onChangeContent("settings")}
       >

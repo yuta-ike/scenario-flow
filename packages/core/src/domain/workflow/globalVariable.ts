@@ -15,7 +15,7 @@ import {
 } from "../entity/globalVariable/globalVariable"
 
 import type { TypedValue } from "../entity/value/dataType"
-import type { ContextOf } from "@/lib/effect/contextOf"
+import { ContextOf } from "../../lib/effect/contextOf"
 
 export type AddGlobalVariable = (params: GlobalVariable) => void
 export const AddGlobalVariable =

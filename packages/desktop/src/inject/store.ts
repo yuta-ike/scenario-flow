@@ -1,6 +1,6 @@
 import { LazyStore } from "@tauri-apps/plugin-store"
 
-import type { InjectedStore, AppStore } from "@/injector/parts/store"
+import type { InjectedStore, AppStore } from "@scenario-flow/app"
 
 const store = new LazyStore("projects.json")
 

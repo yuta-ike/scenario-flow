@@ -1,10 +1,6 @@
 import { TbQuestionMark, TbHash, TbTextSize, TbAsterisk } from "react-icons/tb"
-
-import { ArrayIcon } from "../icons/ArrayIcon"
-
-import { Tooltip } from "./Tooltip"
-
-import type { DataType } from "@/domain/entity/value/dataType"
+import { ArrayIcon, Tooltip } from "@scenario-flow/ui"
+import { DataType } from "../../../domain/entity"
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const getDataTypeIcon = (type: DataType | undefined) => {

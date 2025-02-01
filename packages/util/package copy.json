@@ -1,0 +1,31 @@
+{
+  "name": "@scenario-flow/ui",
+  "version": "1.0.0",
+  "description": "",
+  "sideEffects": false,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint --cache",
+    "lint:fix": "pnpm run lint --fix",
+    "lint:inspect": "eslint --inspect-config",
+    "format": "prettier --cache --ignore-path .prettierignore --check .",
+    "format:fix": "pnpm run format --write",
+    "type-check": "pnpm exec tsc -p ./tsconfig.json --noEmit",
+    "check": "run-p lint format type-check",
+    "fix": "run-p lint:fix format:fix type-check"
+  },
+  "dependencies": {
+    "react": "catalog:",
+    "react-icons": "catalog:",
+    "@radix-ui/react-dialog": "catalog:",
+    "@radix-ui/react-switch": "catalog:"
+  },
+  "devDependencies": {
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-react": "catalog:",
+    "prettier": "catalog:",
+    "@types/react": "catalog:",
+    "@scenario-flow/typescript-config": "workspace:"
+  }
+}

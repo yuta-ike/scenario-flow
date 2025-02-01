@@ -10,10 +10,11 @@
     "dev:vite": "vite",
     "build:vite": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "type-check": "pnpm exec tsc -p ./tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@scenario-flow/core": "workspace:*",
+    "@scenario-flow/app": "workspace:*",
     "@tauri-apps/api": "catalog:",
     "@tauri-apps/plugin-dialog": "catalog:",
     "@tauri-apps/plugin-fs": "catalog:",
@@ -28,14 +29,14 @@
     "@esbuild-plugins/node-globals-polyfill": "catalog:",
     "@esbuild-plugins/node-modules-polyfill": "catalog:",
     "@tauri-apps/cli": "catalog:",
-    "@types/react": "^18.3.12",
+    "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^2.1.6",
     "@vitest/ui": "^2.1.6",
     "autoprefixer": "catalog:",
     "globals": "^15.12.0",
-    "jotai": "^2.10.3",
+    "jotai": "catalog:",
     "postcss": "^8.4.49",
     "rollup-plugin-visualizer": "catalog:"
   }

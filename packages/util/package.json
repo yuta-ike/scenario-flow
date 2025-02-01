@@ -1,0 +1,44 @@
+{
+  "name": "@scenario-flow/util",
+  "version": "1.0.0",
+  "description": "",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./lib": "./src/lib/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint --cache",
+    "lint:fix": "pnpm run lint --fix",
+    "lint:inspect": "eslint --inspect-config",
+    "format": "prettier --cache --ignore-path .prettierignore --check .",
+    "format:fix": "pnpm run format --write",
+    "type-check": "pnpm exec tsc -p ./tsconfig.json --noEmit",
+    "check": "run-p lint format type-check",
+    "fix": "run-p lint:fix format:fix type-check"
+  },
+  "dependencies": {
+    "@stoplight/json-schema-sampler": "catalog:",
+    "client-zip": "catalog:",
+    "date-fns": "catalog:",
+    "effect": "catalog:",
+    "fuzzysort": "catalog:",
+    "jotai": "catalog:",
+    "js-yaml": "catalog:",
+    "nanoid": "catalog:",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@apidevtools/json-schema-ref-parser": "catalog:",
+    "@scenario-flow/typescript-config": "workspace:",
+    "@types/json-schema": "catalog:",
+    "@types/react": "catalog:",
+    "@types/js-yaml": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-react": "catalog:",
+    "openapi3-ts": "catalog:",
+    "prettier": "catalog:"
+  }
+}

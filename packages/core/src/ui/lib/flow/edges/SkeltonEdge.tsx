@@ -2,7 +2,7 @@ import { memo } from "react"
 import { BaseEdge, getSmoothStepPath } from "@xyflow/react"
 
 import type { Edge, EdgeProps } from "@xyflow/react"
-import type { Replace } from "@/utils/typeUtil"
+import { Replace } from "@scenario-flow/util"
 
 type EdgeData = {
   points: { x: number; y: number }[]

@@ -4,7 +4,7 @@ import type { Expression } from "../value/expression"
 import type { LocalVariable, LocalVariableId } from "../variable/variable"
 import type { Builder, BuilderReturn, Transition } from "../type"
 import type { NodeId, Node } from "../node/node"
-import type { Id } from "@/utils/idType"
+import { Id } from "@scenario-flow/util"
 
 declare const _route: unique symbol
 export type RouteId = Id & { [_route]: never }
@@ -27,6 +27,7 @@ export type Route = {
   [_route]: never
   id: RouteId
   name: string
+  description: string
   path: Node[]
   color: Color
   page: Page
@@ -48,8 +49,8 @@ export const buildRoute: Builder<Route, [usedNames?: string[]]> = (
 
 export const buildPrimitiveRoute: Builder<PrimitiveRoute> = (id, params) => {
   return {
-    id,
     ...params,
+    id,
   } satisfies BuilderReturn<PrimitiveRoute> as PrimitiveRoute
 }
 

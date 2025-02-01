@@ -4,11 +4,9 @@ import { getExample } from "./exampleUtil"
 import { getParametersMap } from "./getParametersMap"
 
 import type { OperationObject } from "openapi3-ts/oas31"
-import type { RestCallActionParameter } from "@/domain/entity/action/actionParameter"
-import type { HttpMethod } from "@/utils/http"
-
-import { emptyJson } from "@/utils/json"
-import { genSampleFromSchemaObject } from "@/lib/json-schema/genJsonFromSchema"
+import { HttpMethod, emptyJson } from "@scenario-flow/util"
+import { RestCallActionParameter } from "../../entity/action/actionParameter"
+import { genSampleFromSchemaObject } from "@scenario-flow/util/lib"
 
 /**
  * サンプルデータを生成する

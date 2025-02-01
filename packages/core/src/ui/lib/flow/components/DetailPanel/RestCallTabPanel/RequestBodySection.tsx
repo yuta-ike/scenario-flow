@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { FiPlus } from "react-icons/fi"
 
 import { MagicVariableButton } from "../MagicVariableButton"
@@ -7,23 +7,26 @@ import { Section } from "../Section"
 import type { SetStateAction } from "react"
 import type { RequestBodyObject } from "openapi3-ts/oas31"
 import type { SchemaObject } from "ajv"
-import type { Json } from "@/utils/json"
-import type { ContentType } from "@/utils/http"
-import type { KVItem } from "@/ui/lib/kv"
-import type { NodeId } from "@/domain/entity/node/node"
-import type { ResolvedRestCallActionInstance } from "@/domain/entity/node/actionInstance"
-import type { EditorRef } from "@/ui/lib/editor/Editor2"
+import type { KVItem } from "@scenario-flow/util"
+import { Select, Button, ErrorBoundary } from "@scenario-flow/ui"
+import {
+  ContentType,
+  safelyParseJson,
+  Json,
+  CONTENT_TYPES,
+  strigifyJson,
+  applyUpdate,
+} from "@scenario-flow/util"
 
-import { safelyParseJson, strigifyJson } from "@/utils/json"
-import { applyUpdate } from "@/ui/utils/applyUpdate"
-import { CONTENT_TYPES } from "@/utils/http"
-import { updateActionInstance } from "@/ui/adapter/command"
-import { Button } from "@/ui/components/common/Button"
-import { ParameterTable } from "@/ui/lib/ParameterTable"
-import { Editor2 } from "@/ui/lib/editor/Editor2"
-import { ErrorBoundary } from "@/ui/components/ErrorBoundary"
-import { Select } from "@/ui/components/common/Select"
-import { useParentNodeEnvironment } from "@/ui/adapter/query"
+import { updateActionInstance } from "../../../../../adapter/command"
+import { useParentNodeEnvironment } from "../../../../../adapter/query"
+import { EditorRef, Editor2 } from "../../../../editor/Editor2"
+import { ParameterTable } from "../../../../ParameterTable"
+import { useStore } from "../../../../provider"
+import {
+  NodeId,
+  ResolvedRestCallActionInstance,
+} from "../../../../../../domain/entity"
 
 type Props = {
   nodeId: NodeId
@@ -31,9 +34,11 @@ type Props = {
 }
 
 export const RequestBodySection = ({ nodeId, ai }: Props) => {
+  const store = useStore()
+
   // content type and body
   const [contentTypeTab, setContentTypeTab] = useState<ContentType | null>(
-    ai.instanceParameter.body?.selected ?? null,
+    "application/json",
   )
 
   const ref = useRef<EditorRef>(null)
@@ -45,12 +50,12 @@ export const RequestBodySection = ({ nodeId, ai }: Props) => {
 
   const handleUpdateFormDataParameter = useCallback(
     (update: SetStateAction<KVItem[]>) => {
-      updateActionInstance(nodeId, ai.id, {
+      updateActionInstance(store, nodeId, ai.id, {
         ...ai,
         instanceParameter: {
           ...ai.instanceParameter,
           body: {
-            selected: ai.instanceParameter.body?.selected,
+            selected: "application/form-data",
             params: {
               ...ai.instanceParameter.body?.params,
               "application/form-data": applyUpdate(
@@ -74,12 +79,12 @@ export const RequestBodySection = ({ nodeId, ai }: Props) => {
         setJsonInvalid(true)
         return
       }
-      updateActionInstance(nodeId, ai.id, {
+      updateActionInstance(store, nodeId, ai.id, {
         ...ai,
         instanceParameter: {
           ...ai.instanceParameter,
           body: {
-            selected: ai.instanceParameter.body?.selected,
+            selected: "application/json",
             params: {
               ...ai.instanceParameter.body?.params,
               "application/json": json,

@@ -1,18 +1,20 @@
 import { TbComponents, TbExternalLink } from "react-icons/tb"
 
-import type { NodeId } from "@/domain/entity/node/node"
-import type { ResourceActionIdentifier } from "@/domain/entity/action/identifier"
-import type { ResolvedAction } from "@/domain/entity/action/action"
-
-import { MethodChip } from "@/ui/components/common/MethodChip"
-import { useFocusNode, useIsNodeFocused } from "@/ui/state/focusedNodeId"
-import { unwrapNull } from "@/utils/result"
-import { updateNode } from "@/ui/adapter/command"
-import { isResourceAction } from "@/domain/entity/action/identifier"
-import { useNode, useResource } from "@/ui/adapter/query"
-import { Drawer } from "@/ui/components/common/Drawer"
-import { ResourceDetail } from "@/ui/page/index/Settings/ResourceDetail"
-import { getFilledPath } from "@/domain/entity/action/actionParameter"
+import { useStore } from "../../provider"
+import { Drawer } from "@scenario-flow/ui"
+import { unwrapNull } from "@scenario-flow/util"
+import {
+  NodeId,
+  getFilledPath,
+  isResourceAction,
+  ResolvedAction,
+  ResourceActionIdentifier,
+} from "../../../../domain/entity"
+import { updateNode } from "../../../adapter/command"
+import { useNode, useResource } from "../../../adapter/query"
+import { MethodChip } from "../../../components/common/MethodChip"
+import { ResourceDetail } from "../../../page/index/Settings/ResourceDetail"
+import { useFocusNode, useIsNodeFocused } from "../../../state/focusedNodeId"
 
 type Props = {
   nodeId: NodeId
@@ -20,13 +22,14 @@ type Props = {
 }
 
 export const StepItem = ({ nodeId, index }: Props) => {
+  const store = useStore()
   const focus = useFocusNode()
   const isFocused = useIsNodeFocused(nodeId)
 
   const node = useNode(nodeId)
 
   const updateNodeName = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateNode(nodeId, { name: e.target.value })
+    updateNode(store, nodeId, { name: e.target.value })
   }
 
   return (

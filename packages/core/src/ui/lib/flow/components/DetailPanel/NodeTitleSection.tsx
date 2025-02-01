@@ -7,22 +7,30 @@ import { flushSync } from "react-dom"
 
 import { MagicVariableButton } from "./MagicVariableButton"
 
-import type { Expression } from "@/domain/entity/value/expression"
-import type { Node } from "@/domain/entity/node/node"
-
+import { parseNumber } from "@scenario-flow/util"
 import {
+  TextareaAutosize,
+  ToolButton,
+  IconButton,
+  Collapsible,
+  ErrorBoundary,
+  ErrorDisplay,
+} from "@scenario-flow/ui"
+import {
+  Node,
+  NodeId,
   isNodeConfigConditionSet,
   isNodeConfigLoopSet,
-  type NodeId,
-} from "@/domain/entity/node/node"
-import { deleteNode, updateNode, updateNodeConfig } from "@/ui/adapter/command"
-import { useNode, useParentNodeEnvironment } from "@/ui/adapter/query"
-import { IconButton } from "@/ui/components/common/IconButton"
-import { TextareaAutosize } from "@/ui/components/common/TextareaAutosize"
-import { useResetFocusNodeId } from "@/ui/state/focusedNodeId"
-import { ToolButton } from "@/ui/components/common/ToolButton"
-import { parseNumber } from "@/utils/number"
-import { Collapsible } from "@/ui/components/common/Collapsible"
+  Expression,
+} from "../../../../../domain/entity"
+import {
+  updateNode,
+  deleteNode,
+  updateNodeConfig,
+} from "../../../../adapter/command"
+import { useNode, useParentNodeEnvironment } from "../../../../adapter/query"
+import { useResetFocusNodeId } from "../../../../state/focusedNodeId"
+import { useStore } from "../../../provider"
 
 const descriptionAreaExpandedAtom = atom(false)
 
@@ -31,23 +39,25 @@ type NodeTitleSectionProps = {
 }
 
 export const NodeTitleSection = ({ nodeId }: NodeTitleSectionProps) => {
+  const store = useStore()
   const node = useNode(nodeId)
 
   const [showLoopOrConditionConfig, setShowLoopOrConditionConfig] =
     useState(false)
 
   const updateNodeName = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    updateNode(nodeId, { name: e.target.value })
+    updateNode(store, nodeId, { name: e.target.value })
   }
 
   const updateNodeDescription = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    updateNode(nodeId, { description: e.target.value })
+    updateNode(store, nodeId, { description: e.target.value })
   }
 
   const reset = useResetFocusNodeId()
 
   const [descriptionAreaExpanded, setDescriptionAreaExpanded] = useAtom(
     descriptionAreaExpandedAtom,
+    { store: store.store },
   )
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
 
@@ -82,7 +92,7 @@ export const NodeTitleSection = ({ nodeId }: NodeTitleSectionProps) => {
           icon={FiTrash}
           label="削除"
           size="sm"
-          onClick={() => deleteNode(nodeId)}
+          onClick={() => deleteNode(store, nodeId)}
         />
         <hr className="h-auto w-px self-stretch border-l border-l-slate-200" />
         <div className="shrink-0 py-1">
@@ -137,16 +147,20 @@ export const NodeTitleSection = ({ nodeId }: NodeTitleSectionProps) => {
           </Collapsible>
         </div>
       </section>
-      <Collapsible show={showLoopOrConditionConfig}>
-        <ExpandedSection node={node} />
-      </Collapsible>
+      <ErrorBoundary fallback={<ErrorDisplay />}>
+        <Collapsible show={showLoopOrConditionConfig}>
+          <ExpandedSection node={node} />
+        </Collapsible>
+      </ErrorBoundary>
     </div>
   )
 }
 
 const ExpandedSection = ({ node }: { node: Node }) => {
+  const store = useStore()
+
   const updateNodeCondition = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateNodeConfig(node.id, {
+    updateNodeConfig(store, node.id, {
       ...node.config,
       condition: e.target.value as Expression,
     })
@@ -155,7 +169,7 @@ const ExpandedSection = ({ node }: { node: Node }) => {
   const updateNodeConfigLoopMaxRetries = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    updateNodeConfig(node.id, {
+    updateNodeConfig(store, node.id, {
       ...node.config,
       loop: {
         ...node.config.loop,
@@ -167,7 +181,7 @@ const ExpandedSection = ({ node }: { node: Node }) => {
   const updateNodeConfigLoopInterval = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    updateNodeConfig(node.id, {
+    updateNodeConfig(store, node.id, {
       ...node.config,
       loop: {
         ...node.config.loop,
@@ -179,7 +193,7 @@ const ExpandedSection = ({ node }: { node: Node }) => {
   const updateNodeConfigLoopMaxElapsedTime = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    updateNodeConfig(node.id, {
+    updateNodeConfig(store, node.id, {
       ...node.config,
       loop: {
         ...node.config.loop,
@@ -188,6 +202,7 @@ const ExpandedSection = ({ node }: { node: Node }) => {
     })
   }
 
+  console.log(node.id)
   const environment = useParentNodeEnvironment(node.id)
 
   return (

@@ -1,7 +1,7 @@
 import type { Builder, BuilderReturn, Transition } from "../type"
 import type { JSONSchema7 } from "json-schema"
 import type { TypedValue } from "../value/dataType"
-import type { Id } from "@/utils/idType"
+import { Id } from "@scenario-flow/util"
 
 // Pattern
 declare const _pattern: unique symbol

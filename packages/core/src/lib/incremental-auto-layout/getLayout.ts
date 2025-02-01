@@ -1,6 +1,5 @@
 import { graphlib, layout } from "@dagrejs/dagre"
-
-import { dedupe } from "../array/utils"
+import { dedupe } from "@scenario-flow/util/lib"
 
 type Pos = {
   x: number

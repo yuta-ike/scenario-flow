@@ -1,4 +1,4 @@
-import type { Project } from "@/ui/domain/project"
+import { Project } from "../../ui/domain/project"
 
 export type AppStore = {
   version?: "1.0.0"

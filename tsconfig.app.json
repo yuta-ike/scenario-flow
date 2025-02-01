@@ -14,9 +14,6 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "paths": {
-      "@/*": ["./packages/core/src/*"]
-    },
 
     /* Linting */
     "strict": true,

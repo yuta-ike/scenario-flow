@@ -25,8 +25,7 @@ import { buildGlobalVariableBind } from "../entity/globalVariable/globalVariable
 import { getResolvedNodeEnvironment } from "./getRouteEnvironment"
 
 import type { Expression } from "../entity/value/expression"
-
-import { createStore } from "@/lib/jotai/store"
+import { createStore } from "@scenario-flow/util/lib"
 
 const store = createStore()
 

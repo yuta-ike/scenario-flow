@@ -13,8 +13,7 @@ import { primitiveRoutesAtom } from "../datasource/route"
 
 import type { ResolvedAction } from "../entity/action/action"
 import type { Getter } from "jotai"
-
-import { associateBy } from "@/utils/set"
+import { associateBy } from "@scenario-flow/util"
 
 // selector
 export const resolveActionInstance = (

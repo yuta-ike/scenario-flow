@@ -1,12 +1,12 @@
-import React from "react"
 import { TbComponents } from "react-icons/tb"
 
-import type { ResolvedAction } from "@/domain/entity/action/action"
-import type { ResourceActionIdentifier } from "@/domain/entity/action/identifier"
-
-import { useResource } from "@/ui/adapter/query"
-import { Drawer } from "@/ui/components/common/Drawer"
-import { ResourceDetail } from "@/ui/page/index/Settings/ResourceDetail"
+import { Drawer } from "@scenario-flow/ui"
+import {
+  ResolvedAction,
+  ResourceActionIdentifier,
+} from "../../../../../../domain/entity"
+import { useResource } from "../../../../../adapter/query"
+import { ResourceDetail } from "../../../../../page/index/Settings/ResourceDetail"
 
 type Props = {
   action: ResolvedAction & ResourceActionIdentifier

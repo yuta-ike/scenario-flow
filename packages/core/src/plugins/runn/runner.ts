@@ -1,6 +1,5 @@
+import { error, success } from "@scenario-flow/util"
 import type { EnginePluginRunner } from "../type"
-
-import { error, success } from "@/utils/result"
 
 type RunnResult = {
   failure: number
@@ -23,20 +22,6 @@ export const runnRunner: EnginePluginRunner<string[]> = async ({
   command,
   scenarios,
 }) => {
-  console.log(scenarios)
-  // node.titleとnode.idの対応
-  const nodeNameMap = new Map(
-    scenarios.flatMap((scenario) =>
-      Object.entries(scenario.contents.steps).map(
-        ([id, step]) => [id, step.title] as const,
-      ),
-    ),
-  )
-
-  // pathとscenario.idの対応
-  const pathIdMap = new Map(
-    scenarios.map((scenario) => [scenario.path, scenario.meta.id]),
-  )
   const paths = scenarios.map((scenario) => scenario.path)
 
   try {
@@ -47,8 +32,6 @@ export const runnRunner: EnginePluginRunner<string[]> = async ({
     }
 
     const runnResult: RunnResult = JSON.parse(result.value)
-    console.log(nodeNameMap)
-    console.log(runnResult)
 
     return success(
       runnResult.results.map(({ steps, result }, index) => ({

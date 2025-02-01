@@ -1,4 +1,4 @@
-import type { JsonPrimitive } from "@/utils/json"
+import { JsonPrimitive } from "@scenario-flow/util"
 
 export type DataType =
   | "string"

@@ -5,38 +5,46 @@ import { TbApi, TbDatabase, TbFileImport } from "react-icons/tb"
 import { useAtomCallback } from "jotai/utils"
 
 import type { CreateNode as CreateNodeType } from "../../type"
-import type { RouteId } from "@/domain/entity/route/route"
-
-import { appendUserDefinedRestCallNode } from "@/ui/adapter/command"
-import { appendIncludeNode, appendDbNode } from "@/ui/adapter/command"
-import { currentPageAtom } from "@/ui/state/page"
+import { useStore } from "../../../provider"
+import { RouteId } from "../../../../../domain/entity"
+import {
+  appendIncludeNode,
+  appendUserDefinedRestCallNode,
+  appendDbNode,
+} from "../../../../adapter/command"
+import { currentPageAtom } from "../../../../state/page"
 
 type ApiCallNodeProps = NodeProps<CreateNodeType>
 
 export const CreateNode = memo<ApiCallNodeProps>(
   ({ data: { originalNodeId: nodeId } }) => {
+    const store = useStore()
     const connection = useConnection()
 
     const handleCreateNewIncludeNode = useAtomCallback(
       useCallback(
         (get, _) =>
-          appendIncludeNode(nodeId, "" as RouteId, get(currentPageAtom)),
+          appendIncludeNode(store, nodeId, "" as RouteId, get(currentPageAtom)),
         [nodeId],
       ),
+      { store: store.store },
     )
 
     const handleInsertUserDefinedApiCallNode = useAtomCallback(
       useCallback(
-        (get, _) => appendUserDefinedRestCallNode(nodeId, get(currentPageAtom)),
+        (get, _) =>
+          appendUserDefinedRestCallNode(store, nodeId, get(currentPageAtom)),
         [nodeId],
       ),
+      { store: store.store },
     )
 
     const handleAppendDbNode = useAtomCallback(
       useCallback(
-        (get, _) => appendDbNode(nodeId, get(currentPageAtom)),
+        (get, _) => appendDbNode(store, nodeId, get(currentPageAtom)),
         [nodeId],
       ),
+      { store: store.store },
     )
 
     return (

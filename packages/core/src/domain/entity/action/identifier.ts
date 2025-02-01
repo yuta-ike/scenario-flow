@@ -2,8 +2,7 @@ import type { ResourceId } from "../resource/resource"
 import type { Equal, Receiver, StripeSymbol } from "../type"
 import type { UserDefinedActionId } from "../userDefinedAction/userDefinedAction"
 import type { ResourceActionLocalIdentifier } from "../resource/identifier"
-
-import { throwUnreachable } from "@/utils/unreachable"
+import { throwUnreachable } from "@scenario-flow/util"
 
 // Action Identifier
 export type ResourceActionIdentifierParam = {

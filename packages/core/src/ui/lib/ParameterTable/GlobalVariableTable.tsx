@@ -28,9 +28,7 @@ import clsx from "clsx"
 
 import type { DragEndEvent, UniqueIdentifier } from "@dnd-kit/core"
 import type { CellContext, ColumnDef, Row } from "@tanstack/react-table"
-import type { Id } from "@/utils/idType"
-
-import { genId } from "@/utils/uuid"
+import { type Id, genId } from "@scenario-flow/util"
 
 export type TableRow = {
   id: Id

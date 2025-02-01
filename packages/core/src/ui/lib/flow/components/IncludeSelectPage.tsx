@@ -1,13 +1,13 @@
 import { useAtomCallback } from "jotai/utils"
-import React, { useCallback, useState } from "react"
+import { useCallback, useState } from "react"
 import { TbFlag2, TbFolder } from "react-icons/tb"
 
-import type { RouteId } from "@/domain/entity/route/route"
-
-import { currentPageAtom, usePages } from "@/ui/state/page"
-import { Select } from "@/ui/components/common/Select"
-import { useRoutes } from "@/ui/adapter/query"
-import { fill } from "@/utils/placeholder"
+import { Select } from "@scenario-flow/ui"
+import { fill } from "@scenario-flow/util"
+import { RouteId } from "../../../../domain/entity"
+import { useRoutes } from "../../../adapter/query"
+import { currentPageAtom, usePages } from "../../../state/page"
+import { useStore } from "../../provider"
 
 type Props = {
   onCreate: (routeId: RouteId) => void
@@ -15,7 +15,10 @@ type Props = {
 
 export const IncludeSelectPage = ({ onCreate }: Props) => {
   const [selectedPage, setSelectedPage] = useState(
-    useAtomCallback(useCallback((get) => get(currentPageAtom), [])),
+    useAtomCallback(
+      useCallback((get) => get(currentPageAtom), []),
+      { store: useStore().store },
+    ),
   )
 
   const pages = usePages()

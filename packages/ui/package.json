@@ -1,0 +1,43 @@
+{
+  "name": "@scenario-flow/ui",
+  "version": "1.0.0",
+  "description": "",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint --cache",
+    "lint:fix": "pnpm run lint --fix",
+    "lint:inspect": "eslint --inspect-config",
+    "format": "prettier --cache --ignore-path .prettierignore --check .",
+    "format:fix": "pnpm run format --write",
+    "type-check": "pnpm exec tsc -p ./tsconfig.json --noEmit",
+    "check": "run-p lint format type-check",
+    "fix": "run-p lint:fix format:fix type-check",
+    "test": "vitest --ui"
+  },
+  "dependencies": {
+    "clsx": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-icons": "catalog:",
+    "@radix-ui/react-accordion": "catalog:",
+    "@radix-ui/react-dialog": "catalog:",
+    "@radix-ui/react-popover": "catalog:",
+    "@radix-ui/react-select": "catalog:",
+    "@radix-ui/react-switch": "catalog:",
+    "@radix-ui/react-tooltip": "catalog:",
+    "@scenario-flow/util": "workspace:"
+  },
+  "devDependencies": {
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-react": "catalog:",
+    "prettier": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@scenario-flow/typescript-config": "workspace:"
+  }
+}

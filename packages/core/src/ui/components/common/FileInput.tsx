@@ -1,9 +1,7 @@
 import { TbFile, TbFileImport } from "react-icons/tb"
+import { FileContent } from "@scenario-flow/util"
 
-import type { FileContent } from "@/utils/file"
-
-import { useProjectContext } from "@/ui/context/context"
-import { useInjected } from "@/container"
+import { useInjected, useProjectContext } from "../../lib/provider"
 
 type FileImportProps = {
   value: FileContent | null

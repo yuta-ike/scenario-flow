@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/consistent-indexed-object-style */
-import type { Json } from "../../../utils/json"
+
+import { Json } from "@scenario-flow/util"
 
 type ContentType = "application/json" | "application/form-data"
 

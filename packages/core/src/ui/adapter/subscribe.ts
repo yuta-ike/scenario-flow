@@ -1,19 +1,18 @@
 import { useEffect } from "react"
 
-import { store } from "./store"
-import { useProjectContext } from "./ProjectContext"
+import type { DirHandle, FileHandle, InjectedIo } from "../../injector/parts/io"
 
-import type { Json } from "@/utils/json"
-import type { DirHandle, FileHandle, InjectedIo } from "@/injector/parts/io"
-import type { LocalFileLocation } from "@/domain/entity/resource/resource"
-
-import { decomposedForLibAtom } from "@/domain/selector/decomposedForPlugin"
-import { jsonToYaml } from "@/utils/yaml"
-import { debouncedLock } from "@/utils/lock"
-import { resourcesAtom } from "@/domain/datasource/resource"
-import { associateWithList } from "@/utils/set"
-import { nonNull } from "@/utils/assert"
-import { useInjected } from "@/container"
+import { useInjected, useProjectContext, useStore } from "../lib/provider"
+import {
+  associateWithList,
+  debouncedLock,
+  Json,
+  jsonToYaml,
+  nonNull,
+} from "@scenario-flow/util"
+import { resourcesAtom } from "../../domain/datasource/resource"
+import { LocalFileLocation } from "../../domain/entity"
+import { decomposedForLibAtom } from "../../domain/selector/decomposedForPlugin"
 
 const getOrCreateEntryRec = async (
   entry: DirHandle,
@@ -40,6 +39,7 @@ export const useWriteOutSubscription = () => {
   const {
     io: { writeFile, createFile, createDir, deleteFile, deleteDir },
   } = useInjected()
+  const store = useStore()
 
   useEffect(() => {
     let prevModifiedFiles = new Map<
@@ -47,6 +47,7 @@ export const useWriteOutSubscription = () => {
       { file: FileHandle; dir: DirHandle }
     >()
     let prevModifiedDirs = new Map<string, { dir: DirHandle; name: string }>()
+
     return store.subscribe(
       decomposedForLibAtom,
       debouncedLock(async () => {
@@ -143,6 +144,7 @@ export const useWriteOutSubscription = () => {
     entry,
     project.id,
     writeFile,
+    store,
   ])
 
   useEffect(() => {

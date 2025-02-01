@@ -1,8 +1,7 @@
 import { useCallback } from "react"
 
 import { useReactFlow } from "./FlowProvider"
-
-import type { NodeId } from "@/domain/entity/node/node"
+import { NodeId } from "../../../domain/entity"
 
 export const useFocusOn = () => {
   const reactFlow = useReactFlow()

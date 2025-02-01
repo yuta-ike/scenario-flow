@@ -1,29 +1,15 @@
 import { run } from "../lib/effect/run"
 import { currentPageAtom } from "../state/page"
 
-import { store } from "./store"
-
 import type { Context } from "./context"
 import type { Effect } from "effect/Effect"
 import type { OpenAPIObject } from "openapi3-ts/oas31"
-import type { Json } from "@/utils/json"
-import type { NodeId } from "@/domain/entity/node/node"
-import type { ActionType } from "@/domain/entity/action/action"
-import type { ActionSourceIdentifier } from "@/domain/entity/action/identifier"
-import type { Result } from "@/utils/result"
-import type { JsonParseError } from "@/lib/json-schema/error"
-import type { Resource } from "@/domain/entity/resource/resource"
-import type { StripeSymbol } from "@/domain/entity/type"
+import { genId, Json, Result, addSetOp, success } from "@scenario-flow/util"
+import { Store, JsonParseError, resolveRefs } from "@scenario-flow/util/lib"
+import { resourceAtom, resourceIdsAtom } from "../../domain/datasource/resource"
 
-import { type RouteId } from "@/domain/entity/route/route"
-import {
-  buildResource,
-  type ResourceId,
-} from "@/domain/entity/resource/resource"
-import { resourceAtom, resourceIdsAtom } from "@/domain/datasource/resource"
-import { addResource, putResource } from "@/domain/workflow/resource"
-import { addSetOp } from "@/utils/set"
-import { genId } from "@/utils/uuid"
+import { addResource, putResource } from "../../domain/workflow/resource"
+
 import {
   addRoute as addRouteWf,
   deleteRoute as deleteRouteWf,
@@ -31,7 +17,7 @@ import {
   updateRoute as updateRouteWf,
   swapRoutePath as swapRoutePathWf,
   updateRouteVariables as updateRouteVariablesWf,
-} from "@/domain/workflow/route"
+} from "../../domain/workflow/route"
 import {
   appendNode as appendNodeWf,
   createRootNode as createRootNodeWf,
@@ -54,29 +40,39 @@ import {
   updateUserDefinedAction as updateUserDefinedActionWf,
   changeToNewAction as changeToNewActionWf,
   changeAction as changeActionWf,
-} from "@/domain/workflow/node"
+} from "../../domain/workflow/node"
 import {
   addGlobalVariable as addGlobalVariableWf,
   updateGlobalVariable as updateGlobalVariableWf,
   updateGlobalVariableValue as updateGlobalVariableValueWf,
-} from "@/domain/workflow/globalVariable"
-import { toActionInstanceId } from "@/domain/entity/node/actionInstance.util"
-import { toExpression } from "@/domain/entity/value/expression.util"
-import { resolveRefs } from "@/lib/json-schema/resolveRefs"
-import { success } from "@/utils/result"
+} from "../../domain/workflow/globalVariable"
+import {
+  ActionSourceIdentifier,
+  toActionInstanceId,
+  toExpression,
+  RouteId,
+  NodeId,
+  ActionType,
+  StripeSymbol,
+  ResourceId,
+  buildResource,
+  Resource,
+} from "../../domain/entity"
 
 export const applyRunner =
   <Args extends unknown[], A, E>(
     effect: (...args: Args) => Effect<A, E, Context>,
   ) =>
-  (...args: Args): A =>
-    run(effect(...args))
+  (store: Store, ...args: Args): A =>
+    run(store, effect(...args))
 
 export const createRestCallRootNode = (
+  store: Store,
   actionIdentifier: ActionSourceIdentifier,
   page: string,
 ) =>
   run(
+    store,
     createRootNodeWf(
       {
         description: "",
@@ -118,8 +114,13 @@ export const createRestCallRootNode = (
     ),
   )
 
-export const createIncludeRootNode = (routeId: RouteId, page: string) =>
+export const createIncludeRootNode = (
+  store: Store,
+  routeId: RouteId,
+  page: string,
+) =>
   run(
+    store,
     createRootNodeWf(
       {
         description: "",
@@ -158,8 +159,9 @@ export const createIncludeRootNode = (routeId: RouteId, page: string) =>
     ),
   )
 
-export const createDbNode = (page: string) =>
+export const createDbNode = (store: Store, page: string) =>
   run(
+    store,
     createRootNodeWf(
       {
         description: "",
@@ -202,11 +204,13 @@ export const createUserDefinedRestCallRootNode = applyRunner(
 )
 
 export const appendNode = (
+  store: Store,
   nodeId: NodeId,
   actionIdentifier: ActionSourceIdentifier,
   page: string,
 ) =>
   run(
+    store,
     appendNodeWf(
       {
         description: "",
@@ -245,11 +249,13 @@ export const appendNode = (
   )
 
 export const appendIncludeNode = (
+  store: Store,
   nodeId: NodeId,
   routeId: RouteId,
   page: string,
 ) =>
   run(
+    store,
     appendNodeWf(
       {
         description: "",
@@ -285,12 +291,14 @@ export const appendIncludeNode = (
   )
 
 export const insertNode = (
+  store: Store,
   fromNodeId: NodeId,
   toNodeId: NodeId,
   actionIdentifier: ActionSourceIdentifier,
   page: string,
 ) =>
   run(
+    store,
     insertNodeWf(
       {
         description: "",
@@ -330,12 +338,14 @@ export const insertNode = (
   )
 
 export const insertIncludeNode = (
+  store: Store,
   fromNodeId: NodeId,
   toNodeId: NodeId,
   routeId: RouteId,
   page: string,
 ) =>
   run(
+    store,
     insertNodeWf(
       {
         description: "",
@@ -372,10 +382,12 @@ export const insertIncludeNode = (
   )
 
 export const unshiftNode = (
+  store: Store,
   routeId: RouteId,
   actionIdentifier: ActionSourceIdentifier,
 ) =>
   run(
+    store,
     unshiftNodeWf(
       {
         description: "",
@@ -412,8 +424,9 @@ export const unshiftNode = (
     ),
   )
 
-export const unshiftIncludeNode = (routeId: RouteId) =>
+export const unshiftIncludeNode = (store: Store, routeId: RouteId) =>
   run(
+    store,
     unshiftNodeWf(
       {
         description: "",
@@ -459,8 +472,9 @@ export const unshiftUserDefinedRestCallNode = applyRunner(
   unshiftUserDefinedRestCallNodeWf,
 )
 
-export const unshiftDbNode = (routeId: RouteId) =>
+export const unshiftDbNode = (store: Store, routeId: RouteId) =>
   run(
+    store,
     unshiftNodeWf(
       {
         description: "",
@@ -494,11 +508,13 @@ export const unshiftDbNode = (routeId: RouteId) =>
   )
 
 export const insertDbNode = (
+  store: Store,
   fromNodeId: NodeId,
   toNodeId: NodeId,
   page: string,
 ) =>
   run(
+    store,
     insertNodeWf(
       {
         description: "",
@@ -533,8 +549,9 @@ export const insertDbNode = (
     ),
   )
 
-export const appendDbNode = (fromNodeId: NodeId, page: string) =>
+export const appendDbNode = (store: Store, fromNodeId: NodeId, page: string) =>
   run(
+    store,
     appendNodeWf(
       {
         description: "",
@@ -570,11 +587,13 @@ export const appendDbNode = (fromNodeId: NodeId, page: string) =>
 
 // action instanceを追加する
 export const appendActionInstance = (
+  store: Store,
   nodeId: NodeId,
   type: Exclude<ActionType, "unknown">,
-) => run(appendActionInstanceWf(nodeId, type))
+) => run(store, appendActionInstanceWf(nodeId, type))
 
 export const uploadOpenApiFile = async (
+  store: Store,
   name: string,
   description: string,
   path: string,
@@ -613,6 +632,7 @@ export const uploadOpenApiFile = async (
 }
 
 export const putOpenApiFile = async (
+  store: Store,
   id: ResourceId,
   name: string,
   description: string,
@@ -654,8 +674,11 @@ export const updteRoute = applyRunner(updateRouteWf)
 
 export const swapRoutePath = applyRunner(swapRoutePathWf)
 
-export const updatePageName = (args: { prevPage: string; newPage: string }) => {
-  run(updatePageNameWf(args))
+export const updatePageName = (
+  store: Store,
+  args: { prevPage: string; newPage: string },
+) => {
+  run(store, updatePageNameWf(args))
   if (store.get(currentPageAtom) === args.prevPage) {
     store.set(currentPageAtom, args.newPage)
   }
@@ -689,8 +712,8 @@ export const changeToNewAction = applyRunner(changeToNewActionWf)
 
 export const upsertVariables = applyRunner(upsertVariablesWf)
 
-export const addGlobalVariable = (id: string, name: string) => {
-  return run(addGlobalVariableWf({ id, name }))
+export const addGlobalVariable = (store: Store, id: string, name: string) => {
+  return run(store, addGlobalVariableWf({ id, name }))
 }
 
 export const updateGlobalVariable = applyRunner(updateGlobalVariableWf)

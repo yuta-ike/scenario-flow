@@ -1,7 +1,6 @@
+import { ConnectIcon } from "@scenario-flow/ui"
 import React from "react"
 import { TbHome } from "react-icons/tb"
-
-import { ConnectIcon } from "@/ui/components/icons/ConnectIcon"
 
 type Props = {
   children: React.ReactNode

@@ -6,8 +6,8 @@ import { RunModalContent } from "../components/RunButton/RunModalContent"
 import { useSetShowListView, useShowListView } from "./showListViewAtom"
 import { ListView } from "./ListView"
 
-import { useFocusedRoute } from "@/ui/state/focusedRouteId"
-import { CustomModal } from "@/ui/components/common/CustomModal"
+import { CustomModal } from "@scenario-flow/ui"
+import { useFocusedRoute } from "../../../state/focusedRouteId"
 
 export const ListViewOpenButton = () => {
   const focusedRoute = useFocusedRoute()

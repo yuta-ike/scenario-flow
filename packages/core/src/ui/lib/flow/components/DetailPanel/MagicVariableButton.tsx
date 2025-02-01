@@ -4,15 +4,15 @@ import { useState } from "react"
 
 import { useFocusOn } from "../../useFocusOn"
 
-import type { ResolvedEnvironment } from "@/domain/entity/environment/environment"
-import type { NodeId } from "@/domain/entity/node/node"
-
-import { Popover } from "@/ui/components/common/Popover"
-import { associateWithList } from "@/utils/set"
-import { useSetHighlightedNodeId } from "@/ui/state/highlightedNodeId"
-import { getVariableName } from "@/domain/entity/environment/variable"
-import { getBoundIn } from "@/domain/entity/variable/variable"
-import { nonNull } from "@/utils/assert"
+import { Popover } from "@scenario-flow/ui"
+import { associateWithList, nonNull } from "@scenario-flow/util"
+import {
+  ResolvedEnvironment,
+  NodeId,
+  getBoundIn,
+  getVariableName,
+} from "../../../../../domain/entity"
+import { useSetHighlightedNodeId } from "../../../../state/highlightedNodeId"
 
 type MagicVariableButtonProps = {
   onInsert?: (value: string) => void
@@ -58,6 +58,7 @@ export const MagicVariableButton = ({
           const boundIn = getBoundIn(variable)
           const isThisNode =
             typeof variable.boundIn === "object" &&
+            variable.boundIn.type === "node" &&
             boundIn?.nodeId === currentNodeId
           return {
             id: boundIn?.nodeId ?? boundIn?.routeId ?? "global",

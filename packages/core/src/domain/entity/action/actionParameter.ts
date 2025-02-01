@@ -1,11 +1,9 @@
 import type { Expression } from "../value/expression"
 import type { LocalVariableId } from "../variable/variable"
 import type { Empty } from "effect/ConfigProviderPathPatch"
-import type { HttpMethod } from "@/utils/http"
-import type { Json } from "@/utils/json"
-import type { PartialPartial } from "@/utils/typeUtil"
 
-import { dedupe, type KVItem } from "@/ui/lib/kv"
+import { dedupe, type KVItem } from "@scenario-flow/util"
+import { Json, HttpMethod, PartialPartial } from "@scenario-flow/util"
 
 export type HttpRequestBodyContentTypeObject = {
   "application/json"?: Json
@@ -94,10 +92,6 @@ const mergeRestCallActionParameter = (
     DEFAULT_REST_CALL_ACTION_PARAMETER,
   )
 
-  // const requiredPathParamKeys = merged.path
-  //   .matchAll(/(?<!\{)\{[^({|})]+\}(?!\{)/g)
-  //   .map((m) => m[0].slice(1, -1))
-
   return {
     method: merged.method,
     path: merged.path,
@@ -105,22 +99,21 @@ const mergeRestCallActionParameter = (
       merged.headers.toSorted(
         (a, b) => (a.value.length === 0 ? -1 : b.value.length === 0 ? 1 : 0), // 値が入力されていない場合は優先しない
       ),
-    ),
+    ).filter((kv) => kv.key !== "" || kv.value !== ""),
     cookies: dedupe(
       merged.cookies.toSorted(
         (a, b) => (a.value.length === 0 ? -1 : b.value.length === 0 ? 1 : 0), // 値が入力されていない場合は優先しない
       ),
-    ),
+    ).filter((kv) => kv.key !== "" || kv.value !== ""),
     queryParams: dedupe(
       merged.queryParams.toSorted(
         (a, b) => (a.value.length === 0 ? -1 : b.value.length === 0 ? 1 : 0), // 値が入力されていない場合は優先しない
       ),
-    ),
+    ).filter((kv) => kv.key !== "" || kv.value !== ""),
     pathParams: dedupe(merged.pathParams),
     body:
-      merged.body == null
-        ? undefined
-        : {
+      merged.body != null
+        ? {
             selected: merged.body.selected,
             params: {
               "application/json": merged.body.params["application/json"],
@@ -128,7 +121,16 @@ const mergeRestCallActionParameter = (
                 merged.body.params["application/form-data"],
               ),
             },
-          },
+          }
+        : actionParameters[0]?.body != null
+          ? {
+              selected: "application/json",
+              params: {
+                "application/json":
+                  actionParameters[0]?.body?.params["application/json"],
+              },
+            }
+          : undefined,
     baseUrl: merged.baseUrl,
   }
 }
@@ -156,9 +158,7 @@ export const getFilledPath = (
 
   const pathname = pathParams.reduce((acc, cur) => {
     const value = cur.value
-    return 0 < value.length
-      ? acc.replace(`{${cur.key}}`, encodeURIComponent(value))
-      : acc
+    return 0 < value.length ? acc.replace(`{${cur.key}}`, value) : acc
   }, path)
 
   if (queryparams.length === 0) {
@@ -167,7 +167,7 @@ export const getFilledPath = (
 
   const query = queryparams
     .map((query) => {
-      return `${encodeURIComponent(query.key)}=${encodeURIComponent(query.value)}`
+      return `${query.key}=${query.value}`
     })
     .join("&")
 

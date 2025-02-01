@@ -61,17 +61,20 @@ import type {
 } from "../entity/node/actionInstance"
 import type { NodeId, PrimitiveNode, NodeConfig } from "../entity/node/node"
 import type { RouteId, PrimitiveRoute } from "../entity/route/route"
-import type { OmitId } from "@/utils/idType"
-import type { DistributiveOmit, PartialDict } from "@/utils/typeUtil"
-import type { ContextOf } from "@/lib/effect/contextOf"
-import type { Updater } from "@/ui/utils/applyUpdate"
-
-import { dedupeArrays, sliceFormer, sliceLatter } from "@/lib/array/utils"
-import { associateWithList } from "@/utils/set"
-import { matrixArr, matrixEff } from "@/utils/matrix"
-import { uniq } from "@/utils/array"
-import { nonNull } from "@/utils/assert"
-import { genId } from "@/utils/uuid"
+import {
+  OmitId,
+  PartialDict,
+  associateWithList,
+  uniq,
+  nonNull,
+  DistributiveOmit,
+  genId,
+  matrixEff,
+  matrixArr,
+  Updater,
+} from "@scenario-flow/util"
+import { ContextOf } from "../../lib/effect/contextOf"
+import { dedupeArrays, sliceFormer, sliceLatter } from "@scenario-flow/util/lib"
 
 // export type GetUniqName = (name: string) => string
 // export const GetUniqName = Context.GenericTag<GetUniqName>("GetUniqName")
@@ -1141,6 +1144,7 @@ export const replaceAction = (oldActionId: ActionId, newActionId: ActionId) =>
   pipe(
     _getNodes(),
     Effect.map((nodes) =>
+      // @ts-expect-error
       nodes.map((node) => replaceActionEntity(node, oldActionId, newActionId)),
     ),
     Effect.flatMap((_) => Effect.forEach(_, (node) => _setNode(node.id, node))),

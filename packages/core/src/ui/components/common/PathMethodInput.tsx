@@ -12,16 +12,19 @@ import { FiChevronDown, FiPlus } from "react-icons/fi"
 
 import { MethodChip } from "./MethodChip"
 
-import type { ResourceId } from "@/domain/entity/resource/resource"
-
 import {
-  display,
-  type ActionSourceIdentifier,
-} from "@/domain/entity/action/identifier"
-import { HTTP_METHODS, type HttpMethod } from "@/utils/http"
-import { useActions, useResource } from "@/ui/adapter/query"
-import { searchFuzzy } from "@/utils/searchFuzzy"
-import { associateWithList } from "@/utils/set"
+  associateWithList,
+  HTTP_METHODS,
+  HttpMethod,
+  searchFuzzy,
+} from "@scenario-flow/util"
+import { ActionSourceIdentifier } from "../../../domain/entity/action/identifier"
+import {
+  displayIdentifier,
+  OpenApiResourceLocalIdentifier,
+} from "../../../domain/entity/resource/identifier"
+import { ResourceId } from "../../../domain/entity/resource/resource"
+import { useActions, useResource } from "../../adapter/query"
 
 type MethodPath = {
   identifier: ActionSourceIdentifier
@@ -41,7 +44,7 @@ type Props = {
 
 export const PathMethodInput = ({ method, path, onChange }: Props) => {
   const actions = useActions()
-  const restCallActions: MethodPath[] = useMemo(
+  const restCallActions = useMemo(
     () =>
       actions
         .filter((action) => action.type === "rest_call")
@@ -95,7 +98,7 @@ export const PathMethodInput = ({ method, path, onChange }: Props) => {
 
   const shouldShowCreateOption = useMemo(
     () =>
-      2 <= query.length &&
+      1 <= query.length &&
       !filteredActions.some(
         (action) => action.path === query && action.method === method,
       ),
@@ -149,7 +152,7 @@ export const PathMethodInput = ({ method, path, onChange }: Props) => {
           )}
           {filteredActions.map((action) => (
             <ComboboxOption
-              key={display(action.identifier)}
+              key={JSON.stringify(action.identifier)}
               value={action}
               className="group flex cursor-pointer select-none items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-600 data-[focus]:bg-blue-50"
             >
